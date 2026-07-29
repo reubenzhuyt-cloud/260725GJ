@@ -108,6 +108,7 @@ InitTestScene*.unity*
 
 # OpenCode
 .opencode/
+opencode.json
 
 # MCP for Unity (coplaydev)
 /Packages/com.coplaydev.unity-mcp/
