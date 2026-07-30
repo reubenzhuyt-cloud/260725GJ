@@ -1,5 +1,7 @@
 using UnityEngine;
 
+public enum TimeSpeed { Normal = 1, Fast = 2, Faster = 3, Fastest = 5 }
+
 public class TimeManager : MonoBehaviour
 {
     public static TimeManager Instance { get; private set; }
@@ -10,9 +12,17 @@ public class TimeManager : MonoBehaviour
     [Header("Event Channels (SO assets)")]
     public TimePhaseChangedEvent onPhaseChanged;
     public DayStartedEvent onDayStarted;
+    public TimeSpeedChangedEvent onTimeSpeedChanged;
+
+    [Header("Time Control")]
+    public bool isPaused = false;
+    public TimeSpeed currentSpeed = TimeSpeed.Normal;
 
     // Clock ticking accumulator
     private float minuteAccumulator = 0f;
+
+    // Speed multiplier for direct access
+    public int speedMultiplier => (int)currentSpeed;
 
     // Phase boundaries (hour thresholds)
     private const int DAWN_HOUR = 5;
@@ -32,8 +42,10 @@ public class TimeManager : MonoBehaviour
 
     private void Update()
     {
-        // 1 real second = 20 game minutes
-        float gameMinutesThisFrame = Time.deltaTime * 20f;
+        if (isPaused) return;
+
+        // Apply speed multiplier: 1 real second = 20 game minutes * speed
+        float gameMinutesThisFrame = Time.deltaTime * 20f * (int)currentSpeed;
         minuteAccumulator += gameMinutesThisFrame;
 
         // Process complete minutes
@@ -155,4 +167,78 @@ public class TimeManager : MonoBehaviour
     {
         return timeState.GetTimeString();
     }
+
+    #region Time Pause
+
+    public void PauseTime()
+    {
+        isPaused = true;
+        RaiseTimeSpeedChanged();
+    }
+
+    public void ResumeTime()
+    {
+        isPaused = false;
+        RaiseTimeSpeedChanged();
+    }
+
+    public void TogglePause()
+    {
+        isPaused = !isPaused;
+        RaiseTimeSpeedChanged();
+    }
+
+    #endregion
+
+    #region Time Speed
+
+    public void SetSpeed(int multiplier)
+    {
+        switch (multiplier)
+        {
+            case 1: currentSpeed = TimeSpeed.Normal; break;
+            case 2: currentSpeed = TimeSpeed.Fast; break;
+            case 3: currentSpeed = TimeSpeed.Faster; break;
+            case 4: currentSpeed = TimeSpeed.Faster; break;
+            case 5: currentSpeed = TimeSpeed.Fastest; break;
+            default: currentSpeed = TimeSpeed.Normal; break;
+        }
+        RaiseTimeSpeedChanged();
+    }
+
+    public void SetTimeSpeed(TimeSpeed speed)
+    {
+        currentSpeed = speed;
+        RaiseTimeSpeedChanged();
+    }
+
+    public void SetTimeSpeed(int multiplier)
+    {
+        SetSpeed(multiplier);
+    }
+
+    public void ResetSpeed()
+    {
+        currentSpeed = TimeSpeed.Normal;
+        RaiseTimeSpeedChanged();
+    }
+
+    #endregion
+
+    #region Event Helpers
+
+    private void RaiseTimeSpeedChanged()
+    {
+        if (onTimeSpeedChanged != null)
+        {
+            onTimeSpeedChanged.Raise(new TimeSpeedData
+            {
+                speedMultiplier = (int)currentSpeed,
+                isPaused = isPaused,
+                isWaitingAtNode = false
+            });
+        }
+    }
+
+    #endregion
 }
