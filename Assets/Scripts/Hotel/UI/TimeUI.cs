@@ -68,7 +68,7 @@ public class TimeUI : MonoBehaviour
     private void UpdateDayText(int day)
     {
         if (dayText != null)
-            dayText.text = $"第 {day} 天";
+            dayText.text = $"Day {day}";
     }
 
     private void UpdateClockText(string timeString)
