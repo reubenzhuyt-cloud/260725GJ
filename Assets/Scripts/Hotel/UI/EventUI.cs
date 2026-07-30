@@ -7,22 +7,23 @@ public class EventUI : MonoBehaviour
     [Header("Overlay")]
     public GameObject eventOverlay;
 
-    [Header("Panel References")]
-    public GameObject confirmPanel;
-    public GameObject choicePanel;
+    [Header("Panel")]
+    public GameObject eventPanel;
 
-    [Header("Confirm Panel Elements")]
-    public Image confirmImage;
-    public TextMeshProUGUI confirmTitle;
-    public TextMeshProUGUI confirmDescription;
-    public Button confirmButton;
+    [Header("Shared Elements")]
+    public Image eventImage;
+    public TextMeshProUGUI eventTitle;
+    public TextMeshProUGUI eventDescription;
 
-    [Header("Choice Panel Elements")]
-    public Image choiceImage;
-    public TextMeshProUGUI choiceTitle;
-    public TextMeshProUGUI choiceDescription;
-    public Transform choiceButtonContainer;
+    [Header("Confirm Mode")]
+    public GameObject confirmButton;
+
+    [Header("Choice Mode")]
+    public GameObject choiceButtonContainer;
     public Button choiceButtonPrefab;
+
+    [Header("References")]
+    public TimeControlUI timeControlUI;
 
     [Header("Event Listener")]
     public GamePopupEvent onPopupEvent;
@@ -45,17 +46,36 @@ public class EventUI : MonoBehaviour
     {
         if (eventOverlay != null)
             eventOverlay.SetActive(false);
-        HideAll();
+
+        if (eventPanel != null)
+            eventPanel.SetActive(false);
 
         if (confirmButton != null)
-            confirmButton.onClick.AddListener(OnConfirmClicked);
+        {
+            Button btn = confirmButton.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(OnConfirmClicked);
+            }
+        }
     }
 
     private void OnPopupReceived(PopupData data)
     {
         if (eventOverlay != null)
             eventOverlay.SetActive(true);
-        HideAll();
+
+        if (eventPanel != null)
+            eventPanel.SetActive(true);
+
+        // Set shared content
+        if (eventImage != null && data.image != null)
+            eventImage.sprite = data.image;
+        if (eventTitle != null)
+            eventTitle.text = data.title;
+        if (eventDescription != null)
+            eventDescription.text = data.description;
 
         if (data.eventType == GameEventType.Confirm)
             ShowConfirm(data);
@@ -65,47 +85,57 @@ public class EventUI : MonoBehaviour
 
     private void ShowConfirm(PopupData data)
     {
-        if (confirmPanel != null) confirmPanel.SetActive(true);
-        if (confirmImage != null && data.image != null) confirmImage.sprite = data.image;
-        if (confirmTitle != null) confirmTitle.text = data.title;
-        if (confirmDescription != null) confirmDescription.text = data.description;
+        if (confirmButton != null) confirmButton.SetActive(true);
+        if (choiceButtonContainer != null) choiceButtonContainer.SetActive(false);
         currentConfirmEffects = data.confirmEffects;
     }
 
     private void ShowChoice(PopupData data)
     {
-        if (choicePanel != null) choicePanel.SetActive(true);
-        if (choiceImage != null && data.image != null) choiceImage.sprite = data.image;
-        if (choiceTitle != null) choiceTitle.text = data.title;
-        if (choiceDescription != null) choiceDescription.text = data.description;
+        if (confirmButton != null) confirmButton.SetActive(false);
+        if (choiceButtonContainer != null) choiceButtonContainer.SetActive(true);
 
+        // Clear old clones (skip the template prefab)
         if (choiceButtonContainer != null)
         {
-            foreach (Transform child in choiceButtonContainer)
-                Destroy(child.gameObject);
-        }
-
-        if (data.choiceTexts != null && choiceButtonPrefab != null && choiceButtonContainer != null)
-        {
-            for (int i = 0; i < data.choiceTexts.Length; i++)
+            for (int i = choiceButtonContainer.transform.childCount - 1; i >= 0; i--)
             {
-                Button btn = Instantiate(choiceButtonPrefab, choiceButtonContainer);
-                btn.gameObject.SetActive(true);
-
-                TextMeshProUGUI btnText = btn.GetComponentInChildren<TextMeshProUGUI>();
-                if (btnText != null) btnText.text = data.choiceTexts[i];
-
-                int choiceIndex = i;
-                btn.onClick.AddListener(() => OnChoiceSelected(choiceIndex, data));
+                Transform child = choiceButtonContainer.transform.GetChild(i);
+                if (child.gameObject == choiceButtonPrefab?.gameObject)
+                    continue;
+                Destroy(child.gameObject);
             }
         }
+
+        // Create choice buttons
+        if (data.choiceTexts == null || choiceButtonPrefab == null || choiceButtonContainer == null)
+        {
+            Debug.LogWarning("[EventUI] Missing references for choice buttons!");
+            return;
+        }
+
+        for (int i = 0; i < data.choiceTexts.Length; i++)
+        {
+            Button btn = Instantiate(choiceButtonPrefab, choiceButtonContainer.transform);
+            btn.gameObject.SetActive(true);
+            btn.gameObject.name = $"ChoiceButton_{i}";
+            btn.interactable = true;
+
+            TextMeshProUGUI btnText = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (btnText != null) btnText.text = data.choiceTexts[i];
+
+            int choiceIndex = i;
+            PopupData capturedData = data;
+            btn.onClick.AddListener(() => OnChoiceSelected(choiceIndex, capturedData));
+        }
+
+        currentConfirmEffects = null;
     }
 
     private void OnConfirmClicked()
     {
         ApplyEffects(currentConfirmEffects);
-        HideAll();
-        ResumeTime();
+        Close();
     }
 
     private void OnChoiceSelected(int index, PopupData data)
@@ -115,8 +145,19 @@ public class EventUI : MonoBehaviour
         if (data.choiceEffects != null && index < data.choiceEffects.Length)
             ApplyEffects(data.choiceEffects[index]);
 
-        HideAll();
-        ResumeTime();
+        Close();
+    }
+
+    private void Close()
+    {
+        if (eventPanel != null) eventPanel.SetActive(false);
+        if (eventOverlay != null) eventOverlay.SetActive(false);
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.isPaused = false;
+
+        // Notify time control to restore speed
+        if (timeControlUI != null)
+            timeControlUI.OnEventClosed();
     }
 
     private void ApplyEffects(EventEffect[] effects)
@@ -132,24 +173,7 @@ public class EventUI : MonoBehaviour
                         ErosionManager.Instance.ModifyErosion(effect.floatValue);
                     Debug.Log($"[EventUI] Applied: ModifyErosion {effect.floatValue:+0.0;-0.0}");
                     break;
-                case EffectType.None:
-                    break;
             }
         }
-    }
-
-    private void HideAll()
-    {
-        if (confirmPanel != null) confirmPanel.SetActive(false);
-        if (choicePanel != null) choicePanel.SetActive(false);
-    }
-
-    private void ResumeTime()
-    {
-        HideAll();
-        if (eventOverlay != null)
-            eventOverlay.SetActive(false);
-        if (TimeManager.Instance != null)
-            TimeManager.Instance.isPaused = false;
     }
 }
