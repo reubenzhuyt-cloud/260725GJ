@@ -32,9 +32,18 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         }
 
         Instance = this;
+    }
 
-        _reducer = new StateReducer();
-        _runState = GameRunState.New(new RunId("tenant_assignment_demo"), 1);
+    private void Start()
+    {
+        if (SettlementBridge.Instance == null)
+        {
+            Debug.LogError("[TenantAssignmentCoordinator] SettlementBridge.Instance is null!");
+            return;
+        }
+
+        _reducer = SettlementBridge.Instance.Reducer;
+        _runState = SettlementBridge.Instance.RunState;
 
         for (int i = 1; i <= 9; i++)
         {

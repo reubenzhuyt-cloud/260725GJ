@@ -168,10 +168,8 @@ public class EventUI : MonoBehaviour
         {
             switch (effect.effectType)
             {
-                case EffectType.ModifyErosion:
-                    if (ErosionManager.Instance != null)
-                        ErosionManager.Instance.ModifyErosion(effect.floatValue);
-                    Debug.Log($"[EventUI] Applied: ModifyErosion {effect.floatValue:+0.0;-0.0}");
+                case EffectType.ModifyTenantErosion:
+                    Debug.LogWarning("[EventUI] ModifyTenantErosion effect requires tenant context — deferred");
                     break;
             }
         }

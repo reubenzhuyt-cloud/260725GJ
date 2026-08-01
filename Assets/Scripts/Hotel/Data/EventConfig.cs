@@ -5,7 +5,7 @@ public enum GamePhase { Day, Dawn, Night, Dusk }
 
 public enum GameEventType { Confirm, Choice }
 
-public enum EffectType { None, ModifyErosion }
+public enum EffectType { None, ModifyTenantErosion }
 
 [System.Serializable]
 public class EventEffect
