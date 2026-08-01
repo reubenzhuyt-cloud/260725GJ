@@ -22,13 +22,14 @@ public class EventUI : MonoBehaviour
     public GameObject choiceButtonContainer;
     public Button choiceButtonPrefab;
 
-    [Header("References")]
-    public TimeControlUI timeControlUI;
-
     [Header("Event Listener")]
     public GamePopupEvent onPopupEvent;
 
+    [Header("Event Channel")]
+    public EventProcessedEvent onEventProcessed;
+
     private EventEffect[] currentConfirmEffects;
+    private string currentEventId;
 
     private void OnEnable()
     {
@@ -63,6 +64,8 @@ public class EventUI : MonoBehaviour
 
     private void OnPopupReceived(PopupData data)
     {
+        currentEventId = data.eventId;
+
         if (eventOverlay != null)
             eventOverlay.SetActive(true);
 
@@ -152,12 +155,9 @@ public class EventUI : MonoBehaviour
     {
         if (eventPanel != null) eventPanel.SetActive(false);
         if (eventOverlay != null) eventOverlay.SetActive(false);
-        if (TimeManager.Instance != null)
-            TimeManager.Instance.isPaused = false;
 
-        // Notify time control to restore speed
-        if (timeControlUI != null)
-            timeControlUI.OnEventClosed();
+        if (onEventProcessed != null && currentEventId != null)
+            onEventProcessed.Raise(currentEventId);
     }
 
     private void ApplyEffects(EventEffect[] effects)

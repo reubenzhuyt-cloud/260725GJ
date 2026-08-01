@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+public enum GamePhase { Day, Dawn, Night, Dusk }
+
 public enum GameEventType { Confirm, Choice }
 
 public enum EffectType { None, ModifyErosion }
@@ -15,20 +17,24 @@ public class EventEffect
 [CreateAssetMenu(fileName = "EventConfig", menuName = "Configs/EventConfig")]
 public class EventConfig : ScriptableObject
 {
-    [Header("Event ID")]
+    [Header("Identity")]
     public int eventIndex;
     public string eventId;
+
+    [Header("Trigger")]
+    public GamePhase triggerPhase = GamePhase.Day;
+    public string triggerCondition; // reserved for future use, leave empty
+
+    [Header("Content")]
     public string eventTitle;
     [TextArea] public string eventDescription;
     public Sprite eventImage;
-    public int triggerHour;
-    public int triggerMinute;
     public GameEventType eventType = GameEventType.Confirm;
 
-    [Header("Confirm Effects (applied on confirm)")]
+    [Header("Confirm Effects")]
     public List<EventEffect> confirmEffects = new List<EventEffect>();
 
-    [Header("Choice Options (only for Choice type)")]
+    [Header("Choice Options")]
     public List<ChoiceOption> choices = new List<ChoiceOption>();
 }
 
@@ -38,7 +44,5 @@ public class ChoiceOption
     public string choiceId;
     public string choiceText;
     [TextArea] public string choiceResult;
-
-    [Header("Effects for this choice")]
     public List<EventEffect> choiceEffects = new List<EventEffect>();
 }

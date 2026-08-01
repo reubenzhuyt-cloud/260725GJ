@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_Night_1
+  m_EditorClassIdentifier: 
+  eventIndex: 201
+  eventId: event_night_1
+  triggerPhase: 2
+  triggerCondition: 
+  eventTitle: "\u9ED1\u591C\u4E8B\u4EF61"
+  eventDescription: "\u5360\u4F4D\u4E8B\u4EF6"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects:
+  - effectType: 1
+    floatValue: 3
+  choices: []

@@ -9,6 +9,7 @@ public enum TimePhase
 }
 
 [Serializable]
+[System.Obsolete("Deprecated: Use GamePhaseManager instead")]
 public class TimeState
 {
     public int currentDay = 1;

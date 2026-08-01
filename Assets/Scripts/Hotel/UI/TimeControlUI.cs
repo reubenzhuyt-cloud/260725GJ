@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Obsolete("Deprecated: Use new phase system instead")]
 public class TimeControlUI : MonoBehaviour
 {
     [Header("Toggles")]
@@ -60,14 +61,29 @@ public class TimeControlUI : MonoBehaviour
             speed4xToggle.onValueChanged.AddListener(On4xChanged);
         }
 
+        // Start paused
         SetState(SpeedState.Normal);
+
+        isPaused = true;
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.isPaused = true;
+
+        // Set pause toggle after UpdateToggles resets it
+        if (pauseToggle != null)
+            SetToggleWithoutCallback(pauseToggle, OnPauseChanged, true);
     }
 
     private void OnEventTriggered(PopupData data)
     {
         stateBeforeEvent = currentState;
-        SetState(SpeedState.Normal);
-        isPaused = false;
+        // Don't call SetState — it resets isPaused via UpdateToggles.
+        // EventManager already paused time; just update speed and visuals.
+        currentState = SpeedState.Normal;
+        if (TimeManager.Instance != null)
+            TimeManager.Instance.SetSpeed(1);
+        SetToggleWithoutCallback(speed1xToggle, On1xChanged, true);
+        SetToggleWithoutCallback(speed2xToggle, On2xChanged, false);
+        SetToggleWithoutCallback(speed4xToggle, On4xChanged, false);
     }
 
     public void OnEventClosed()

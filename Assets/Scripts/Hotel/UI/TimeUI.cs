@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+[System.Obsolete("Deprecated: Use new phase system instead")]
 public class TimeUI : MonoBehaviour
 {
     [Header("UI References")]

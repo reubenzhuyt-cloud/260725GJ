@@ -5,14 +5,29 @@ public class EventManager : MonoBehaviour
 {
     public static EventManager Instance { get; private set; }
 
-    [Header("Scheduled Events")]
-    public List<EventConfig> scheduledEvents = new List<EventConfig>();
+    [Header("Event Pools (drag SO assets here)")]
+    public List<EventConfig> dayEvents = new List<EventConfig>();
+    public List<EventConfig> nightEvents = new List<EventConfig>();
+    public List<EventConfig> dawnEvents = new List<EventConfig>();
+    public List<EventConfig> duskEvents = new List<EventConfig>();
 
-    [Header("Event Channel")]
+    [Header("Probability Settings")]
+    [Range(0, 100)] public int normalPhaseChance = 70;   // Day/Night
+    [Range(0, 100)] public int hiddenPhaseChance = 50;   // Dawn/Dusk
+
+    [Header("SO Channels")]
     public GamePopupEvent onPopupEvent;
+    public EventProcessedEvent onEventProcessed;
+    public EventQueueEmptyEvent onEventQueueEmpty;
 
-    private HashSet<string> firedToday = new HashSet<string>();
-    private int lastCheckedMinute = -1;
+    [Header("Listener")]
+    public PhaseEnteredEvent onPhaseEntered;
+
+    private Queue<EventConfig> eventQueue = new Queue<EventConfig>();
+    private bool isProcessing = false;
+
+    private Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents = 
+        new Dictionary<GamePhase, List<EventConfig>>();
 
     private void Awake()
     {
@@ -20,42 +35,130 @@ public class EventManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        if (TimeManager.Instance == null || TimeManager.Instance.isPaused) return;
+        if (onPhaseEntered != null)
+            onPhaseEntered.Register(OnPhaseEntered);
+        if (onEventProcessed != null)
+            onEventProcessed.Register(OnEventProcessed);
+    }
 
-        var state = TimeManager.Instance.timeState;
-        int currentMinute = state.hour * 60 + state.minute;
+    private void OnDisable()
+    {
+        if (onPhaseEntered != null)
+            onPhaseEntered.Unregister(OnPhaseEntered);
+        if (onEventProcessed != null)
+            onEventProcessed.Unregister(OnEventProcessed);
+    }
 
-        if (currentMinute != lastCheckedMinute)
+    private void OnPhaseEntered(PhaseEnterData data)
+    {
+        eventQueue.Clear();
+
+        if (preGeneratedEvents.ContainsKey(data.phase))
         {
-            lastCheckedMinute = currentMinute;
-            CheckTimeEvents(state.hour, state.minute, state.currentDay);
+            foreach (var config in preGeneratedEvents[data.phase])
+                eventQueue.Enqueue(config);
+        }
+
+        bool hasEvents = eventQueue.Count > 0;
+        Debug.Log($"[EventManager] Phase {data.phase}: hasEvents={hasEvents}, queue={eventQueue.Count}");
+
+        if (hasEvents)
+        {
+            isProcessing = true;
+            ProcessNextEvent();
+        }
+        else
+        {
+            isProcessing = false;
+            NotifyQueueEmpty();
         }
     }
 
-    public void CheckTimeEvents(int hour, int minute, int day)
+    /// <summary>
+    /// Pre-generate all events for an entire day. Called once when Day phase begins.
+    /// </summary>
+    public void PreGenerateDayEvents(int day)
     {
-        foreach (var config in scheduledEvents)
-        {
-            if (config == null) continue;
-            string key = $"{config.eventId}_day{day}";
-            if (firedToday.Contains(key)) continue;
+        preGeneratedEvents.Clear();
 
-            if (config.triggerHour == hour && config.triggerMinute == minute)
+        foreach (GamePhase phase in System.Enum.GetValues(typeof(GamePhase)))
+        {
+            List<EventConfig> pool = GetPoolForPhase(phase);
+            if (pool == null || pool.Count == 0) continue;
+
+            int chance = IsHiddenPhase(phase) ? hiddenPhaseChance : normalPhaseChance;
+            int roll = Random.Range(0, 100);
+
+            if (roll < chance)
             {
-                firedToday.Add(key);
-                TriggerEvent(config);
+                int count = Random.Range(1, Mathf.Min(3, pool.Count + 1));
+                preGeneratedEvents[phase] = PickRandom(pool, count);
             }
         }
+
+        Debug.Log($"[EventManager] Pre-generated events for day {day}: " +
+            string.Join(", ", preGeneratedEvents.Keys));
+    }
+
+    /// <summary>
+    /// Check if a phase has pre-generated events. Used by GamePhaseManager for deterministic skip.
+    /// </summary>
+    public bool HasPreGeneratedEvents(GamePhase phase)
+    {
+        return preGeneratedEvents.ContainsKey(phase) && 
+               preGeneratedEvents[phase].Count > 0;
+    }
+
+    private List<EventConfig> GetPoolForPhase(GamePhase phase)
+    {
+        switch (phase)
+        {
+            case GamePhase.Day:   return dayEvents;
+            case GamePhase.Night: return nightEvents;
+            case GamePhase.Dawn:  return dawnEvents;
+            case GamePhase.Dusk:  return duskEvents;
+            default: return null;
+        }
+    }
+
+    private bool IsHiddenPhase(GamePhase phase)
+    {
+        return phase == GamePhase.Dawn || phase == GamePhase.Dusk;
+    }
+
+    private List<EventConfig> PickRandom(List<EventConfig> pool, int count)
+    {
+        List<EventConfig> source = new List<EventConfig>(pool);
+        List<EventConfig> result = new List<EventConfig>();
+
+        for (int i = 0; i < count && source.Count > 0; i++)
+        {
+            int idx = Random.Range(0, source.Count);
+            result.Add(source[idx]);
+            source.RemoveAt(idx);
+        }
+
+        return result;
+    }
+
+    private void ProcessNextEvent()
+    {
+        if (eventQueue.Count == 0)
+        {
+            isProcessing = false;
+            NotifyQueueEmpty();
+            return;
+        }
+
+        EventConfig config = eventQueue.Dequeue();
+        TriggerEvent(config);
     }
 
     private void TriggerEvent(EventConfig config)
     {
         if (onPopupEvent == null) return;
-
-        if (TimeManager.Instance != null)
-            TimeManager.Instance.isPaused = true;
 
         PopupData data = new PopupData
         {
@@ -86,11 +189,21 @@ public class EventManager : MonoBehaviour
         }
 
         onPopupEvent.Raise(data);
-        Debug.Log($"[EventManager] Triggered: {config.eventTitle} at {config.triggerHour:D2}:{config.triggerMinute:D2}");
+        Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
     }
 
-    public void ResetToday()
+    private void OnEventProcessed(string eventId)
     {
-        firedToday.Clear();
+        Debug.Log($"[EventManager] Event processed: {eventId}");
+        ProcessNextEvent();
     }
+
+    private void NotifyQueueEmpty()
+    {
+        Debug.Log("[EventManager] Queue empty");
+        if (onEventQueueEmpty != null)
+            onEventQueueEmpty.Raise(0);
+    }
+
+
 }

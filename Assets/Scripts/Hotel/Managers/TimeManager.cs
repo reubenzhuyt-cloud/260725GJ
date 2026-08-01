@@ -2,6 +2,7 @@ using UnityEngine;
 
 public enum TimeSpeed { Normal = 1, Fast = 2, Faster = 3, Fastest = 5 }
 
+[System.Obsolete("Deprecated: Use GamePhaseManager instead")]
 public class TimeManager : MonoBehaviour
 {
     public static TimeManager Instance { get; private set; }
@@ -15,7 +16,7 @@ public class TimeManager : MonoBehaviour
     public TimeSpeedChangedEvent onTimeSpeedChanged;
 
     [Header("Time Control")]
-    public bool isPaused = false;
+    public bool isPaused = true;
     public TimeSpeed currentSpeed = TimeSpeed.Normal;
 
     // Clock ticking accumulator

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 
+[System.Obsolete("Deprecated: Use new phase system instead")]
 [CreateAssetMenu(fileName = "TimeSpeedChangedEvent", menuName = "Events/TimeSpeedChangedEvent")]
 public class TimeSpeedChangedEvent : GameEvent<TimeSpeedData> {}
 
