@@ -20,6 +20,11 @@ public class TenantAvatarDisplay : MonoBehaviour
         ApplyColor();
     }
 
+    public void SetVisible(bool value)
+    {
+        gameObject.SetActive(value);
+    }
+
     private void ApplyColor()
     {
         if (spriteRenderer != null)

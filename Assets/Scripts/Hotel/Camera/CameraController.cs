@@ -94,6 +94,12 @@ public class CameraController : MonoBehaviour
 
     private void HandleDragInput()
     {
+        if (TenantAssignmentCoordinator.Instance != null && TenantAssignmentCoordinator.Instance.IsDragging)
+        {
+            isDragging = false;
+            return;
+        }
+
         // Don't drag if mouse is over UI
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
