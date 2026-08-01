@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Hotel.Authoring.DayCycle
 {
     [CreateAssetMenu(menuName = "Hotel/Day Cycle")]
-    public sealed class DayCycleDefinition : ScriptableObject
+    public sealed class DayCycleDefinition : ScriptableObject, IPhaseCycle
     {
         [SerializeField] private HotelPhase[] ordered =
         {
@@ -17,6 +17,11 @@ namespace Hotel.Authoring.DayCycle
         };
 
         public IReadOnlyList<HotelPhase> OrderedPhases => Array.AsReadOnly(ordered);
+
+        public static DayCycleDefinition CreateDefault()
+        {
+            return CreateInstance<DayCycleDefinition>();
+        }
 
         public HotelPhase GetNext(HotelPhase phase)
         {

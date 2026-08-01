@@ -1,0 +1,139 @@
+using System.Collections.Generic;
+
+namespace Hotel.Runtime
+{
+    public abstract class RunChange
+    {
+    }
+
+    public sealed class SetPhaseLifecycleChange : RunChange
+    {
+        public SetPhaseLifecycleChange(PhaseLifecycleState value) { Value = value; }
+        public PhaseLifecycleState Value { get; }
+    }
+
+    public sealed class SetCurrentPhaseChange : RunChange
+    {
+        public SetCurrentPhaseChange(HotelPhase phase, int day, int occurrence) { Phase = phase; Day = day; Occurrence = occurrence; }
+        public HotelPhase Phase { get; }
+        public int Day { get; }
+        public int Occurrence { get; }
+    }
+
+    public sealed class CreateDecisionChange : RunChange
+    {
+        public CreateDecisionChange(DecisionRunState value) { Value = value; }
+        public DecisionRunState Value { get; }
+    }
+
+    public sealed class CompleteDecisionChange : RunChange
+    {
+        public CompleteDecisionChange(string id) { DecisionId = id; }
+        public string DecisionId { get; }
+    }
+
+    public sealed class AppendAuditLogChange : RunChange
+    {
+        public AppendAuditLogChange(string value) { Value = value; }
+        public string Value { get; }
+    }
+
+    public sealed class SetRunSummaryChange : RunChange
+    {
+        public SetRunSummaryChange(RunSummaryState value) { Value = value; }
+        public RunSummaryState Value { get; }
+    }
+
+    public sealed class PlanEventHistoryChange : RunChange
+    {
+        public PlanEventHistoryChange(EventHistoryRecord value) { Value = value; }
+        public EventHistoryRecord Value { get; }
+    }
+
+    public sealed class ResolveEventHistoryChange : RunChange
+    {
+        public ResolveEventHistoryChange(string id, string option) { EventId = id; OptionId = option; }
+        public string EventId { get; }
+        public string OptionId { get; }
+    }
+
+    public sealed class SetTenantMarkChange : RunChange
+    {
+        public SetTenantMarkChange(string id, bool value) { TenantId = id; Value = value; }
+        public string TenantId { get; }
+        public bool Value { get; }
+    }
+
+    public sealed class AdjustTenantErosionChange : RunChange
+    {
+        public AdjustTenantErosionChange(string id, float delta) { TenantId = id; Delta = delta; }
+        public string TenantId { get; }
+        public float Delta { get; }
+    }
+
+    public sealed class AssignRoomChange : RunChange
+    {
+        public AssignRoomChange(string tenant, string room) { TenantId = tenant; RoomId = room; }
+        public string TenantId { get; }
+        public string RoomId { get; }
+    }
+
+    public sealed class AssignJobChange : RunChange
+    {
+        public AssignJobChange(string tenant, string job) { TenantId = tenant; JobId = job; }
+        public string TenantId { get; }
+        public string JobId { get; }
+    }
+
+    public sealed class AdjustResourceChange : RunChange
+    {
+        public AdjustResourceChange(string id, int delta) { ResourceId = id; Delta = delta; }
+        public string ResourceId { get; }
+        public int Delta { get; }
+    }
+
+    public sealed class AuthorizedChangeSet
+    {
+        private readonly List<RunChange> _changes = new List<RunChange>();
+
+        private AuthorizedChangeSet(RunId run, long version, string authorizer, string command)
+        {
+            RunId = run;
+            ExpectedStateVersion = version;
+            AuthorizerId = authorizer;
+            CommandId = command;
+        }
+
+        public RunId RunId { get; }
+        public long ExpectedStateVersion { get; }
+        public string AuthorizerId { get; }
+        public string CommandId { get; }
+        public IReadOnlyList<RunChange> Changes => _changes;
+
+        public static AuthorizedChangeSet Coordinator(RunId r, long v, string command)
+        {
+            return new AuthorizedChangeSet(r, v, "GamePhaseCoordinator", command);
+        }
+
+        public static AuthorizedChangeSet Domain(RunId r, long v, string authorizer, string command)
+        {
+            return new AuthorizedChangeSet(r, v, authorizer, command);
+        }
+
+        public void Add(RunChange change)
+        {
+            _changes.Add(change);
+        }
+    }
+
+    public readonly struct CommitResult
+    {
+        public CommitResult(bool succeeded) { Succeeded = succeeded; }
+        public bool Succeeded { get; }
+    }
+
+    public interface IStateReducer
+    {
+        CommitResult TryCommit(GameRunState state, AuthorizedChangeSet changes);
+    }
+}

@@ -63,6 +63,27 @@ namespace Hotel.Runtime.Tests
             Assert.That(state.Phase.Current, Is.EqualTo(HotelPhase.Dawn));
         }
 
+        [Test]
+        public void DayCycleDefinition_ImplementsIPhaseCycle()
+        {
+            Assert.That(typeof(IPhaseCycle).IsAssignableFrom(typeof(DayCycleDefinition)), Is.True);
+        }
+
+        [Test]
+        public void CreateDefault_ReturnsValidDawnDayDuskNightOrder()
+        {
+            var cycle = DayCycleDefinition.CreateDefault();
+
+            Assert.That(cycle, Is.Not.Null);
+            Assert.That(cycle.Validate(), Is.Empty);
+            Assert.That(cycle.GetNext(HotelPhase.Dawn), Is.EqualTo(HotelPhase.Day));
+            Assert.That(cycle.GetNext(HotelPhase.Day), Is.EqualTo(HotelPhase.Dusk));
+            Assert.That(cycle.GetNext(HotelPhase.Dusk), Is.EqualTo(HotelPhase.Night));
+            Assert.That(cycle.GetNext(HotelPhase.Night), Is.EqualTo(HotelPhase.Dawn));
+
+            Object.DestroyImmediate(cycle);
+        }
+
         private static void ConfigurePhases(DayCycleDefinition cycle, params HotelPhase[] phases)
         {
             var serializedObject = new SerializedObject(cycle);
