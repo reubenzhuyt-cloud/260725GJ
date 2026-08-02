@@ -40,9 +40,10 @@ public class GamePhaseManager : MonoBehaviour
 
         if (IsHiddenPhase(nextPhase))
         {
-            if (EventManager.Instance != null && EventManager.Instance.HasPreGeneratedEvents(nextPhase))
+            if ((EventManager.Instance != null && EventManager.Instance.HasPreGeneratedEvents(nextPhase))
+                || ShouldForceEnterHiddenPhase(nextPhase))
             {
-                // Hidden phase has pre-generated events → enter it
+                // Hidden phase has pre-generated events or pending review → enter it
                 currentPhase = nextPhase;
                 if (currentPhase == GamePhase.Dawn)
                     currentDay++;
@@ -84,6 +85,13 @@ public class GamePhaseManager : MonoBehaviour
     private bool IsHiddenPhase(GamePhase phase)
     {
         return phase == GamePhase.Dawn || phase == GamePhase.Dusk;
+    }
+
+    private bool ShouldForceEnterHiddenPhase(GamePhase phase)
+    {
+        if (phase == GamePhase.Dawn && TenantReviewCoordinator.Instance != null)
+            return TenantReviewCoordinator.Instance.HasPendingReview();
+        return false;
     }
 
     private GamePhase GetPhaseAfterHidden(GamePhase hiddenPhase)

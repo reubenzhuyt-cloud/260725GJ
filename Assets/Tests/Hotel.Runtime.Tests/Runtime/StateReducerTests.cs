@@ -322,5 +322,97 @@ namespace Hotel.Runtime.Tests
             Assert.That(result.Succeeded, Is.True);
             Assert.That(state.StateVersion, Is.EqualTo(1));
         }
+
+        [Test]
+        public void AddTenant_SucceedsWhenNotDuplicate()
+        {
+            var state = GameRunState.New(new RunId("r"));
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "confirm");
+            set.Add(new AddTenantChange("tenant_new", "tenant_new"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(state.Tenants.ContainsKey("tenant_new"), Is.True);
+            Assert.That(state.Tenants["tenant_new"].TenantId, Is.EqualTo("tenant_new"));
+        }
+
+        [Test]
+        public void AddTenant_RejectsDuplicateId()
+        {
+            var state = GameRunState.New(new RunId("r"));
+            state.Tenants["tenant_existing"] = new TenantRunState { TenantId = "tenant_existing", DefinitionId = "tenant_existing" };
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "confirm");
+            set.Add(new AddTenantChange("tenant_existing", "tenant_existing"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(state.StateVersion, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ResolveCandidate_SucceedsWhenNotDuplicate()
+        {
+            var state = GameRunState.New(new RunId("r"));
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "resolve");
+            set.Add(new ResolveCandidateChange("candidate_01"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(state.ResolvedReviewCandidateIds, Does.Contain("candidate_01"));
+        }
+
+        [Test]
+        public void ResolveCandidate_RejectsAlreadyResolved()
+        {
+            var state = GameRunState.New(new RunId("r"));
+            state.ResolvedReviewCandidateIds.Add("candidate_01");
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "resolve");
+            set.Add(new ResolveCandidateChange("candidate_01"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(state.StateVersion, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ConfirmCandidate_AddsTenantAndResolvesAtomically()
+        {
+            var state = GameRunState.New(new RunId("r"));
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "confirm");
+            set.Add(new AddTenantChange("tenant_alpha", "tenant_alpha"));
+            set.Add(new ResolveCandidateChange("tenant_alpha"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(state.StateVersion, Is.EqualTo(1));
+            Assert.That(state.Tenants.ContainsKey("tenant_alpha"), Is.True);
+            Assert.That(state.ResolvedReviewCandidateIds, Does.Contain("tenant_alpha"));
+        }
+
+        [Test]
+        public void RejectCandidate_ResolvesWithoutAddingTenant()
+        {
+            var state = GameRunState.New(new RunId("r"));
+
+            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "review", "reject");
+            set.Add(new ResolveCandidateChange("tenant_beta"));
+
+            var result = new StateReducer().TryCommit(state, set);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(state.StateVersion, Is.EqualTo(1));
+            Assert.That(state.Tenants.ContainsKey("tenant_beta"), Is.False);
+            Assert.That(state.ResolvedReviewCandidateIds, Does.Contain("tenant_beta"));
+        }
     }
 }

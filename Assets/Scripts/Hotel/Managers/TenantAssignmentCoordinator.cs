@@ -55,16 +55,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             };
         }
 
-        AddTenant("tenant_alpha", "Alpha", new Color(0.90f, 0.30f, 0.30f, 1f));
-        AddTenant("tenant_beta", "Beta", new Color(0.30f, 0.80f, 0.30f, 1f));
-        AddTenant("tenant_gamma", "Gamma", new Color(0.30f, 0.40f, 0.90f, 1f));
-        AddTenant("tenant_delta", "Delta", new Color(0.95f, 0.75f, 0.20f, 1f));
-        AddTenant("tenant_epsilon", "Epsilon", new Color(0.80f, 0.30f, 0.80f, 1f));
-        AddTenant("tenant_zeta", "Zeta", new Color(0.30f, 0.85f, 0.85f, 1f));
-        AddTenant("tenant_eta", "Eta", new Color(0.95f, 0.55f, 0.25f, 1f));
-        AddTenant("tenant_theta", "Theta", new Color(0.60f, 0.40f, 0.20f, 1f));
-        AddTenant("tenant_iota", "Iota", new Color(0.75f, 0.75f, 0.75f, 1f));
-
         RebuildUnassigned();
 
         AnchorDropTarget.RefreshAll();
@@ -86,6 +76,16 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         };
         _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
         _tenantOrder.Add(tenantId);
+    }
+
+    public void RegisterTenant(string tenantId, string displayName, Color color)
+    {
+        if (_displayLookup.ContainsKey(tenantId)) return;
+        _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
+        _tenantOrder.Add(tenantId);
+        RebuildUnassigned();
+        AnchorDropTarget.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
     }
 
     private void RebuildUnassigned()

@@ -92,6 +92,19 @@ namespace Hotel.Runtime
         public int Delta { get; }
     }
 
+    public sealed class AddTenantChange : RunChange
+    {
+        public AddTenantChange(string tenantId, string definitionId) { TenantId = tenantId; DefinitionId = definitionId; }
+        public string TenantId { get; }
+        public string DefinitionId { get; }
+    }
+
+    public sealed class ResolveCandidateChange : RunChange
+    {
+        public ResolveCandidateChange(string candidateId) { CandidateId = candidateId; }
+        public string CandidateId { get; }
+    }
+
     public sealed class AuthorizedChangeSet
     {
         private readonly List<RunChange> _changes = new List<RunChange>();

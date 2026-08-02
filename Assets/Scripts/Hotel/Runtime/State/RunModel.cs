@@ -133,6 +133,7 @@ namespace Hotel.Runtime
         public Dictionary<string, RoomRunState> Rooms = new Dictionary<string, RoomRunState>();
         public Dictionary<string, ResourceRunState> Resources = new Dictionary<string, ResourceRunState>();
         public RunSummaryState Summary = new RunSummaryState();
+        public List<string> ResolvedReviewCandidateIds = new List<string>();
 
         public static GameRunState New(RunId id, int seed = 1)
         {

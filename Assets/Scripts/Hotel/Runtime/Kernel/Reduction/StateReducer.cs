@@ -121,12 +121,24 @@ namespace Hotel.Runtime
                             return false;
                         break;
                     }
-                    case AdjustResourceChange resource:
-                    {
-                        if (!s.Resources.ContainsKey(resource.ResourceId))
-                            return false;
-                        break;
-                    }
+                case AdjustResourceChange resource:
+                {
+                    if (!s.Resources.ContainsKey(resource.ResourceId))
+                        return false;
+                    break;
+                }
+                case AddTenantChange add:
+                {
+                    if (s.Tenants.ContainsKey(add.TenantId))
+                        return false;
+                    break;
+                }
+                case ResolveCandidateChange resolve:
+                {
+                    if (s.ResolvedReviewCandidateIds.Contains(resolve.CandidateId))
+                        return false;
+                    break;
+                }
                 }
             }
 
@@ -206,6 +218,16 @@ namespace Hotel.Runtime
                     break;
                 case AdjustResourceChange x:
                     s.Resources[x.ResourceId].Amount += x.Delta;
+                    break;
+                case AddTenantChange x:
+                    s.Tenants[x.TenantId] = new TenantRunState
+                    {
+                        TenantId = x.TenantId,
+                        DefinitionId = x.DefinitionId
+                    };
+                    break;
+                case ResolveCandidateChange x:
+                    s.ResolvedReviewCandidateIds.Add(x.CandidateId);
                     break;
             }
         }
