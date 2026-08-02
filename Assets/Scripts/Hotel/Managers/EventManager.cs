@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class EventManager : MonoBehaviour
@@ -18,12 +19,16 @@ public class EventManager : MonoBehaviour
     [Header("SO Channels")]
     public GamePopupEvent onPopupEvent;
     public EventProcessedEvent onEventProcessed;
+
+    [Header("Tenant Review")]
+    public TenantReviewCoordinator tenantReviewCoordinator;
     public EventQueueEmptyEvent onEventQueueEmpty;
 
     [Header("Listener")]
     public PhaseEnteredEvent onPhaseEntered;
 
     private Queue<EventConfig> eventQueue = new Queue<EventConfig>();
+    private Coroutine _advanceRoutine;
     private bool isProcessing = false;
 
     private Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents = 
@@ -51,8 +56,14 @@ public class EventManager : MonoBehaviour
             onEventProcessed.Unregister(OnEventProcessed);
     }
 
-    private void OnPhaseEntered(PhaseEnterData data)
+private void OnPhaseEntered(PhaseEnterData data)
     {
+        if (_advanceRoutine != null)
+        {
+            StopCoroutine(_advanceRoutine);
+            _advanceRoutine = null;
+        }
+
         eventQueue.Clear();
 
         if (preGeneratedEvents.ContainsKey(data.phase))
@@ -61,10 +72,15 @@ public class EventManager : MonoBehaviour
                 eventQueue.Enqueue(config);
         }
 
-        bool hasEvents = eventQueue.Count > 0;
-        Debug.Log($"[EventManager] Phase {data.phase}: hasEvents={hasEvents}, queue={eventQueue.Count}");
+        Debug.Log($"[EventManager] Phase {data.phase}: queue={eventQueue.Count}");
 
-        if (hasEvents)
+        if (data.phase == GamePhase.Dawn && tenantReviewCoordinator != null && tenantReviewCoordinator.TryBeginReview(OnTenantReviewResolved))
+        {
+            isProcessing = true;
+            return;
+        }
+
+        if (eventQueue.Count > 0)
         {
             isProcessing = true;
             ProcessNextEvent();
@@ -143,7 +159,7 @@ public class EventManager : MonoBehaviour
         return result;
     }
 
-    private void ProcessNextEvent()
+private void ProcessNextEvent()
     {
         if (eventQueue.Count == 0)
         {
@@ -156,9 +172,15 @@ public class EventManager : MonoBehaviour
         TriggerEvent(config);
     }
 
-    private void TriggerEvent(EventConfig config)
+private void TriggerEvent(EventConfig config)
     {
-        if (onPopupEvent == null) return;
+        if (onPopupEvent == null)
+        {
+            Debug.LogError("[EventManager] Missing popup event channel; cannot present event");
+            isProcessing = false;
+            NotifyQueueEmpty();
+            return;
+        }
 
         PopupData data = new PopupData
         {
@@ -192,9 +214,29 @@ public class EventManager : MonoBehaviour
         Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
     }
 
-    private void OnEventProcessed(string eventId)
+private void OnEventProcessed(string eventId)
     {
         Debug.Log($"[EventManager] Event processed: {eventId}");
+        BeginAdvanceAfterDelay();
+    }
+
+    private void OnTenantReviewResolved()
+    {
+        Debug.Log("[EventManager] Tenant review resolved");
+        BeginAdvanceAfterDelay();
+    }
+
+    private void BeginAdvanceAfterDelay()
+    {
+        if (_advanceRoutine != null)
+            StopCoroutine(_advanceRoutine);
+        _advanceRoutine = StartCoroutine(AdvanceAfterDelay());
+    }
+
+    private IEnumerator AdvanceAfterDelay()
+    {
+        yield return new WaitForSeconds(0.3f);
+        _advanceRoutine = null;
         ProcessNextEvent();
     }
 

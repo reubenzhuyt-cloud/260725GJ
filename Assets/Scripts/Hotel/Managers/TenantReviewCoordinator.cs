@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hotel.Runtime;
 using UnityEngine;
@@ -19,6 +20,7 @@ public class TenantReviewCoordinator : MonoBehaviour
     private GameRunState _runState;
     private TenantReviewCandidateSO[] _shuffledOrder;
     private Dictionary<string, TenantReviewCandidateSO> _candidateLookup;
+    private Action _onReviewResolved;
     private bool _panelActive;
 
     private void Awake()
@@ -79,27 +81,26 @@ public class TenantReviewCoordinator : MonoBehaviour
         return result;
     }
 
-    private void OnEnable()
+
+
+
+
+private void OnPhaseEntered(PhaseEnterData data)
     {
-        if (onPhaseEntered != null)
-            onPhaseEntered.Register(OnPhaseEntered);
+        // Presentation is owned by EventManager's shared queue.
     }
 
-    private void OnDisable()
+    public bool TryBeginReview(Action onResolved)
     {
-        if (onPhaseEntered != null)
-            onPhaseEntered.Unregister(OnPhaseEntered);
-    }
+        if (_panelActive || _runState == null || _shuffledOrder == null)
+            return false;
 
-    private void OnPhaseEntered(PhaseEnterData data)
-    {
-        if (data.phase != GamePhase.Dawn) return;
-        if (_runState == null || _shuffledOrder == null) return;
+        if (!TryGetNextCandidate(out var candidate))
+            return false;
 
-        if (TryGetNextCandidate(out var candidate))
-        {
-            ShowReview(candidate);
-        }
+        _onReviewResolved = onResolved;
+        ShowReview(candidate);
+        return true;
     }
 
     public bool HasPendingReview()
@@ -145,20 +146,24 @@ public class TenantReviewCoordinator : MonoBehaviour
             OnReject);
     }
 
-    private void HideReview()
+private void HideReview()
     {
         _panelActive = false;
         if (reviewPanel != null)
             reviewPanel.Hide();
     }
 
-    private void OnConfirm()
+private void OnConfirm()
     {
         if (!_panelActive) return;
+
+        Action resolvedCallback = _onReviewResolved;
+        _onReviewResolved = null;
 
         if (!TryGetNextCandidate(out var candidate))
         {
             HideReview();
+            resolvedCallback?.Invoke();
             return;
         }
 
@@ -184,15 +189,20 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
 
         HideReview();
+        resolvedCallback?.Invoke();
     }
 
-    private void OnReject()
+private void OnReject()
     {
         if (!_panelActive) return;
+
+        Action resolvedCallback = _onReviewResolved;
+        _onReviewResolved = null;
 
         if (!TryGetNextCandidate(out var candidate))
         {
             HideReview();
+            resolvedCallback?.Invoke();
             return;
         }
 
@@ -214,5 +224,6 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
 
         HideReview();
+        resolvedCallback?.Invoke();
     }
 }
