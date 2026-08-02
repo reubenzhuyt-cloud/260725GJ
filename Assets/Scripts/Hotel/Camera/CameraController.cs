@@ -76,6 +76,9 @@ public class CameraController : MonoBehaviour
 
     private void HandleZoomInput()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (Mathf.Abs(scroll) < 0.001f) return;
 

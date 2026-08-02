@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(10)]
 public class AnchorDropTarget : MonoBehaviour
 {
     [SerializeField] private string roomId;

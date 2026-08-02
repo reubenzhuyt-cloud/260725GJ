@@ -107,6 +107,9 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     public bool TryAssign(string tenantId, string roomId)
     {
+        if (_runState == null)
+            return false;
+
         if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(roomId))
             return false;
 
@@ -152,6 +155,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     public bool IsRoomOccupied(string roomId)
     {
+        if (_runState == null)
+            return false;
         if (!_runState.Rooms.ContainsKey(roomId))
             return false;
         return _runState.Rooms[roomId].OccupantIds.Count > 0;
@@ -159,6 +164,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     public string GetRoomOccupantId(string roomId)
     {
+        if (_runState == null)
+            return null;
         if (!_runState.Rooms.ContainsKey(roomId))
             return null;
         var occupants = _runState.Rooms[roomId].OccupantIds;
