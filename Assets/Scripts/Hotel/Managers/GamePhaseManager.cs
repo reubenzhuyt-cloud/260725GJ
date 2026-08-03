@@ -7,7 +7,7 @@ public class GamePhaseManager : MonoBehaviour
 
     [Header("State")]
     public int currentDay = 1;
-    public GamePhase currentPhase = GamePhase.Day;
+    public GamePhase currentPhase = GamePhase.Dawn;
 
     [Header("Event Channel")]
     public PhaseEnteredEvent onPhaseEntered;
@@ -19,7 +19,7 @@ public class GamePhaseManager : MonoBehaviour
 
         // Force Day on every play — scene serialized value might still be Dawn
         currentDay = 1;
-        currentPhase = GamePhase.Day;
+        currentPhase = GamePhase.Dawn;
     }
 
     private void Start()
@@ -36,12 +36,19 @@ public class GamePhaseManager : MonoBehaviour
 
     public void AdvancePhase()
     {
+        if (!CanAdvancePhase())
+        {
+            Debug.Log("[GamePhaseManager] Advance blocked until review, assignment, and events are complete.");
+            return;
+        }
+
         GamePhase nextPhase = GetNextPhase();
+        int targetDay = currentDay + (nextPhase == GamePhase.Dawn ? 1 : 0);
 
         if (IsHiddenPhase(nextPhase))
         {
             if ((EventManager.Instance != null && EventManager.Instance.HasPreGeneratedEvents(nextPhase))
-                || ShouldForceEnterHiddenPhase(nextPhase))
+                || ShouldForceEnterHiddenPhase(nextPhase, targetDay))
             {
                 // Hidden phase has pre-generated events or pending review → enter it
                 currentPhase = nextPhase;
@@ -70,6 +77,15 @@ public class GamePhaseManager : MonoBehaviour
         NotifyPhaseEntered();
     }
 
+    public bool CanAdvancePhase()
+    {
+        if (TenantReviewCoordinator.Instance != null && TenantReviewCoordinator.Instance.IsReviewActive)
+            return false;
+        if (TenantAssignmentCoordinator.Instance != null && TenantAssignmentCoordinator.Instance.HasUnassignedTenants)
+            return false;
+        return EventManager.Instance == null || EventManager.Instance.IsPhaseComplete;
+    }
+
     private GamePhase GetNextPhase()
     {
         switch (currentPhase)
@@ -87,11 +103,10 @@ public class GamePhaseManager : MonoBehaviour
         return phase == GamePhase.Dawn || phase == GamePhase.Dusk;
     }
 
-    private bool ShouldForceEnterHiddenPhase(GamePhase phase)
+    private bool ShouldForceEnterHiddenPhase(GamePhase phase, int day)
     {
-        if (phase == GamePhase.Dawn && TenantReviewCoordinator.Instance != null)
-            return TenantReviewCoordinator.Instance.HasPendingReview();
-        return false;
+        return TenantReviewCoordinator.Instance != null
+            && TenantReviewCoordinator.Instance.HasScheduledReview(day, phase);
     }
 
     private GamePhase GetPhaseAfterHidden(GamePhase hiddenPhase)

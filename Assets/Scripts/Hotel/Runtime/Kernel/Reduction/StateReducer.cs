@@ -31,6 +31,10 @@ namespace Hotel.Runtime
             var plannedDecisionIds = new HashSet<string>();
             var plannedEventIds = new HashSet<string>();
             var assignedTenants = new HashSet<string>();
+            var plannedTenantIds = new HashSet<string>();
+            var plannedCandidateIds = new HashSet<string>();
+            var plannedTenantErosion = new Dictionary<string, float>();
+            var reviewRecords = new List<ReviewDecisionRecord>();
 
             foreach (var c in set.Changes)
             {
@@ -131,15 +135,32 @@ namespace Hotel.Runtime
                 {
                     if (s.Tenants.ContainsKey(add.TenantId))
                         return false;
+                    if (!plannedTenantIds.Add(add.TenantId))
+                        return false;
+                    plannedTenantErosion.Add(add.TenantId, add.InitialErosion);
                     break;
                 }
                 case ResolveCandidateChange resolve:
                 {
                     if (s.ResolvedReviewCandidateIds.Contains(resolve.CandidateId))
                         return false;
+                    if (!plannedCandidateIds.Add(resolve.CandidateId))
+                        return false;
+                    if (resolve.Record != null) reviewRecords.Add(resolve.Record);
                     break;
                 }
                 }
+            }
+
+            foreach (var record in reviewRecords)
+            {
+                if (record.Decision == ReviewDecision.Recruit)
+                {
+                    if (!plannedTenantErosion.TryGetValue(record.CandidateId, out var erosion)
+                        || erosion != record.InitialErosion)
+                        return false;
+                }
+                else if (plannedTenantIds.Contains(record.CandidateId)) return false;
             }
 
             return true;
@@ -223,11 +244,23 @@ namespace Hotel.Runtime
                     s.Tenants[x.TenantId] = new TenantRunState
                     {
                         TenantId = x.TenantId,
-                        DefinitionId = x.DefinitionId
+                        DefinitionId = x.DefinitionId,
+                        TrueErosion = x.InitialErosion
                     };
                     break;
                 case ResolveCandidateChange x:
                     s.ResolvedReviewCandidateIds.Add(x.CandidateId);
+                    if (x.Record != null)
+                    {
+                        s.ReviewHistory.Add(new ReviewDecisionRecord
+                        {
+                            CandidateId = x.Record.CandidateId,
+                            Decision = x.Record.Decision,
+                            Day = x.Record.Day,
+                            Phase = x.Record.Phase,
+                            InitialErosion = x.Record.InitialErosion
+                        });
+                    }
                     break;
             }
         }

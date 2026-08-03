@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: tenant_gamma
   m_EditorClassIdentifier: 
   candidateId: tenant_gamma
+  portrait: {fileID: 0}
+  ability: 0
+  activityType: 0
   displayName: "\u738B\u5927\u5988"
   avatarColor: {r: 0.3, g: 0.4, b: 0.9, a: 1}
   shortDescription: "王大妈，五十五岁，退休小学语文教师，在这个小区住了快二十年。小区里公认的万事通，谁家孩子上学、谁家老人看病、谁家夫妻吵架拌嘴她都门儿清，比居委会主任还了解情况。每天傍晚六点半准时在楼下领舞广场舞，音响声音偏大，低层住户苦不堪言，投诉不断她却我行我素。为人热心肠，但热心过头，逢人就问有没有对象，主动帮邻居张罗介绍相亲，口头禅是我这都是为你好。嗓门虽然不如赵铁柱大，但胜在话多嘴碎，能拉着路过的邻居聊上一个小时不带重样的。穿着打扮讲究体面，永远烫着整齐的卷发，出门必穿碎花连衣裙配珍珠项链，活脱脱一个精致的老太太。"

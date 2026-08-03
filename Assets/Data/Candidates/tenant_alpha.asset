@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: tenant_alpha
   m_EditorClassIdentifier: 
   candidateId: tenant_alpha
+  portrait: {fileID: 0}
+  ability: 3
+  activityType: 0
   displayName: "\u8D75\u94C1\u67F1"
   avatarColor: {r: 0.9, g: 0.3, b: 0.3, a: 1}
   shortDescription: "赵铁柱，六十二岁，原钢铁厂退休老工人。嗓门洪亮，中气十足，整栋楼都能听见他打电话的声音。为人仗义豪爽，邻里有困难第一个冲上去帮忙，从不计较个人得失。退休后最大的爱好就是在阳台养鸽子，二十多只信鸽咕咕叫个不停，鸽子羽毛和绒毛经常飘到楼下晾衣架上，邻居们怨声载道他也不在乎。夏天永远是白背心配大裤衩，冬天一件军绿色棉袄穿了十几年。平时爱在小区门口下象棋，输了就拍大腿骂娘，赢了就哈哈大笑。虽然小毛病不少，但骨子里是个热心肠的好人，谁家有大事小情他总是第一个到场张罗。"

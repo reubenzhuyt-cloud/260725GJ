@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: tenant_delta
   m_EditorClassIdentifier: 
   candidateId: tenant_delta
+  portrait: {fileID: 0}
+  ability: 5
+  activityType: 0
   displayName: "\u9648\u6D69\u7136"
   avatarColor: {r: 0.95, g: 0.75, b: 0.2, a: 1}
   shortDescription: "陈浩然，三十岁，外卖骑手，来自河南农村的一个小县城。每天早出晚归，风雨无阻，骑着电动车穿梭在城市的大街小巷。为人老实本分，从不拖欠房租，每个月一号准时转账，水电费也从来不赖账。房间里堆满了各种外卖保温箱，大大小小五六个，说是公司备用的，实际上已经占了半个客厅。偶尔深更半夜回来，楼道里碰倒自行车，动静大得像小型地震，惹得楼下住户直骂。手机里装了好几个接单软件，吃饭永远在赶时间，狼吞虎咽五分钟解决一顿饭。皮肤晒得黝黑，手上全是被寒风吹裂的口子，但从不叫苦叫累。"

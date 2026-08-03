@@ -1,4 +1,5 @@
 using UnityEngine;
+using Hotel.Runtime;
 
 [CreateAssetMenu(fileName = "TenantReviewCandidate", menuName = "Configs/TenantReviewCandidate")]
 public class TenantReviewCandidateSO : ScriptableObject
@@ -8,7 +9,12 @@ public class TenantReviewCandidateSO : ScriptableObject
 
     [Header("Display")]
     public string displayName;
+    public Sprite portrait;
     public Color avatarColor = Color.white;
+
+    [Header("Gameplay Information")]
+    public TenantAbility ability;
+    public TenantActivityType activityType;
 
     [Header("Descriptions")]
     [TextArea(2, 4)]

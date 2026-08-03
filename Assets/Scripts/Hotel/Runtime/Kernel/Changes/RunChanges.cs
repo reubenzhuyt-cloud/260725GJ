@@ -94,15 +94,27 @@ namespace Hotel.Runtime
 
     public sealed class AddTenantChange : RunChange
     {
-        public AddTenantChange(string tenantId, string definitionId) { TenantId = tenantId; DefinitionId = definitionId; }
+        public AddTenantChange(string tenantId, string definitionId, float initialErosion = 0f)
+        {
+            TenantId = tenantId;
+            DefinitionId = definitionId;
+            InitialErosion = initialErosion;
+        }
         public string TenantId { get; }
         public string DefinitionId { get; }
+        public float InitialErosion { get; }
     }
 
     public sealed class ResolveCandidateChange : RunChange
     {
         public ResolveCandidateChange(string candidateId) { CandidateId = candidateId; }
+        public ResolveCandidateChange(ReviewDecisionRecord record)
+        {
+            Record = record;
+            CandidateId = record?.CandidateId;
+        }
         public string CandidateId { get; }
+        public ReviewDecisionRecord Record { get; }
     }
 
     public sealed class AuthorizedChangeSet

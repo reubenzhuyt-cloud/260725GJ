@@ -31,12 +31,29 @@ public class NextPhasePanel : MonoBehaviour
             onPopupEvent.Register(OnEventTriggered);
     }
 
+    private void Start()
+    {
+        if (EventManager.Instance != null)
+            EventManager.Instance.PhaseProcessingStarted += OnPhaseProcessingStarted;
+    }
+
     private void OnDisable()
     {
         if (onEventQueueEmpty != null)
             onEventQueueEmpty.Unregister(OnQueueEmpty);
         if (onPopupEvent != null)
             onPopupEvent.Unregister(OnEventTriggered);
+    }
+
+    private void OnDestroy()
+    {
+        if (EventManager.Instance != null)
+            EventManager.Instance.PhaseProcessingStarted -= OnPhaseProcessingStarted;
+    }
+
+    private void OnPhaseProcessingStarted()
+    {
+        SetVisible(false);
     }
 
     private void OnEventTriggered(PopupData data)

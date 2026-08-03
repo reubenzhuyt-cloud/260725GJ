@@ -36,6 +36,32 @@ namespace Hotel.Runtime
         Night
     }
 
+    public enum ReviewDecision
+    {
+        Recruit,
+        Reject
+    }
+
+    public enum TenantAbility
+    {
+        None,
+        Doctor,
+        Cook,
+        Engineer,
+        NightWatch,
+        FormerEmployee,
+        Merchant,
+        Carpenter,
+        Farmer
+    }
+
+    public enum TenantActivityType
+    {
+        DayActive,
+        NightActive,
+        AllDay
+    }
+
     public enum PhaseLifecycleState
     {
         Entered,
@@ -80,6 +106,16 @@ namespace Hotel.Runtime
         public bool RequiresDecision;
         public bool Resolved;
         public string OptionId;
+    }
+
+    [Serializable]
+    public sealed class ReviewDecisionRecord
+    {
+        public string CandidateId;
+        public ReviewDecision Decision;
+        public int Day;
+        public HotelPhase Phase;
+        public float InitialErosion;
     }
 
     [Serializable]
@@ -134,6 +170,7 @@ namespace Hotel.Runtime
         public Dictionary<string, ResourceRunState> Resources = new Dictionary<string, ResourceRunState>();
         public RunSummaryState Summary = new RunSummaryState();
         public List<string> ResolvedReviewCandidateIds = new List<string>();
+        public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
 
         public static GameRunState New(RunId id, int seed = 1)
         {

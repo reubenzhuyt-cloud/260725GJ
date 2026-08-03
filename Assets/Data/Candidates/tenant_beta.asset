@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: tenant_beta
   m_EditorClassIdentifier: 
   candidateId: tenant_beta
+  portrait: {fileID: 0}
+  ability: 0
+  activityType: 1
   displayName: "\u6797\u5C0F\u96E8"
   avatarColor: {r: 0.3, g: 0.8, b: 0.3, a: 1}
   shortDescription: "林小雨，二十六岁，自由职业插画师。性格安静内向，极少与人交流，见了邻居只是微微点头便匆匆走过。白天几乎见不到人影，窗帘拉得严严实实，凌晨两三点房间里还亮着暖黄的灯，画笔在数位板上沙沙作响。阳台上种满了各式各样的多肉植物，每一盆都细心打理得井井有条，还贴着手写的小标签。偶尔会画邻居的猫咪，画得栩栩如生，邻居看了赞不绝口她却红着脸跑回屋里。深夜房间里偶尔传来轻声哼歌，旋律优美却透着一丝旁人听不懂的忧伤。穿着打扮文艺清新，总是戴着大耳机，沉浸在自己的世界里不愿被打扰。"

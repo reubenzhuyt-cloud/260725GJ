@@ -1,10 +1,11 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class EventManager : MonoBehaviour
 {
     public static EventManager Instance { get; private set; }
+    public event System.Action PhaseProcessingStarted;
+    public bool IsPhaseComplete { get; private set; }
 
     [Header("Event Pools (drag SO assets here)")]
     public List<EventConfig> dayEvents = new List<EventConfig>();
@@ -19,17 +20,13 @@ public class EventManager : MonoBehaviour
     [Header("SO Channels")]
     public GamePopupEvent onPopupEvent;
     public EventProcessedEvent onEventProcessed;
-
-    [Header("Tenant Review")]
-    public TenantReviewCoordinator tenantReviewCoordinator;
     public EventQueueEmptyEvent onEventQueueEmpty;
 
     [Header("Listener")]
     public PhaseEnteredEvent onPhaseEntered;
 
     private Queue<EventConfig> eventQueue = new Queue<EventConfig>();
-    private Coroutine _advanceRoutine;
-    private bool isProcessing = false;
+    private bool waitingForPhaseGate;
 
     private Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents = 
         new Dictionary<GamePhase, List<EventConfig>>();
@@ -48,6 +45,14 @@ public class EventManager : MonoBehaviour
             onEventProcessed.Register(OnEventProcessed);
     }
 
+    private void Start()
+    {
+        if (TenantReviewCoordinator.Instance != null)
+            TenantReviewCoordinator.Instance.ReviewBatchCompleted += OnReviewBatchCompleted;
+        if (TenantAssignmentCoordinator.Instance != null)
+            TenantAssignmentCoordinator.Instance.AssignmentChanged += OnAssignmentChanged;
+    }
+
     private void OnDisable()
     {
         if (onPhaseEntered != null)
@@ -56,14 +61,21 @@ public class EventManager : MonoBehaviour
             onEventProcessed.Unregister(OnEventProcessed);
     }
 
-private void OnPhaseEntered(PhaseEnterData data)
+    private void OnDestroy()
     {
-        if (_advanceRoutine != null)
-        {
-            StopCoroutine(_advanceRoutine);
-            _advanceRoutine = null;
-        }
+        if (TenantReviewCoordinator.Instance != null)
+            TenantReviewCoordinator.Instance.ReviewBatchCompleted -= OnReviewBatchCompleted;
+        if (TenantAssignmentCoordinator.Instance != null)
+            TenantAssignmentCoordinator.Instance.AssignmentChanged -= OnAssignmentChanged;
+        if (Instance == this)
+            Instance = null;
+    }
 
+    private void OnPhaseEntered(PhaseEnterData data)
+    {
+        IsPhaseComplete = false;
+        waitingForPhaseGate = false;
+        PhaseProcessingStarted?.Invoke();
         eventQueue.Clear();
 
         if (preGeneratedEvents.ContainsKey(data.phase))
@@ -72,22 +84,55 @@ private void OnPhaseEntered(PhaseEnterData data)
                 eventQueue.Enqueue(config);
         }
 
-        Debug.Log($"[EventManager] Phase {data.phase}: queue={eventQueue.Count}");
+        bool hasEvents = eventQueue.Count > 0;
+        Debug.Log($"[EventManager] Phase {data.phase}: hasEvents={hasEvents}, queue={eventQueue.Count}");
 
-        if (data.phase == GamePhase.Dawn && tenantReviewCoordinator != null && tenantReviewCoordinator.TryBeginReview(OnTenantReviewResolved))
+        var reviewPending = TenantReviewCoordinator.Instance != null
+            && TenantReviewCoordinator.Instance.HasScheduledReview(data.day, data.phase);
+        var assignmentPending = TenantAssignmentCoordinator.Instance != null
+            && TenantAssignmentCoordinator.Instance.HasUnassignedTenants;
+
+        if (reviewPending || assignmentPending)
         {
-            isProcessing = true;
-            return;
+            waitingForPhaseGate = true;
+            Debug.Log($"[EventManager] Waiting for phase gate: review={reviewPending}, assignment={assignmentPending}");
         }
-
-        if (eventQueue.Count > 0)
+        else if (hasEvents)
         {
-            isProcessing = true;
             ProcessNextEvent();
         }
         else
         {
-            isProcessing = false;
+            NotifyQueueEmpty();
+        }
+    }
+
+    private void OnReviewBatchCompleted()
+    {
+        TryReleasePhaseGate();
+    }
+
+    private void OnAssignmentChanged()
+    {
+        TryReleasePhaseGate();
+    }
+
+    private void TryReleasePhaseGate()
+    {
+        if (!waitingForPhaseGate)
+            return;
+        if (TenantReviewCoordinator.Instance != null && TenantReviewCoordinator.Instance.IsReviewActive)
+            return;
+        if (TenantAssignmentCoordinator.Instance != null && TenantAssignmentCoordinator.Instance.HasUnassignedTenants)
+            return;
+
+        waitingForPhaseGate = false;
+        if (eventQueue.Count > 0)
+        {
+            ProcessNextEvent();
+        }
+        else
+        {
             NotifyQueueEmpty();
         }
     }
@@ -159,11 +204,10 @@ private void OnPhaseEntered(PhaseEnterData data)
         return result;
     }
 
-private void ProcessNextEvent()
+    private void ProcessNextEvent()
     {
         if (eventQueue.Count == 0)
         {
-            isProcessing = false;
             NotifyQueueEmpty();
             return;
         }
@@ -172,15 +216,9 @@ private void ProcessNextEvent()
         TriggerEvent(config);
     }
 
-private void TriggerEvent(EventConfig config)
+    private void TriggerEvent(EventConfig config)
     {
-        if (onPopupEvent == null)
-        {
-            Debug.LogError("[EventManager] Missing popup event channel; cannot present event");
-            isProcessing = false;
-            NotifyQueueEmpty();
-            return;
-        }
+        if (onPopupEvent == null) return;
 
         PopupData data = new PopupData
         {
@@ -214,34 +252,15 @@ private void TriggerEvent(EventConfig config)
         Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
     }
 
-private void OnEventProcessed(string eventId)
+    private void OnEventProcessed(string eventId)
     {
         Debug.Log($"[EventManager] Event processed: {eventId}");
-        BeginAdvanceAfterDelay();
-    }
-
-    private void OnTenantReviewResolved()
-    {
-        Debug.Log("[EventManager] Tenant review resolved");
-        BeginAdvanceAfterDelay();
-    }
-
-    private void BeginAdvanceAfterDelay()
-    {
-        if (_advanceRoutine != null)
-            StopCoroutine(_advanceRoutine);
-        _advanceRoutine = StartCoroutine(AdvanceAfterDelay());
-    }
-
-    private IEnumerator AdvanceAfterDelay()
-    {
-        yield return new WaitForSeconds(0.3f);
-        _advanceRoutine = null;
         ProcessNextEvent();
     }
 
     private void NotifyQueueEmpty()
     {
+        IsPhaseComplete = true;
         Debug.Log("[EventManager] Queue empty");
         if (onEventQueueEmpty != null)
             onEventQueueEmpty.Raise(0);

@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: tenant_epsilon
   m_EditorClassIdentifier: 
   candidateId: tenant_epsilon
+  portrait: {fileID: 0}
+  ability: 6
+  activityType: 1
   displayName: "\u82CF\u5A49\u513F"
   avatarColor: {r: 0.8, g: 0.3, b: 0.8, a: 1}
   shortDescription: "苏婉儿，二十四岁，网络直播主播，主要在某短视频平台做娱乐直播。直播时活力四射，笑容甜美迷人，声音嗲嗲的特别好听，粉丝们都亲切地叫她婉儿宝贝。镜头一关判若两人，安静得像只猫，脸上没什么表情，低头刷手机一言不发。经常半夜直播时突然激动大喊，邻居报警以为发生了刑事案件。房间里堆满了化妆品和各种打光设备，补光灯半夜还亮着，透过门缝射出来格外诡异。穿着打扮精致时尚，妆容永远一丝不苟，但私下里其实邋遢得很，外卖盒子堆了一桌子从来不收拾。"

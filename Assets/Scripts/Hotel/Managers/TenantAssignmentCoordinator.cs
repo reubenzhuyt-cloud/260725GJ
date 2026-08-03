@@ -22,6 +22,9 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         new List<TenantAssignmentItemView>();
 
     public IReadOnlyList<TenantAssignmentItemView> UnassignedTenants => _unassignedTenants;
+    public int UnassignedCount => _unassignedTenants.Count;
+    public int AvailableCapacity => _runState == null ? 0 : Mathf.Max(0, _runState.Rooms.Count - _runState.Tenants.Count);
+    public bool HasUnassignedTenants => UnassignedCount > 0;
 
     private void Awake()
     {

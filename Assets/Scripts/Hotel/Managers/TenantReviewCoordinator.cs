@@ -6,6 +6,8 @@ using UnityEngine;
 public class TenantReviewCoordinator : MonoBehaviour
 {
     public static TenantReviewCoordinator Instance { get; private set; }
+    public event Action ReviewBatchCompleted;
+    public bool IsReviewActive => _panelActive;
 
     [Header("Event Channel")]
     public PhaseEnteredEvent onPhaseEntered;
@@ -20,7 +22,11 @@ public class TenantReviewCoordinator : MonoBehaviour
     private GameRunState _runState;
     private TenantReviewCandidateSO[] _shuffledOrder;
     private Dictionary<string, TenantReviewCandidateSO> _candidateLookup;
-    private Action _onReviewResolved;
+    private IReadOnlyList<VisitorArrival> _arrivalSchedule;
+    private readonly List<TenantReviewCandidateSO> _activeBatch = new List<TenantReviewCandidateSO>();
+    private int _activeBatchIndex;
+    private int _activeDay;
+    private HotelPhase _activePhase;
     private bool _panelActive;
 
     private void Awake()
@@ -47,6 +53,7 @@ public class TenantReviewCoordinator : MonoBehaviour
 
         BuildLookup();
         _shuffledOrder = GetShuffledOrder(_runState.Seed);
+        _arrivalSchedule = VisitorArrivalScheduler.CreateSchedule(_runState.Seed, _shuffledOrder.Length);
     }
 
     private void BuildLookup()
@@ -81,99 +88,172 @@ public class TenantReviewCoordinator : MonoBehaviour
         return result;
     }
 
-
-
-
-
-private void OnPhaseEntered(PhaseEnterData data)
+    private void OnEnable()
     {
-        // Presentation is owned by EventManager's shared queue.
+        if (onPhaseEntered != null)
+            onPhaseEntered.Register(OnPhaseEntered);
     }
 
-    public bool TryBeginReview(Action onResolved)
+    private void OnDisable()
     {
-        if (_panelActive || _runState == null || _shuffledOrder == null)
-            return false;
+        if (onPhaseEntered != null)
+            onPhaseEntered.Unregister(OnPhaseEntered);
+    }
 
-        if (!TryGetNextCandidate(out var candidate))
-            return false;
+    private void OnPhaseEntered(PhaseEnterData data)
+    {
+        if (_runState == null || _shuffledOrder == null || _panelActive) return;
+        if (!TryBuildBatch(data.day, data.phase)) return;
 
-        _onReviewResolved = onResolved;
-        ShowReview(candidate);
-        return true;
+        _activeDay = data.day;
+        _activePhase = ToHotelPhase(data.phase);
+        _activeBatchIndex = 0;
+        ShowCurrentReview();
     }
 
     public bool HasPendingReview()
     {
-        if (_runState == null || _shuffledOrder == null) return false;
-        return TryGetNextCandidate(out _);
+        if (_panelActive) return true;
+        if (GamePhaseManager.Instance == null) return false;
+        return HasScheduledReview(GamePhaseManager.Instance.currentDay, GamePhaseManager.Instance.currentPhase);
     }
 
-    private bool TryGetNextCandidate(out TenantReviewCandidateSO candidate)
+    public bool HasScheduledReview(int day, GamePhase phase)
     {
-        for (int i = 0; i < _shuffledOrder.Length; i++)
+        if (_runState == null || _shuffledOrder == null || _arrivalSchedule == null)
+            return false;
+
+        if (!TryGetArrival(day, phase, out var arrival, out var startIndex))
+            return false;
+
+        var endIndex = Math.Min(startIndex + arrival.VisitorCount, _shuffledOrder.Length);
+        for (var index = startIndex; index < endIndex; index++)
         {
-            string id = _shuffledOrder[i].candidateId;
-            bool resolved = false;
-            for (int j = 0; j < _runState.ResolvedReviewCandidateIds.Count; j++)
-            {
-                if (_runState.ResolvedReviewCandidateIds[j] == id)
-                {
-                    resolved = true;
-                    break;
-                }
-            }
-            if (!resolved)
-            {
-                candidate = _shuffledOrder[i];
+            if (!_runState.ResolvedReviewCandidateIds.Contains(_shuffledOrder[index].candidateId))
                 return true;
-            }
         }
-        candidate = null;
+
         return false;
     }
 
-    private void ShowReview(TenantReviewCandidateSO candidate)
+    private bool TryBuildBatch(int day, GamePhase phase)
     {
-        if (reviewPanel == null) return;
+        _activeBatch.Clear();
+        if (!TryGetArrival(day, phase, out var arrival, out var startIndex))
+            return false;
+
+        var endIndex = Math.Min(startIndex + arrival.VisitorCount, _shuffledOrder.Length);
+        for (var index = startIndex; index < endIndex; index++)
+        {
+            var candidate = _shuffledOrder[index];
+            if (!_runState.ResolvedReviewCandidateIds.Contains(candidate.candidateId))
+                _activeBatch.Add(candidate);
+        }
+
+        return _activeBatch.Count > 0;
+    }
+
+    private bool TryGetArrival(int day, GamePhase phase, out VisitorArrival arrival, out int startIndex)
+    {
+        startIndex = 0;
+        var runtimePhase = ToHotelPhase(phase);
+        for (var index = 0; index < _arrivalSchedule.Count; index++)
+        {
+            var scheduled = _arrivalSchedule[index];
+            if (scheduled.Day == day && scheduled.Phase == runtimePhase)
+            {
+                arrival = scheduled;
+                return true;
+            }
+            startIndex += scheduled.VisitorCount;
+        }
+
+        arrival = default;
+        return false;
+    }
+
+    private static HotelPhase ToHotelPhase(GamePhase phase)
+    {
+        return phase switch
+        {
+            GamePhase.Dawn => HotelPhase.Dawn,
+            GamePhase.Dusk => HotelPhase.Dusk,
+            GamePhase.Night => HotelPhase.Night,
+            _ => HotelPhase.Day,
+        };
+
+    }
+
+    private void ShowCurrentReview()
+    {
+        if (_activeBatchIndex >= _activeBatch.Count)
+        {
+            CompleteBatch();
+            return;
+        }
+        if (reviewPanel == null)
+        {
+            Debug.LogError("[TenantReviewCoordinator] Review panel is not assigned.");
+            CompleteBatch();
+            return;
+        }
+
+        var candidate = _activeBatch[_activeBatchIndex];
+        var canRecruit = HasRecruitmentCapacity();
         _panelActive = true;
         reviewPanel.Show(
             candidate.displayName,
+            candidate.portrait,
             candidate.avatarColor,
+            candidate.ability,
+            candidate.activityType,
             candidate.shortDescription,
             candidate.detailedDescription,
+            canRecruit,
+            canRecruit ? null : "旅馆没有空房，无法招募。",
             OnConfirm,
             OnReject);
     }
 
-private void HideReview()
+    private bool HasRecruitmentCapacity()
+    {
+        if (_runState == null) return false;
+        return _runState.Tenants.Count < _runState.Rooms.Count;
+    }
+
+    private void HideReview()
     {
         _panelActive = false;
         if (reviewPanel != null)
             reviewPanel.Hide();
     }
 
-private void OnConfirm()
+    private void OnConfirm()
     {
         if (!_panelActive) return;
-
-        Action resolvedCallback = _onReviewResolved;
-        _onReviewResolved = null;
-
-        if (!TryGetNextCandidate(out var candidate))
+        if (!HasRecruitmentCapacity())
         {
-            HideReview();
-            resolvedCallback?.Invoke();
+            ShowCurrentReview();
             return;
         }
+
+        var candidate = _activeBatch[_activeBatchIndex];
+        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId);
 
         var changeSet = AuthorizedChangeSet.Domain(
             _runState.RunId,
             _runState.StateVersion,
             "TenantReviewCoordinator",
             "ConfirmCandidate");
-        changeSet.Add(new AddTenantChange(candidate.candidateId, candidate.candidateId));
-        changeSet.Add(new ResolveCandidateChange(candidate.candidateId));
+        changeSet.Add(new AddTenantChange(candidate.candidateId, candidate.candidateId, initialErosion));
+        changeSet.Add(new ResolveCandidateChange(new ReviewDecisionRecord
+        {
+            CandidateId = candidate.candidateId,
+            Decision = ReviewDecision.Recruit,
+            Day = _activeDay,
+            Phase = _activePhase,
+            InitialErosion = initialErosion
+        }));
 
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
         if (result.Succeeded)
@@ -188,30 +268,30 @@ private void OnConfirm()
             Debug.LogError($"[TenantReviewCoordinator] Failed to commit confirm for: {candidate.displayName}");
         }
 
-        HideReview();
-        resolvedCallback?.Invoke();
+        if (result.Succeeded)
+            AdvanceBatch();
     }
 
-private void OnReject()
+    private void OnReject()
     {
         if (!_panelActive) return;
 
-        Action resolvedCallback = _onReviewResolved;
-        _onReviewResolved = null;
-
-        if (!TryGetNextCandidate(out var candidate))
-        {
-            HideReview();
-            resolvedCallback?.Invoke();
-            return;
-        }
+        var candidate = _activeBatch[_activeBatchIndex];
+        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId);
 
         var changeSet = AuthorizedChangeSet.Domain(
             _runState.RunId,
             _runState.StateVersion,
             "TenantReviewCoordinator",
             "RejectCandidate");
-        changeSet.Add(new ResolveCandidateChange(candidate.candidateId));
+        changeSet.Add(new ResolveCandidateChange(new ReviewDecisionRecord
+        {
+            CandidateId = candidate.candidateId,
+            Decision = ReviewDecision.Reject,
+            Day = _activeDay,
+            Phase = _activePhase,
+            InitialErosion = initialErosion
+        }));
 
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
         if (result.Succeeded)
@@ -223,7 +303,21 @@ private void OnReject()
             Debug.LogError($"[TenantReviewCoordinator] Failed to commit reject for: {candidate.displayName}");
         }
 
+        if (result.Succeeded)
+            AdvanceBatch();
+    }
+
+    private void AdvanceBatch()
+    {
+        _activeBatchIndex++;
+        ShowCurrentReview();
+    }
+
+    private void CompleteBatch()
+    {
         HideReview();
-        resolvedCallback?.Invoke();
+        _activeBatch.Clear();
+        _activeBatchIndex = 0;
+        ReviewBatchCompleted?.Invoke();
     }
 }
