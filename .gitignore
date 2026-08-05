@@ -114,7 +114,7 @@ InitTestScene*.unity*
 opencode.json
 
 # Unity dir monitor sync file
-~UnityDirMonSyncFile~
+~UnityDirMonSyncFile~*
 
 # MCP for Unity (coplaydev)
 /Packages/com.coplaydev.unity-mcp/
