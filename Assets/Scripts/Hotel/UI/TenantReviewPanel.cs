@@ -11,6 +11,7 @@ public class TenantReviewPanel : MonoBehaviour
     public TextMeshProUGUI nameLabel;
     public TextMeshProUGUI shortDescriptionLabel;
     public TextMeshProUGUI detailedDescriptionLabel;
+    public ScrollRect detailedDescriptionScroll;
     public Button confirmButton;
     public Button rejectButton;
 
@@ -23,7 +24,8 @@ public class TenantReviewPanel : MonoBehaviour
         if (avatarImage != null)
             _fallbackAvatarSprite = avatarImage.sprite;
 
-        gameObject.SetActive(false);
+        // Activation is controlled externally (TenantReviewCoordinator), following
+        // the Event popup pattern — the panel is inactive by default in the scene.
 
         if (confirmButton != null)
         {
@@ -72,7 +74,18 @@ public class TenantReviewPanel : MonoBehaviour
         if (confirmButton != null)
             confirmButton.interactable = canRecruit;
 
-        gameObject.SetActive(true);
+        // NOTE: Activation (SetActive) is handled by the external controller
+        // (TenantReviewCoordinator) before calling Show, matching the Event popup
+        // pattern. The panel must already be active for the layout reset below.
+
+        // Force the layout pass so the ContentSizeFitter inside the scroll view has
+        // its final content height before resetting, otherwise the deferred layout
+        // rebuild would overwrite the scroll position. Default to the top on show.
+        if (detailedDescriptionScroll != null)
+        {
+            Canvas.ForceUpdateCanvases();
+            detailedDescriptionScroll.verticalNormalizedPosition = 1f;
+        }
     }
 
     private static string GetAbilityLabel(TenantAbility ability)
@@ -107,7 +120,7 @@ public class TenantReviewPanel : MonoBehaviour
     {
         _onConfirm = null;
         _onReject = null;
-        gameObject.SetActive(false);
+        // Deactivation is handled externally by TenantReviewCoordinator.
     }
 
     private void HandleConfirm()
