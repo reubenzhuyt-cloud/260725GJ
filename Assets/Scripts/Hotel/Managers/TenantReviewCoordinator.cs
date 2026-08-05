@@ -67,6 +67,22 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
     }
 
+    public bool TryGetCandidatePresentation(string candidateId, out string displayName, out Color color)
+    {
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            var candidate = candidates[i];
+            if (candidate == null || candidate.candidateId != candidateId) continue;
+            displayName = candidate.displayName;
+            color = candidate.avatarColor;
+            return true;
+        }
+
+        displayName = candidateId;
+        color = Color.white;
+        return false;
+    }
+
     private TenantReviewCandidateSO[] GetShuffledOrder(int seed)
     {
         var valid = new List<TenantReviewCandidateSO>();

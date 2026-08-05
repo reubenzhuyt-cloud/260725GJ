@@ -51,6 +51,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         for (int i = 1; i <= 9; i++)
         {
             string roomId = string.Format("room_{0:D2}", i);
+            if (_runState.Rooms.ContainsKey(roomId)) continue;
             _runState.Rooms[roomId] = new RoomRunState
             {
                 RoomId = roomId,
@@ -58,6 +59,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             };
         }
 
+        RebuildLoadedTenantViews();
         RebuildUnassigned();
 
         AnchorDropTarget.RefreshAll();
@@ -79,6 +81,25 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         };
         _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
         _tenantOrder.Add(tenantId);
+    }
+
+    private void RebuildLoadedTenantViews()
+    {
+        _displayLookup.Clear();
+        _tenantOrder.Clear();
+
+        foreach (var pair in _runState.Tenants)
+        {
+            string displayName = pair.Key;
+            Color color = Color.white;
+            if (TenantReviewCoordinator.Instance != null)
+                TenantReviewCoordinator.Instance.TryGetCandidatePresentation(pair.Key, out displayName, out color);
+
+            _displayLookup[pair.Key] = new TenantAssignmentItemView(pair.Key, displayName, color);
+            _tenantOrder.Add(pair.Key);
+        }
+
+        _tenantOrder.Sort(StringComparer.Ordinal);
     }
 
     public void RegisterTenant(string tenantId, string displayName, Color color)

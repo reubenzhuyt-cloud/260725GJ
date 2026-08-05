@@ -10,7 +10,7 @@ namespace Hotel.Runtime.Tests
     public sealed class VisitorFlowWiringTests
     {
         [Test]
-        public void BuildStartsFromMainSceneOnly()
+        public void BuildStartsFromMainMenuThenIncludesGameScene()
         {
             var enabledScenes = new List<EditorBuildSettingsScene>();
             foreach (var scene in EditorBuildSettings.scenes)
@@ -19,8 +19,17 @@ namespace Hotel.Runtime.Tests
                     enabledScenes.Add(scene);
             }
 
-            Assert.That(enabledScenes.Count, Is.EqualTo(1));
-            Assert.That(enabledScenes[0].path, Is.EqualTo("Assets/Scenes/MainScene.unity"));
+            Assert.That(enabledScenes.Count, Is.EqualTo(2));
+            Assert.That(enabledScenes[0].path, Is.EqualTo("Assets/Scenes/MainMenu.unity"));
+            Assert.That(enabledScenes[1].path, Is.EqualTo("Assets/Scenes/MainScene.unity"));
+        }
+
+        [Test]
+        public void MainMenuScene_HasMenuController()
+        {
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
+            var coordinator = FindComponentByTypeName(scene, "MainMenuController");
+            Assert.That(coordinator, Is.Not.Null);
         }
 
         [Test]
