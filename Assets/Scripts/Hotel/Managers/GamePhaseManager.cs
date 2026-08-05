@@ -18,8 +18,16 @@ public class GamePhaseManager : MonoBehaviour
         Instance = this;
 
         // Force Day on every play — scene serialized value might still be Dawn
-        currentDay = 1;
-        currentPhase = GamePhase.Dawn;
+        if (SettlementBridge.Instance != null && SettlementBridge.Instance.RunState != null)
+        {
+            currentDay = Mathf.Max(1, SettlementBridge.Instance.RunState.Day);
+            currentPhase = ToGamePhase(SettlementBridge.Instance.RunState.Phase.Current);
+        }
+        else
+        {
+            currentDay = 1;
+            currentPhase = GamePhase.Dawn;
+        }
     }
 
     private void Start()
@@ -135,5 +143,16 @@ public class GamePhaseManager : MonoBehaviour
                 phase = currentPhase
             });
         }
+    }
+
+    private static GamePhase ToGamePhase(Hotel.Runtime.HotelPhase phase)
+    {
+        return phase switch
+        {
+            Hotel.Runtime.HotelPhase.Dawn => GamePhase.Dawn,
+            Hotel.Runtime.HotelPhase.Dusk => GamePhase.Dusk,
+            Hotel.Runtime.HotelPhase.Night => GamePhase.Night,
+            _ => GamePhase.Day,
+        };
     }
 }

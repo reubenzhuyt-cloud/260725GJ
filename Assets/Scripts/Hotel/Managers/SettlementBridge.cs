@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hotel.Runtime;
 using Hotel.Authoring.Resources;
@@ -30,13 +31,16 @@ public class SettlementBridge : MonoBehaviour
         Instance = this;
 
         _reducer = new StateReducer();
-        _runState = GameRunState.New(new RunId("main_run"), 1);
+        GameLaunchContext.TryConsume(out var loadedState, out _);
+        _runState = loadedState ?? GameRunState.New(new RunId(Guid.NewGuid().ToString("N")), Environment.TickCount);
 
-        _lastPhase = GamePhase.Day;
+        _lastSettlementDay = _runState.Day;
+        _lastPhase = ToGamePhase(_runState.Phase.Current);
 
         foreach (var def in resourceDefinitions)
         {
             if (def == null) continue;
+            if (_runState.Resources.ContainsKey(def.resourceId)) continue;
             _runState.Resources[def.resourceId] = new ResourceRunState
             {
                 ResourceId = def.resourceId,
@@ -72,13 +76,25 @@ public class SettlementBridge : MonoBehaviour
             return;
         }
 
-        if (_lastPhase == GamePhase.Night && data.day > _lastSettlementDay)
+        bool crossedNewDayBoundary = _lastPhase == GamePhase.Night && data.day > _lastSettlementDay;
+        bool completedNewDaySettlement = false;
+        if (crossedNewDayBoundary)
         {
             if (ExecuteFoodSettlement(data.day))
+            {
                 _lastSettlementDay = data.day;
+                completedNewDaySettlement = true;
+            }
         }
 
+        _runState.Day = data.day;
+        _runState.Phase.Current = ToHotelPhase(data.phase);
+        _runState.Phase.Lifecycle = PhaseLifecycleState.Entered;
         _lastPhase = data.phase;
+
+        bool shouldAutosave = data.phase == GamePhase.Dawn || completedNewDaySettlement;
+        if (shouldAutosave && !SaveGameService.TrySave(_runState, out var error))
+            Debug.LogError($"[SettlementBridge] Dawn autosave failed: {error}");
     }
 
     private bool ExecuteFoodSettlement(int day)
@@ -146,5 +162,27 @@ public class SettlementBridge : MonoBehaviour
     public int GetResourceAmount(string resourceId)
     {
         return ResourceService.GetAmount(_runState, resourceId);
+    }
+
+    private static HotelPhase ToHotelPhase(GamePhase phase)
+    {
+        switch (phase)
+        {
+            case GamePhase.Dawn: return HotelPhase.Dawn;
+            case GamePhase.Dusk: return HotelPhase.Dusk;
+            case GamePhase.Night: return HotelPhase.Night;
+            default: return HotelPhase.Day;
+        }
+    }
+
+    private static GamePhase ToGamePhase(HotelPhase phase)
+    {
+        switch (phase)
+        {
+            case HotelPhase.Dawn: return GamePhase.Dawn;
+            case HotelPhase.Dusk: return GamePhase.Dusk;
+            case HotelPhase.Night: return GamePhase.Night;
+            default: return GamePhase.Day;
+        }
     }
 }
