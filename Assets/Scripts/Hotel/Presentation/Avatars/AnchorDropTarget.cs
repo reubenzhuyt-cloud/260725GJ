@@ -22,14 +22,18 @@ public class AnchorDropTarget : MonoBehaviour
             TenantAssignmentCoordinator.Instance.AssignmentChanged -= Refresh;
     }
 
-    private void Start()
+    private void Awake()
     {
         if (hoverTrigger != null)
             hoverTrigger.tenantIdProvider = () => GetOccupantId();
+    }
+
+    private void Start()
+    {
         Refresh();
     }
 
-    private string GetOccupantId()
+    public string GetOccupantId()
     {
         if (TenantAssignmentCoordinator.Instance == null)
             return null;

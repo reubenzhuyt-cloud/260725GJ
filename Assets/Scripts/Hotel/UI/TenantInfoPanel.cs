@@ -6,19 +6,9 @@ using UnityEngine.UI;
 using TMPro;
 
 public class TenantInfoPanel : MonoBehaviour,
-    IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
+    IPointerEnterHandler, IPointerExitHandler
 {
-    private static TenantInfoPanel _instance;
-
-    public static TenantInfoPanel Instance
-    {
-        get
-        {
-            if (_instance == null)
-                _instance = FindObjectOfType<TenantInfoPanel>(true);
-            return _instance;
-        }
-    }
+    public enum PanelMode { Hidden, Hover, Pinned }
 
     [Header("UI References")]
     public TextMeshProUGUI nameLabel;
@@ -30,183 +20,83 @@ public class TenantInfoPanel : MonoBehaviour,
     public TextMeshProUGUI shortDescriptionLabel;
     public TextMeshProUGUI detailedDescriptionLabel;
 
+    public PanelMode Mode { get; private set; } = PanelMode.Hidden;
+    public bool IsPointerOver { get; private set; }
+    public bool IsShowing => gameObject.activeSelf;
+
     private Canvas _canvas;
     private RectTransform _selfRect;
-    private bool _triggerHovering;
-    private float _hidePendingStart;
-    private const float HideDelay = 0.15f;
-
-    public bool OpenedByRightClick { get; private set; }
-    public bool OpenedByHover { get; private set; }
-
     private TMP_Dropdown _dropdown;
-    private float _suppressExternalCloseUntil;
 
     private void Awake()
     {
-        if (_instance != null && _instance != this)
+        _dropdown = GetComponentInChildren<TMP_Dropdown>(true);
+    }
+
+    private void Update()
+    {
+        if (Mode != PanelMode.Pinned)
+            return;
+        if (!Input.GetMouseButtonDown(0))
+            return;
+
+        List<RaycastResult> hits = RaycastAllUnderPointer();
+        if (hits == null)
         {
-            Destroy(gameObject);
+            Hide();
             return;
         }
-        _instance = this;
-        _dropdown = GetComponentInChildren<TMP_Dropdown>(true);
-        if (_dropdown != null)
-            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
+        for (int i = 0; i < hits.Count; i++)
+        {
+            GameObject hitObject = hits[i].gameObject;
+            if (hitObject == null)
+                continue;
+            if (IsInternalHit(hitObject))
+                return;
+            if (hits[i].module is GraphicRaycaster)
+            {
+                Hide();
+                return;
+            }
+        }
+        for (int i = 0; i < hits.Count; i++)
+        {
+            if (hits[i].module is Physics2DRaycaster)
+                return;
+        }
+        Hide();
     }
 
-    private void OnDestroy()
-    {
-        if (_dropdown != null)
-            _dropdown.onValueChanged.RemoveListener(OnDropdownValueChanged);
-        if (_instance == this)
-            _instance = null;
-    }
-
-    private void OnDropdownValueChanged(int value)
-    {
-        SuppressExternalClose();
-        string ddName = _dropdown != null ? _dropdown.name : "null";
-        Debug.Log($"[TenantInfo] OnDropdownValueChanged dropdown={ddName} frame={Time.frameCount} suppressUntil={_suppressExternalCloseUntil.ToString("F3")}");
-    }
-
-    private void SuppressExternalClose()
-    {
-        _suppressExternalCloseUntil = Time.unscaledTime + 0.15f;
-    }
-
-    public bool IsSuppressingExternalClose()
-    {
-        return Time.unscaledTime < _suppressExternalCloseUntil;
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        SuppressExternalClose();
-        GameObject target = eventData.pointerEnter != null ? eventData.pointerEnter : (eventData.pointerCurrentRaycast.gameObject != null ? eventData.pointerCurrentRaycast.gameObject : null);
-        string targetName = target != null ? target.name : "none";
-        Debug.Log($"[TenantInfo] OnPointerDown button={eventData.button} target={targetName} frame={Time.frameCount} suppressUntil={_suppressExternalCloseUntil.ToString("F3")}");
-    }
-
-    public bool IsShowing => gameObject.activeSelf;
-
-    private void EnsureInitialized()
-    {
-        if (_selfRect == null)
-            _selfRect = GetComponent<RectTransform>();
-        if (_canvas == null)
-            _canvas = GetComponentInParent<Canvas>();
-    }
-
-    public void ShowHover(string tenantId, Vector2 screenPoint)
+    public void ShowHover(string tenantId, Vector2 screenPoint, bool preferLeft)
     {
         EnsureInitialized();
-        Debug.Log($"[TenantInfo] ShowHover tenantId={tenantId} frame={Time.frameCount}");
-        TenantReviewCandidateSO candidate = FindCandidate(tenantId);
-        if (candidate == null)
+        if (!FillContent(tenantId))
         {
-            Hide("candidate-null-hover");
+            Hide();
             return;
         }
-
-        ApplyContent(candidate);
-        OpenedByRightClick = false;
-        OpenedByHover = true;
+        Mode = PanelMode.Hover;
         gameObject.SetActive(true);
-        CancelPendingHide();
-        PositionAt(screenPoint);
+        PositionAt(screenPoint, preferLeft);
     }
 
     public void ShowPinned(string tenantId, Vector2 screenPoint)
     {
         EnsureInitialized();
-        Debug.Log($"[TenantInfo] ShowPinned tenantId={tenantId} frame={Time.frameCount}");
-        TenantReviewCandidateSO candidate = FindCandidate(tenantId);
-        if (candidate == null)
+        if (!FillContent(tenantId))
         {
-            Hide("candidate-null-pinned");
+            Hide();
             return;
         }
-
-        ApplyContent(candidate);
-        OpenedByRightClick = true;
-        OpenedByHover = false;
-        _hidePendingStart = 0f;
+        Mode = PanelMode.Pinned;
         gameObject.SetActive(true);
-        PositionAt(screenPoint);
+        PositionAt(screenPoint, false);
     }
 
-    private void ApplyContent(TenantReviewCandidateSO candidate)
+    public void Hide()
     {
-        if (nameLabel != null)
-            nameLabel.text = candidate.displayName;
-        if (tenantImage != null)
-            tenantImage.gameObject.SetActive(candidate.portrait != null);
-        RefreshTagPanel(candidate.ability);
-        if (titleLabel != null)
-            titleLabel.text = GetActivityLabel(candidate.activityType);
-        if (shortDescriptionLabel != null)
-            shortDescriptionLabel.text = candidate.shortDescription ?? string.Empty;
-        if (detailedDescriptionLabel != null)
-            detailedDescriptionLabel.text = candidate.detailedDescription ?? string.Empty;
-    }
-
-    public void Hide(string reason = "panel-disable/other")
-    {
-        Debug.Log($"[TenantInfo] Hide reason={reason} rightClick={OpenedByRightClick} hover={OpenedByHover} frame={Time.frameCount}");
-        _hidePendingStart = 0f;
-        OpenedByRightClick = false;
-        OpenedByHover = false;
+        Mode = PanelMode.Hidden;
         gameObject.SetActive(false);
-    }
-
-    public void SetTriggerHover(bool hovering)
-    {
-        _triggerHovering = hovering;
-        if (OpenedByRightClick)
-            return;
-        if (hovering)
-            CancelPendingHide();
-        else
-            ScheduleHideIfNeeded();
-    }
-
-    public void CancelPendingHide()
-    {
-        _hidePendingStart = 0f;
-    }
-
-    public void ScheduleHideIfNeeded()
-    {
-        if (!IsShowing)
-            return;
-        if (!OpenedByHover)
-            return;
-        if (_triggerHovering || IsPointerOver)
-            return;
-        if (_hidePendingStart <= 0f)
-        {
-            _hidePendingStart = Time.unscaledTime;
-            Debug.Log($"[TenantInfo] ScheduleHideIfNeeded started timer frame={Time.frameCount}");
-        }
-    }
-
-    public bool IsPointerOver { get; private set; }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        IsPointerOver = true;
-        if (OpenedByRightClick)
-            return;
-        CancelPendingHide();
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        IsPointerOver = false;
-        if (OpenedByRightClick)
-            return;
-        ScheduleHideIfNeeded();
     }
 
     public bool IsInternalHit(GameObject hitObject)
@@ -219,6 +109,55 @@ public class TenantInfoPanel : MonoBehaviour,
         if (listRoot != null && hitObject.transform.IsChildOf(listRoot))
             return true;
         return false;
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        IsPointerOver = true;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        IsPointerOver = false;
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_selfRect == null)
+            _selfRect = GetComponent<RectTransform>();
+        if (_canvas == null)
+            _canvas = GetComponentInParent<Canvas>();
+    }
+
+    private bool FillContent(string tenantId)
+    {
+        TenantReviewCandidateSO candidate = FindCandidate(tenantId);
+        if (candidate == null)
+            return false;
+        if (nameLabel != null)
+            nameLabel.text = candidate.displayName;
+        if (tenantImage != null && candidate.portrait != null)
+            tenantImage.sprite = candidate.portrait;
+        RefreshTagPanel(candidate.ability);
+        if (titleLabel != null)
+            titleLabel.text = GetActivityLabel(candidate.activityType);
+        if (shortDescriptionLabel != null)
+            shortDescriptionLabel.text = candidate.shortDescription ?? string.Empty;
+        if (detailedDescriptionLabel != null)
+            detailedDescriptionLabel.text = candidate.detailedDescription ?? string.Empty;
+        return true;
+    }
+
+    private static List<RaycastResult> RaycastAllUnderPointer()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null)
+            return null;
+        PointerEventData ped = new PointerEventData(eventSystem);
+        ped.position = Input.mousePosition;
+        var results = new List<RaycastResult>();
+        eventSystem.RaycastAll(ped, results);
+        return results;
     }
 
     private Transform GetActiveDropdownListRoot()
@@ -239,17 +178,6 @@ public class TenantInfoPanel : MonoBehaviour,
         catch
         {
             return null;
-        }
-    }
-
-    private void Update()
-    {
-        if (_hidePendingStart > 0f && IsShowing && OpenedByHover)
-        {
-            if (Time.unscaledTime - _hidePendingStart >= HideDelay)
-            {
-                Hide("hover-delay");
-            }
         }
     }
 
@@ -321,7 +249,7 @@ public class TenantInfoPanel : MonoBehaviour,
         }
     }
 
-    private void PositionAt(Vector2 screenPoint)
+    private void PositionAt(Vector2 screenPoint, bool preferLeft)
     {
         if (_canvas == null || _selfRect == null)
             return;
@@ -347,25 +275,19 @@ public class TenantInfoPanel : MonoBehaviour,
         Vector2 half = canvasSize * 0.5f;
 
         bool overRight = local.x + size.x > half.x;
+        bool overLeft = local.x - size.x < -half.x;
         bool overBottom = local.y - size.y < -half.y;
 
-        Vector2 target;
-        if (!overRight && !overBottom)
-        {
-            target = new Vector2(local.x + pivot.x * size.x, local.y - (1f - pivot.y) * size.y);
-        }
-        else if (overRight && !overBottom)
-        {
-            target = new Vector2(local.x - (1f - pivot.x) * size.x, local.y - (1f - pivot.y) * size.y);
-        }
-        else if (!overRight && overBottom)
-        {
-            target = new Vector2(local.x + pivot.x * size.x, local.y + pivot.y * size.y);
-        }
-        else
-        {
-            target = new Vector2(local.x - (1f - pivot.x) * size.x, local.y + pivot.y * size.y);
-        }
+        bool placeLeft = preferLeft ? !overLeft : overRight;
+        bool placeUp = overBottom;
+
+        Vector2 target = new Vector2(
+            placeLeft
+                ? local.x - (1f - pivot.x) * size.x
+                : local.x + pivot.x * size.x,
+            placeUp
+                ? local.y + pivot.y * size.y
+                : local.y - (1f - pivot.y) * size.y);
 
         target.x = Mathf.Clamp(target.x, -half.x, half.x);
         target.y = Mathf.Clamp(target.y, -half.y, half.y);

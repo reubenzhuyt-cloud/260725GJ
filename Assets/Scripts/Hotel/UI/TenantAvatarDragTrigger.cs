@@ -11,11 +11,17 @@ public class TenantAvatarDragTrigger : MonoBehaviour,
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
-            return;
-        _finished = false;
-        if (owner != null)
-            owner.BeginAvatarHold();
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            _finished = false;
+            if (owner != null)
+                owner.BeginAvatarHold();
+        }
+        else if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (owner != null)
+                owner.OpenPinnedFromTrigger();
+        }
     }
 
     public void OnPointerUp(PointerEventData eventData)

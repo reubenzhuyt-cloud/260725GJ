@@ -30,6 +30,12 @@ public class TenantAvatarListItem : MonoBehaviour
             nameLabel.text = displayName;
     }
 
+    public void OpenPinnedFromTrigger()
+    {
+        if (hoverTrigger != null)
+            hoverTrigger.OpenPinned();
+    }
+
     private void LateUpdate()
     {
         if (_isDragging && TenantDragOverlay.Instance != null)
@@ -40,6 +46,12 @@ public class TenantAvatarListItem : MonoBehaviour
     {
         _isDragging = true;
         _dragFinished = false;
+
+        if (hoverTrigger != null)
+        {
+            hoverTrigger.HideHoverPanel();
+            hoverTrigger.ClosePinned();
+        }
 
         if (canvasGroup != null)
             canvasGroup.alpha = 0.45f;
