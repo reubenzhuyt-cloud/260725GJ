@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using Hotel.Runtime;
 
 [CreateAssetMenu(fileName = "GamePopupEvent", menuName = "Events/GamePopupEvent")]
 public class GamePopupEvent : GameEvent<PopupData> {}
@@ -13,8 +14,11 @@ public struct PopupData
     public string description;
     public Sprite image;
     public GameEventType eventType;
+    public EventKind eventKind;
     public EventEffect[] confirmEffects;
     public string[] choiceTexts;
     public string[] choiceResults;
+    public string[] choiceEffectTexts;
+    public TenantAbility[][] choiceRequiredTags;
     public EventEffect[][] choiceEffects;
 }
