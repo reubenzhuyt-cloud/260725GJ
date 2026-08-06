@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 
 public class TenantInfoPanel : MonoBehaviour,
-    IPointerEnterHandler, IPointerExitHandler
+    IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
 {
     private static TenantInfoPanel _instance;
 
@@ -40,6 +40,7 @@ public class TenantInfoPanel : MonoBehaviour,
     public bool OpenedByHover { get; private set; }
 
     private TMP_Dropdown _dropdown;
+    private float _suppressExternalCloseUntil;
 
     private void Awake()
     {
@@ -50,12 +51,41 @@ public class TenantInfoPanel : MonoBehaviour,
         }
         _instance = this;
         _dropdown = GetComponentInChildren<TMP_Dropdown>(true);
+        if (_dropdown != null)
+            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }
 
     private void OnDestroy()
     {
+        if (_dropdown != null)
+            _dropdown.onValueChanged.RemoveListener(OnDropdownValueChanged);
         if (_instance == this)
             _instance = null;
+    }
+
+    private void OnDropdownValueChanged(int value)
+    {
+        SuppressExternalClose();
+        string ddName = _dropdown != null ? _dropdown.name : "null";
+        Debug.Log($"[TenantInfo] OnDropdownValueChanged dropdown={ddName} frame={Time.frameCount} suppressUntil={_suppressExternalCloseUntil.ToString("F3")}");
+    }
+
+    private void SuppressExternalClose()
+    {
+        _suppressExternalCloseUntil = Time.unscaledTime + 0.15f;
+    }
+
+    public bool IsSuppressingExternalClose()
+    {
+        return Time.unscaledTime < _suppressExternalCloseUntil;
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        SuppressExternalClose();
+        GameObject target = eventData.pointerEnter != null ? eventData.pointerEnter : (eventData.pointerCurrentRaycast.gameObject != null ? eventData.pointerCurrentRaycast.gameObject : null);
+        string targetName = target != null ? target.name : "none";
+        Debug.Log($"[TenantInfo] OnPointerDown button={eventData.button} target={targetName} frame={Time.frameCount} suppressUntil={_suppressExternalCloseUntil.ToString("F3")}");
     }
 
     public bool IsShowing => gameObject.activeSelf;
@@ -71,10 +101,11 @@ public class TenantInfoPanel : MonoBehaviour,
     public void ShowHover(string tenantId, Vector2 screenPoint)
     {
         EnsureInitialized();
+        Debug.Log($"[TenantInfo] ShowHover tenantId={tenantId} frame={Time.frameCount}");
         TenantReviewCandidateSO candidate = FindCandidate(tenantId);
         if (candidate == null)
         {
-            Hide();
+            Hide("candidate-null-hover");
             return;
         }
 
@@ -89,10 +120,11 @@ public class TenantInfoPanel : MonoBehaviour,
     public void ShowPinned(string tenantId, Vector2 screenPoint)
     {
         EnsureInitialized();
+        Debug.Log($"[TenantInfo] ShowPinned tenantId={tenantId} frame={Time.frameCount}");
         TenantReviewCandidateSO candidate = FindCandidate(tenantId);
         if (candidate == null)
         {
-            Hide();
+            Hide("candidate-null-pinned");
             return;
         }
 
@@ -119,8 +151,9 @@ public class TenantInfoPanel : MonoBehaviour,
             detailedDescriptionLabel.text = candidate.detailedDescription ?? string.Empty;
     }
 
-    public void Hide()
+    public void Hide(string reason = "panel-disable/other")
     {
+        Debug.Log($"[TenantInfo] Hide reason={reason} rightClick={OpenedByRightClick} hover={OpenedByHover} frame={Time.frameCount}");
         _hidePendingStart = 0f;
         OpenedByRightClick = false;
         OpenedByHover = false;
@@ -152,7 +185,10 @@ public class TenantInfoPanel : MonoBehaviour,
         if (_triggerHovering || IsPointerOver)
             return;
         if (_hidePendingStart <= 0f)
+        {
             _hidePendingStart = Time.unscaledTime;
+            Debug.Log($"[TenantInfo] ScheduleHideIfNeeded started timer frame={Time.frameCount}");
+        }
     }
 
     public bool IsPointerOver { get; private set; }
@@ -212,9 +248,7 @@ public class TenantInfoPanel : MonoBehaviour,
         {
             if (Time.unscaledTime - _hidePendingStart >= HideDelay)
             {
-                _hidePendingStart = 0f;
-                gameObject.SetActive(false);
-                OpenedByHover = false;
+                Hide("hover-delay");
             }
         }
     }

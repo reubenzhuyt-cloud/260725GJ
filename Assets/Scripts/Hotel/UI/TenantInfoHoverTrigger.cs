@@ -56,21 +56,46 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         TenantInfoPanel panel = TenantInfoPanel.Instance;
         if (panel == null)
             return;
-        var hits = RaycastAllUnderPointer();
-        if (hits == null)
+        if (panel.IsSuppressingExternalClose())
         {
-            panel.Hide();
+            Debug.Log($"[TenantInfo] HandleExternalClick suppress-return frame={Time.frameCount}");
             return;
         }
-        for (int i = 0; i < hits.Count; i++)
+        var hits = RaycastAllUnderPointer();
+        if (hits != null)
+            Debug.Log($"[TenantInfo] HandleExternalClick uiHits={hits.Count} frame={Time.frameCount}");
+        if (hits != null && hits.Count > 0)
         {
-            GameObject hit = hits[i].gameObject;
-            if (panel.IsInternalHit(hit))
-                return;
-            if (hit == gameObject || hit.transform.IsChildOf(transform))
-                return;
+            for (int i = 0; i < hits.Count; i++)
+            {
+                GameObject hit = hits[i].gameObject;
+                if (hit == null)
+                    continue;
+                Debug.Log($"[TenantInfo]   hit[{i}] {TransformPath(hit.transform)}");
+            }
+            return;
         }
-        panel.Hide();
+        bool worldHit = IsPointerOverWorldObject();
+        Debug.Log($"[TenantInfo] HandleExternalClick no-ui worldHit={worldHit} frame={Time.frameCount}");
+        if (worldHit)
+            return;
+        Debug.Log($"[TenantInfo] HandleExternalClick closing explicit-blank frame={Time.frameCount}");
+        panel.Hide("explicit-blank-click");
+    }
+
+    private static string TransformPath(Transform t)
+    {
+        if (t == null)
+            return "null";
+        var parts = new List<string>();
+        Transform cur = t;
+        while (cur != null)
+        {
+            parts.Add(cur.name);
+            cur = cur.parent;
+        }
+        parts.Reverse();
+        return string.Join("/", parts);
     }
 
     private static List<RaycastResult> RaycastAllUnderPointer()
@@ -83,6 +108,17 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         var results = new List<RaycastResult>();
         eventSystem.RaycastAll(ped, results);
         return results;
+    }
+
+    private static bool IsPointerOverWorldObject()
+    {
+        Camera cam = Camera.main;
+        if (cam == null)
+            return false;
+        Vector3 worldPos = cam.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 point = new Vector2(worldPos.x, worldPos.y);
+        Collider2D hit = Physics2D.OverlapPoint(point);
+        return hit != null;
     }
 
     private bool IsPointerOverWorldTarget()
@@ -124,12 +160,13 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        TenantInfoPanel panel = TenantInfoPanel.Instance;
+        Debug.Log($"[TenantInfo] Trigger.OnPointerDown button={eventData.button} trigger={gameObject.name} rightClick={panel != null && panel.OpenedByRightClick} frame={Time.frameCount}");
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             string tenantId = tenantIdProvider != null ? tenantIdProvider() : null;
             if (string.IsNullOrEmpty(tenantId))
                 return;
-            TenantInfoPanel panel = TenantInfoPanel.Instance;
             if (panel != null)
             {
                 panel.SetTriggerHover(true);
@@ -139,12 +176,10 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         else if (eventData.button == PointerEventData.InputButton.Left && hideOnLeftClick)
         {
             _hovering = false;
-            TenantInfoPanel panel = TenantInfoPanel.Instance;
             if (panel != null)
             {
                 panel.SetTriggerHover(false);
-                if (!panel.OpenedByRightClick)
-                    panel.Hide();
+                panel.Hide("left-trigger-down");
             }
         }
     }

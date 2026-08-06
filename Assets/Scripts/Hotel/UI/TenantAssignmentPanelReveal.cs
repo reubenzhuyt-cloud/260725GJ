@@ -7,6 +7,8 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
     [SerializeField] private float retractedOffset = 64f;
     [SerializeField] private float slideDuration = 0.2f;
     [SerializeField] private float retractDelay = 0.15f;
+    [SerializeField] private GameObject eventPanel;
+    [SerializeField] private GameObject reviewPanel;
 
     private Vector2 expandedPosition;
     private int hoverCount;
@@ -40,7 +42,17 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
         if (!active)
             return;
 
-        bool shouldExpand = hoverCount > 0 || Time.unscaledTime < exitTime + retractDelay;
+        bool overInfoPanel = TenantInfoPanel.Instance != null
+            && TenantInfoPanel.Instance.IsShowing
+            && TenantInfoPanel.Instance.IsPointerOver;
+
+        bool blockAutoExpand = (eventPanel != null && eventPanel.activeInHierarchy)
+            || (reviewPanel != null && reviewPanel.activeInHierarchy);
+
+        bool shouldExpand = (hoverCount > 0
+            || Time.unscaledTime < exitTime + retractDelay
+            || overInfoPanel)
+            && !blockAutoExpand;
         Vector2 target = shouldExpand
             ? expandedPosition
             : expandedPosition + Vector2.right * retractedOffset;
