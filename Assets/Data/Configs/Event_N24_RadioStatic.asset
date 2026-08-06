@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N24_RadioStatic
+  m_EditorClassIdentifier: 
+  eventIndex: 224
+  eventId: n24_radio_static
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_intrusion
+  eventTitle: "广播杂音"
+  eventDescription: "无线电突然响起，里面是模糊不清的人声和尖叫。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【工程师】调试"
+    choiceResult: "工程师调试后听到半句话：\"……它们在等待净化信号……\"。"
+    effectText: "听到半句话：\"……它们在等待净化信号……\""
+    requiredTags:
+    - 3
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，全楼侵蚀+5，黄色房客侵蚀+10。"
+    effectText: "全楼侵蚀+5，黄色房客侵蚀+10"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 5

@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N03_MassVomit
+  m_EditorClassIdentifier: 
+  eventIndex: 203
+  eventId: n03_mass_vomit
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 5
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_medical
+  eventTitle: "集体呕吐"
+  eventDescription: "深夜，食堂方向传来此起彼伏的呕吐声——多人食物中毒。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【医生】+【厨师】协作"
+    choiceResult: "医生+厨师协作，全楼侵蚀+1，消耗5食物+5货币。"
+    effectText: "全楼侵蚀+1，消耗5食物+5货币"
+    requiredTags:
+    - 1
+    - 2
+    choiceEffects:
+    - effectType: 1
+      floatValue: 1
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，全楼房客侵蚀度+5，持续2天。"
+    effectText: "全楼房客侵蚀度+5，持续2天"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 5

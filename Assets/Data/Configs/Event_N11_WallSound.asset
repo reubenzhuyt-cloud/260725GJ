@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N11_WallSound
+  m_EditorClassIdentifier: 
+  eventIndex: 211
+  eventId: n11_wall_sound
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_pollution
+  eventTitle: "墙壁里的声音"
+  eventDescription: "有人在敲击墙壁，一下，两下——但隔壁房间是空的。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【工程师】拆墙检查"
+    choiceResult: "工程师拆墙检查——什么都没有。"
+    effectText: "什么都没有"
+    requiredTags:
+    - 3
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，全楼房客侵蚀+4，该房间无法住人2天。"
+    effectText: "全楼房客侵蚀+4，该房间无法住人2天"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 4

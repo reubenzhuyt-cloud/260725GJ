@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D24_OldDiary
+  m_EditorClassIdentifier: 
+  eventIndex: 124
+  eventId: d24_old_diary
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 3
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "旧日记发现"
+  eventDescription: "在打扫房间时发现了一本旧日记——属于曾经住在这里的人。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "阅读"
+    choiceResult: "阅读，侵蚀+1，获得线索。"
+    effectText: "侵蚀+1，获得线索"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 1
+  - choiceId: B
+    choiceText: "封存"
+    choiceResult: "封存日记。"
+    effectText: "无影响"
+    requiredTags: []
+    choiceEffects: []

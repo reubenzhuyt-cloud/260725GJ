@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N08_NightWander
+  m_EditorClassIdentifier: 
+  eventIndex: 208
+  eventId: n08_night_wander
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 3
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_pollution
+  eventTitle: "夜游"
+  eventDescription: "XXX在半夜打开了其他房间的门，站在门口看着里面熟睡的人。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【守夜人】预警并阻止"
+    choiceResult: "守夜人预警并阻止，被看者侵蚀+2。"
+    effectText: "被看者侵蚀+2"
+    requiredTags:
+    - 4
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，被看房客侵蚀+5，红色房客侵蚀+3。"
+    effectText: "被看房客侵蚀+5，红色房客侵蚀+3"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3

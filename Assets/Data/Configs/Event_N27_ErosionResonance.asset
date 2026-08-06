@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N27_ErosionResonance
+  m_EditorClassIdentifier: 
+  eventIndex: 227
+  eventId: n27_erosion_resonance
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 5
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_erosion
+  eventTitle: "侵蚀共振"
+  eventDescription: "旅馆里的所有灯同时闪烁了几下——一种无形的力量在同层扩散。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【前员工】引导疏散该层"
+    choiceResult: "前员工引导疏散该层，该层侵蚀+3。"
+    effectText: "该层侵蚀+3"
+    requiredTags:
+    - 5
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3
+  - choiceId: A2
+    choiceText: "【守夜人】引导疏散该层"
+    choiceResult: "守夜人引导疏散该层，该层侵蚀+3。"
+    effectText: "该层侵蚀+3"
+    requiredTags:
+    - 4
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，该层所有房客侵蚀+8，红色房客侵蚀+12。"
+    effectText: "该层所有房客侵蚀+8，红色房客侵蚀+12"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 8

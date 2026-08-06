@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N06_Whisper
+  m_EditorClassIdentifier: 
+  eventIndex: 206
+  eventId: n06_whisper
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 10
+    category: night_pollution
+  eventTitle: "低语"
+  eventDescription: "走廊尽头传来低语声，但那里明明没有人。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【前员工】安抚房客"
+    choiceResult: "前员工安抚房客，侵蚀无变化。"
+    effectText: "侵蚀度无变化"
+    requiredTags:
+    - 5
+    choiceEffects: []
+  - choiceId: A2
+    choiceText: "【守夜人】巡查安抚"
+    choiceResult: "守夜人巡查后安抚房客，侵蚀无变化。"
+    effectText: "侵蚀度无变化"
+    requiredTags:
+    - 4
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "低语声持续回荡，全楼房客感到不安。"
+    effectText: "全楼房客侵蚀度+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2

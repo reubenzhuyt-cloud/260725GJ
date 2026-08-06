@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N25_ErosionBurst
+  m_EditorClassIdentifier: 
+  eventIndex: 225
+  eventId: n25_erosion_burst
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 9999
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_erosion
+  eventTitle: "侵蚀爆发"
+  eventDescription: "XXX的侵蚀度急剧恶化——他的身体以不自然的方式扭曲着。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【医生】稳定"
+    choiceResult: "医生处理，消耗5货币，侵蚀度-10，暂时稳定。"
+    effectText: "消耗5货币，侵蚀度-10，暂时稳定"
+    requiredTags:
+    - 1
+    choiceEffects:
+    - effectType: 1
+      floatValue: -10
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，该房客变为完全体伪人，全楼侵蚀+15，次日必须驱逐。"
+    effectText: "该房客变为完全体伪人，全楼侵蚀+15，次日必须驱逐"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 15

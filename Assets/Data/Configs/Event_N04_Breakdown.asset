@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N04_Breakdown
+  m_EditorClassIdentifier: 
+  eventIndex: 204
+  eventId: n04_breakdown
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 5
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_medical
+  eventTitle: "精神崩溃"
+  eventDescription: "XXX开始尖叫，反复用头撞击墙壁，仿佛看到了什么。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【医生】成功安抚"
+    choiceResult: "医生成功安抚，侵蚀度-6，消耗3货币。"
+    effectText: "侵蚀度-6，消耗3货币"
+    requiredTags:
+    - 1
+    choiceEffects:
+    - effectType: 1
+      floatValue: -6
+  - choiceId: A2
+    choiceText: "【教师】成功安抚"
+    choiceResult: "教师成功安抚，侵蚀度-6，消耗3货币。"
+    effectText: "侵蚀度-6，消耗3货币"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -6
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，该房客侵蚀度+20，同层房客侵蚀度+5。"
+    effectText: "该房客侵蚀度+20，同层房客侵蚀度+5"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 5

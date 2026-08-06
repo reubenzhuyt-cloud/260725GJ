@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N01_Fever
+  m_EditorClassIdentifier: 
+  eventIndex: 201
+  eventId: n01_fever
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 3
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_medical
+  eventTitle: "高烧"
+  eventDescription: "半夜，XXX开始高烧不退，身体滚烫，说着胡话。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【医生】进行治疗"
+    choiceResult: "医生进行治疗，侵蚀度-3，次日康复。"
+    effectText: "侵蚀度-3，次日康复"
+    requiredTags:
+    - 1
+    choiceEffects:
+    - effectType: 1
+      floatValue: -3
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，该房客侵蚀度+10，次日效率-50%。"
+    effectText: "该房客侵蚀度+10，次日效率-50%"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 10

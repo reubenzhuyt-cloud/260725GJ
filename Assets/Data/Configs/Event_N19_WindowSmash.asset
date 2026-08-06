@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N19_WindowSmash
+  m_EditorClassIdentifier: 
+  eventIndex: 219
+  eventId: n19_window_smash
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_facility
+  eventTitle: "窗户碎裂"
+  eventDescription: "暴风把窗户吹碎了，冷风和雨水灌进来。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【工程师】临时修补"
+    choiceResult: "工程师临时修补，消耗1货币。"
+    effectText: "消耗1货币"
+    requiredTags:
+    - 3
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，该房间房客侵蚀+8，设施耐久-15%。"
+    effectText: "该房间房客侵蚀+8，设施耐久-15%"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 8

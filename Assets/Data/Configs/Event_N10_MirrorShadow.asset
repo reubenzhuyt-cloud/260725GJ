@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N10_MirrorShadow
+  m_EditorClassIdentifier: 
+  eventIndex: 210
+  eventId: n10_mirror_shadow
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_pollution
+  eventTitle: "镜中影"
+  eventDescription: "走廊镜子里倒映出一张脸——但它不属于在场的任何人。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【前员工】擦除镜子"
+    choiceResult: "前员工擦除镜子，无影响。"
+    effectText: "无影响"
+    requiredTags:
+    - 5
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，全楼房客侵蚀+3。"
+    effectText: "全楼房客侵蚀+3"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3

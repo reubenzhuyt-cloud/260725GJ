@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D14_Theft
+  m_EditorClassIdentifier: 
+  eventIndex: 114
+  eventId: d14_theft
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 3
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "偷窃事件"
+  eventDescription: "有人偷了仓库里的食物。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "全楼搜查"
+    choiceResult: "全楼搜查，全楼侵蚀+2。"
+    effectText: "全楼侵蚀+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2
+  - choiceId: B
+    choiceText: "【守夜人】设陷阱"
+    choiceResult: "守夜人设陷阱。"
+    effectText: "设陷阱"
+    requiredTags:
+    - 4
+    choiceEffects: []
+  - choiceId: C
+    choiceText: "无视"
+    choiceResult: "无视，损失5食物。"
+    effectText: "损失5食物"
+    requiredTags: []
+    choiceEffects: []

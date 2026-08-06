@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N16_FoodAnomaly
+  m_EditorClassIdentifier: 
+  eventIndex: 216
+  eventId: n16_food_anomaly
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 10
+    category: night_behavior
+  eventTitle: "食物异常"
+  eventDescription: "XXX把食物摆成奇怪的形状后才肯吃。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【厨师】重新烹饪"
+    choiceResult: "厨师重新烹饪，侵蚀度-2。"
+    effectText: "侵蚀度-2"
+    requiredTags:
+    - 2
+    choiceEffects:
+    - effectType: 1
+      floatValue: -2
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "房客在怪异的仪式感中进食，侵蚀加深。"
+    effectText: "侵蚀度+5"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 5

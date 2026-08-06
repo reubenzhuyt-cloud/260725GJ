@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D08_FoodDispute
+  m_EditorClassIdentifier: 
+  eventIndex: 108
+  eventId: d08_food_dispute
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 3
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "食物分配争议"
+  eventDescription: "食堂里有人在抱怨：\"为什么他分到的比我们多？\""
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "统一配给"
+    choiceResult: "统一配给，每人少吃一点，全楼侵蚀+1。"
+    effectText: "每人少吃一点，全楼侵蚀+1"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 1
+  - choiceId: B
+    choiceText: "惩罚闹事者"
+    choiceResult: "惩罚闹事者，侵蚀+2。"
+    effectText: "侵蚀+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2
+  - choiceId: C
+    choiceText: "自己不吃让给他们"
+    choiceResult: "自己不吃让给他们，经理侵蚀+2。"
+    effectText: "经理侵蚀+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2

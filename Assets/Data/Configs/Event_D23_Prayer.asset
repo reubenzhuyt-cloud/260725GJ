@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D23_Prayer
+  m_EditorClassIdentifier: 
+  eventIndex: 123
+  eventId: d23_prayer
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "祈祷活动"
+  eventDescription: "几名房客在公共区域组织了一个小型祈祷会。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "支持"
+    choiceResult: "支持，全楼侵蚀-1。"
+    effectText: "全楼侵蚀-1"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -1
+  - choiceId: B
+    choiceText: "制止"
+    choiceResult: "制止，全楼侵蚀+3。"
+    effectText: "全楼侵蚀+3"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3

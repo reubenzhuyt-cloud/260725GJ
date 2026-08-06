@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D07_Argument
+  m_EditorClassIdentifier: 
+  eventIndex: 107
+  eventId: d07_argument
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "房客争吵"
+  eventDescription: "XXX和XXX在走廊里大声争吵。一个说\"他每天晚上都在盯着我\"，另一个说\"你疯了\"。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "介入调解"
+    choiceResult: "介入调解，消耗3食物。"
+    effectText: "消耗3食物"
+    requiredTags: []
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "把两人分别安排到不同楼层"
+    choiceResult: "把两人分别安排到不同楼层。"
+    effectText: "把两人分别安排到不同楼层"
+    requiredTags: []
+    choiceEffects: []
+  - choiceId: C
+    choiceText: "冷处理"
+    choiceResult: "冷处理，全楼侵蚀+1。"
+    effectText: "全楼侵蚀+1"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 1

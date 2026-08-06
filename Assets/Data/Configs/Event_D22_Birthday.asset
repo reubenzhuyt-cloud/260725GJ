@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D22_Birthday
+  m_EditorClassIdentifier: 
+  eventIndex: 122
+  eventId: d22_birthday
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "生日发现"
+  eventDescription: "在XXX的档案里发现——今天是他/她的生日。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "举办小聚会"
+    choiceResult: "举办小聚会，消耗5食物，全楼侵蚀-2。"
+    effectText: "消耗5食物，全楼侵蚀-2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -2
+  - choiceId: B
+    choiceText: "私下送一份小礼物"
+    choiceResult: "私下送一份小礼物，消耗2食物，该房客侵蚀-5。"
+    effectText: "消耗2食物，该房客侵蚀-5"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -5

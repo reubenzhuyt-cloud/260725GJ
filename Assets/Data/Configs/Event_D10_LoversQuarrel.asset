@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D10_LoversQuarrel
+  m_EditorClassIdentifier: 
+  eventIndex: 110
+  eventId: d10_lovers_quarrel
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "情侣争执"
+  eventDescription: "一对情侣在公共区域大声争吵，女方哭着说\"你变了\"。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【教师】介入调解"
+    choiceResult: "教师介入调解，消耗2食物。"
+    effectText: "消耗2食物"
+    requiredTags: []
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "给他们单独房间"
+    choiceResult: "给他们单独房间，消耗1间空房。"
+    effectText: "消耗1间空房"
+    requiredTags: []
+    choiceEffects: []
+  - choiceId: C
+    choiceText: "冷处理"
+    choiceResult: "冷处理。"
+    effectText: "无影响"
+    requiredTags: []
+    choiceEffects: []

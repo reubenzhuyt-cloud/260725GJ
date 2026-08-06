@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_D11_Bullying
+  m_EditorClassIdentifier: 
+  eventIndex: 111
+  eventId: d11_bullying
+  trigger:
+    eligiblePhases: 1
+    kind: 0
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: day_management
+  eventTitle: "霸凌事件"
+  eventDescription: "几个房客在嘲笑XXX，因为他昨晚行为异常。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "制止霸凌"
+    choiceResult: "制止霸凌，全楼侵蚀-2。"
+    effectText: "全楼侵蚀-2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -2
+  - choiceId: B
+    choiceText: "私下安慰受害者"
+    choiceResult: "私下安慰受害者，消耗2货币，该房客侵蚀-3。"
+    effectText: "消耗2货币，该房客侵蚀-3"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: -3
+  - choiceId: C
+    choiceText: "无视"
+    choiceResult: "无视，全楼侵蚀+3。"
+    effectText: "全楼侵蚀+3"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 3

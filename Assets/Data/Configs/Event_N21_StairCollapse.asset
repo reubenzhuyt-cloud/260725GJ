@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_N21_StairCollapse
+  m_EditorClassIdentifier: 
+  eventIndex: 221
+  eventId: n21_stair_collapse
+  trigger:
+    eligiblePhases: 2
+    kind: 0
+    minDay: 20
+    maxDay: 0
+    repeatPolicy: 1
+    cooldownDays: 1
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    baseWeight: 8
+    category: night_facility
+  eventTitle: "楼梯塌陷"
+  eventDescription: "一声巨响——通往二楼的楼梯塌了一半。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【工程师】修复"
+    choiceResult: "工程师修复，消耗8食物+5货币+1天修复。"
+    effectText: "消耗8食物+5货币+1天修复"
+    requiredTags:
+    - 3
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "无人处理"
+    choiceResult: "无人处理，二三楼层被阻断，上层房客侵蚀度+5/天直至修复。"
+    effectText: "二三楼层被阻断，上层房客侵蚀度+5/天直至修复"
+    requiredTags: []
+    choiceEffects: []
