@@ -64,6 +64,13 @@ namespace Hotel.Runtime
         public bool Value { get; }
     }
 
+    public sealed class SetTenantFlagChange : RunChange
+    {
+        public SetTenantFlagChange(string id, int value) { TenantId = id; Flag = value; }
+        public string TenantId { get; }
+        public int Flag { get; }
+    }
+
     public sealed class AdjustTenantErosionChange : RunChange
     {
         public AdjustTenantErosionChange(string id, float delta) { TenantId = id; Delta = delta; }

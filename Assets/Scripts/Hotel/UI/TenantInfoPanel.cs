@@ -20,17 +20,39 @@ public class TenantInfoPanel : MonoBehaviour,
     public TextMeshProUGUI shortDescriptionLabel;
     public TextMeshProUGUI detailedDescriptionLabel;
 
+    [Header("Player Flag")]
+    public TMP_Dropdown flagDropdown;
+    public TextMeshProUGUI flagLabel;
+    public Image flagBackground;
+    public Color[] flagColors;
+    public string[] flagLabels;
+
     public PanelMode Mode { get; private set; } = PanelMode.Hidden;
     public bool IsPointerOver { get; private set; }
     public bool IsShowing => gameObject.activeSelf;
+    public string CurrentTenantId => _currentTenantId;
 
     private Canvas _canvas;
     private RectTransform _selfRect;
+    private CanvasGroup _canvasGroup;
     private TMP_Dropdown _dropdown;
+    private string _currentTenantId;
+    private bool _suppressFlagWrite;
+    private Color _defaultFlagBackgroundColor;
 
     private void Awake()
     {
-        _dropdown = GetComponentInChildren<TMP_Dropdown>(true);
+        _dropdown = flagDropdown;
+        if (flagBackground != null)
+            _defaultFlagBackgroundColor = flagBackground.color;
+        if (flagDropdown != null)
+            flagDropdown.onValueChanged.AddListener(OnFlagChanged);
+    }
+
+    private void OnDestroy()
+    {
+        if (flagDropdown != null)
+            flagDropdown.onValueChanged.RemoveListener(OnFlagChanged);
     }
 
     private void Update()
@@ -75,8 +97,11 @@ public class TenantInfoPanel : MonoBehaviour,
             Hide();
             return;
         }
+        _currentTenantId = tenantId;
         Mode = PanelMode.Hover;
+        ApplyInteractionMode();
         gameObject.SetActive(true);
+        ApplyFlagToPanel(tenantId);
         PositionAt(screenPoint, preferLeft);
     }
 
@@ -88,14 +113,20 @@ public class TenantInfoPanel : MonoBehaviour,
             Hide();
             return;
         }
+        _currentTenantId = tenantId;
         Mode = PanelMode.Pinned;
+        ApplyInteractionMode();
         gameObject.SetActive(true);
+        ApplyFlagToPanel(tenantId);
         PositionAt(screenPoint, false);
     }
 
     public void Hide()
     {
         Mode = PanelMode.Hidden;
+        _currentTenantId = null;
+        IsPointerOver = false;
+        ApplyInteractionMode();
         gameObject.SetActive(false);
     }
 
@@ -129,6 +160,15 @@ public class TenantInfoPanel : MonoBehaviour,
             _canvas = GetComponentInParent<Canvas>();
     }
 
+    private void ApplyInteractionMode()
+    {
+        if (_canvasGroup == null)
+            _canvasGroup = GetComponent<CanvasGroup>();
+        if (_canvasGroup == null)
+            _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        _canvasGroup.blocksRaycasts = Mode == PanelMode.Pinned;
+    }
+
     private bool FillContent(string tenantId)
     {
         TenantReviewCandidateSO candidate = FindCandidate(tenantId);
@@ -158,6 +198,84 @@ public class TenantInfoPanel : MonoBehaviour,
         var results = new List<RaycastResult>();
         eventSystem.RaycastAll(ped, results);
         return results;
+    }
+
+    private void OnFlagChanged(int value)
+    {
+        if (_suppressFlagWrite)
+            return;
+        if (string.IsNullOrEmpty(_currentTenantId))
+            return;
+        WriteFlag(value);
+        if (flagLabel != null)
+            flagLabel.text = GetFlagText(value);
+        ApplyFlagColor(value);
+    }
+
+    private void WriteFlag(int value)
+    {
+        SettlementBridge bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
+            return;
+        if (!bridge.RunState.Tenants.ContainsKey(_currentTenantId))
+            return;
+        var set = AuthorizedChangeSet.Domain(
+            bridge.RunState.RunId,
+            bridge.RunState.StateVersion,
+            "TenantInfoPanel",
+            "SetTenantFlag");
+        set.Add(new SetTenantFlagChange(_currentTenantId, value));
+        CommitResult result = bridge.Reducer.TryCommit(bridge.RunState, set);
+        if (!result.Succeeded)
+            ApplyFlagToPanel(_currentTenantId);
+    }
+
+    private void ApplyFlagToPanel(string tenantId)
+    {
+        int flag = ReadFlag(tenantId);
+        if (flagDropdown != null)
+        {
+            int clamped = Mathf.Clamp(flag, 0, Mathf.Max(0, flagDropdown.options.Count - 1));
+            if (flagDropdown.value != clamped)
+            {
+                _suppressFlagWrite = true;
+                flagDropdown.value = clamped;
+                _suppressFlagWrite = false;
+            }
+        }
+        if (flagLabel != null)
+            flagLabel.text = GetFlagText(flag);
+        ApplyFlagColor(flag);
+    }
+
+    private static int ReadFlag(string tenantId)
+    {
+        SettlementBridge bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null)
+            return 0;
+        if (bridge.RunState.Tenants.TryGetValue(tenantId, out TenantRunState tenant))
+            return tenant.PlayerFlag;
+        return 0;
+    }
+
+    private string GetFlagText(int flag)
+    {
+        if (flagDropdown != null && flag >= 0 && flag < flagDropdown.options.Count)
+            return flagDropdown.options[flag].text;
+        if (flagLabels != null && flag >= 0 && flag < flagLabels.Length)
+            return flagLabels[flag];
+        return string.Empty;
+    }
+
+    private void ApplyFlagColor(int flag)
+    {
+        if (flagBackground == null)
+            return;
+        Color target = _defaultFlagBackgroundColor;
+        int colorIndex = flag - 1;
+        if (colorIndex >= 0 && flagColors != null && colorIndex < flagColors.Length)
+            target = flagColors[colorIndex];
+        flagBackground.color = target;
     }
 
     private Transform GetActiveDropdownListRoot()

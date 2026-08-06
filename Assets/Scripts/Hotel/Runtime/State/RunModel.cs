@@ -125,6 +125,7 @@ namespace Hotel.Runtime
         public string DefinitionId;
         public float TrueErosion;
         public bool PlayerMarked;
+        public int PlayerFlag;
         public string RoomId;
         public string JobId;
     }

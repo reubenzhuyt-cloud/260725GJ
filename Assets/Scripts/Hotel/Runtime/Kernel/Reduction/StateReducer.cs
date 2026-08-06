@@ -103,6 +103,14 @@ namespace Hotel.Runtime
                             return false;
                         break;
                     }
+                    case SetTenantFlagChange flag:
+                    {
+                        if (!s.Tenants.ContainsKey(flag.TenantId))
+                            return false;
+                        if (flag.Flag < 0 || flag.Flag > 3)
+                            return false;
+                        break;
+                    }
                     case AdjustTenantErosionChange erosion:
                     {
                         if (!s.Tenants.ContainsKey(erosion.TenantId))
@@ -213,6 +221,9 @@ namespace Hotel.Runtime
                     break;
                 case SetTenantMarkChange x:
                     s.Tenants[x.TenantId].PlayerMarked = x.Value;
+                    break;
+                case SetTenantFlagChange x:
+                    s.Tenants[x.TenantId].PlayerFlag = x.Flag;
                     break;
                 case AdjustTenantErosionChange x:
                 {

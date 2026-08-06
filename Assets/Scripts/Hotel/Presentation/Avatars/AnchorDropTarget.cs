@@ -24,8 +24,25 @@ public class AnchorDropTarget : MonoBehaviour
 
     private void Awake()
     {
-        if (hoverTrigger != null)
-            hoverTrigger.tenantIdProvider = () => GetOccupantId();
+        // The avatar itself now owns hover. Disable the anchor's scene trigger so it
+        // cannot compete with (or shadow) the avatar's own trigger.
+        var selfTrigger = GetComponent<TenantInfoHoverTrigger>();
+        if (selfTrigger != null)
+            selfTrigger.enabled = false;
+
+        // Configure the avatar's own trigger from the scene-wired anchor trigger
+        // (panel references, delays, placement). The avatar trigger binds its
+        // tenantId at runtime via SetOccupant/ClearOccupant.
+        if (hoverTrigger != null && coloredCircle != null)
+        {
+            TenantInfoHoverTrigger avatarTrigger = coloredCircle.GetOrCreateTrigger();
+            avatarTrigger.hoverInfoPanel = hoverTrigger.hoverInfoPanel;
+            avatarTrigger.pinnedInfoPanel = hoverTrigger.pinnedInfoPanel;
+            avatarTrigger.hoverDelay = hoverTrigger.hoverDelay;
+            avatarTrigger.hideDelay = hoverTrigger.hideDelay;
+            avatarTrigger.hitMask = hoverTrigger.hitMask;
+            avatarTrigger.preferLeftPlacement = hoverTrigger.preferLeftPlacement;
+        }
     }
 
     private void Start()
@@ -49,14 +66,19 @@ public class AnchorDropTarget : MonoBehaviour
 
         if (coloredCircle != null)
         {
-            coloredCircle.gameObject.SetActive(occupied);
             if (occupied)
             {
                 string occupantId = TenantAssignmentCoordinator.Instance.GetRoomOccupantId(roomId);
+                coloredCircle.SetOccupant(occupantId);
                 if (occupantId != null &&
                     TenantAssignmentCoordinator.Instance.TryGetTenantColor(occupantId, out Color color))
                     coloredCircle.SetColor(color);
             }
+            else
+            {
+                coloredCircle.ClearOccupant();
+            }
+            coloredCircle.gameObject.SetActive(occupied);
         }
 
         if (detailBackground != null)

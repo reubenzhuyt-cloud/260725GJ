@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class TenantInfoHoverTrigger : MonoBehaviour,
-    IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
+    IPointerEnterHandler, IPointerExitHandler
 {
     public TenantInfoPanel hoverInfoPanel;
     public TenantInfoPanel pinnedInfoPanel;
@@ -15,9 +15,12 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     public Func<string> tenantIdProvider;
 
+    private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
+
     private bool _hovering;
     private float _hoverStart;
     private float _hidePendingStart;
+    private string _shownHoverTenantId;
     private AnchorDropTarget _cachedAnchor;
 
     private void Update()
@@ -33,6 +36,14 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
             else if (!over && _hovering)
             {
                 _hovering = false;
+            }
+
+            if (over)
+            {
+                if (Input.GetMouseButtonDown(1))
+                    OpenPinned();
+                else if (Input.GetMouseButtonDown(0))
+                    HideHoverPanel();
             }
         }
 
@@ -51,14 +62,20 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
             _hoverStart = Time.unscaledTime;
             return;
         }
-        if (hoverInfoPanel.IsShowing)
+        if (Input.GetMouseButton(0))
+        {
+            _hoverStart = Time.unscaledTime;
             return;
+        }
         string tenantId = GetTenantId();
         if (string.IsNullOrEmpty(tenantId))
+            return;
+        if (hoverInfoPanel.IsShowing && hoverInfoPanel.CurrentTenantId == tenantId)
             return;
         if (Time.unscaledTime - _hoverStart < hoverDelay)
             return;
         hoverInfoPanel.ShowHover(tenantId, Input.mousePosition, preferLeftPlacement);
+        _shownHoverTenantId = tenantId;
     }
 
     private void UpdateHoverHide()
@@ -66,8 +83,30 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         if (hoverInfoPanel == null)
             return;
         if (!hoverInfoPanel.IsShowing || hoverInfoPanel.Mode != TenantInfoPanel.PanelMode.Hover)
+        {
+            _hidePendingStart = 0f;
+            _shownHoverTenantId = null;
             return;
-        if (_hovering || hoverInfoPanel.IsPointerOver)
+        }
+        string tenantId = GetTenantId();
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            if (!string.IsNullOrEmpty(_shownHoverTenantId) && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
+                hoverInfoPanel.Hide();
+            _shownHoverTenantId = null;
+            _hidePendingStart = 0f;
+            return;
+        }
+        if (tenantId != hoverInfoPanel.CurrentTenantId)
+        {
+            if (!string.IsNullOrEmpty(_shownHoverTenantId) && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
+                hoverInfoPanel.Hide();
+            _shownHoverTenantId = null;
+            _hidePendingStart = 0f;
+            return;
+        }
+        _shownHoverTenantId = tenantId;
+        if (_hovering)
         {
             _hidePendingStart = 0f;
             return;
@@ -114,16 +153,29 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         _hovering = false;
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    private void OnDisable()
     {
-        if (eventData.button == PointerEventData.InputButton.Right)
+        TryHideOwnedHover();
+    }
+
+    private void OnDestroy()
+    {
+        TryHideOwnedHover();
+    }
+
+    private void TryHideOwnedHover()
+    {
+        if (hoverInfoPanel == null)
+            return;
+        if (hoverInfoPanel.IsShowing
+            && hoverInfoPanel.Mode == TenantInfoPanel.PanelMode.Hover
+            && !string.IsNullOrEmpty(_shownHoverTenantId)
+            && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
         {
-            OpenPinned();
+            hoverInfoPanel.Hide();
         }
-        else if (eventData.button == PointerEventData.InputButton.Left)
-        {
-            HideHoverPanel();
-        }
+        _shownHoverTenantId = null;
+        _hidePendingStart = 0f;
     }
 
     private string GetTenantId()
@@ -137,13 +189,17 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     private bool IsPointerOverWorldTarget()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return false;
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 point = new Vector2(worldPos.x, worldPos.y);
-        Collider2D hit = Physics2D.OverlapPoint(point, hitMask);
-        if (hit == null)
-            return false;
-        if (hit.transform != transform && !hit.transform.IsChildOf(transform) && !transform.IsChildOf(hit.transform))
-            return false;
-        return !string.IsNullOrEmpty(GetTenantId());
+        int count = Physics2D.OverlapPointNonAlloc(point, _hitBuffer, hitMask);
+        for (int i = 0; i < count; i++)
+        {
+            Transform t = _hitBuffer[i].transform;
+            if (t == transform || t.IsChildOf(transform))
+                return !string.IsNullOrEmpty(GetTenantId());
+        }
+        return false;
     }
 }

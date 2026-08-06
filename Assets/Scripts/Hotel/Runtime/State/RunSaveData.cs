@@ -147,6 +147,7 @@ namespace Hotel.Runtime
                 DefinitionId = value.DefinitionId,
                 TrueErosion = value.TrueErosion,
                 PlayerMarked = value.PlayerMarked,
+                PlayerFlag = value.PlayerFlag,
                 RoomId = value.RoomId,
                 JobId = value.JobId
             };

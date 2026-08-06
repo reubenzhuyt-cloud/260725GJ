@@ -25,6 +25,7 @@ namespace Hotel.Runtime.Tests
                 DefinitionId = "tenant_alpha",
                 TrueErosion = 23.5f,
                 PlayerMarked = true,
+                PlayerFlag = 3,
                 RoomId = "room_01",
                 JobId = "kitchen"
             };
@@ -55,6 +56,7 @@ namespace Hotel.Runtime.Tests
             Assert.That(restored.Tenants["tenant_alpha"].TrueErosion, Is.EqualTo(23.5f));
             Assert.That(restored.Tenants["tenant_alpha"].RoomId, Is.EqualTo("room_01"));
             Assert.That(restored.Tenants["tenant_alpha"].JobId, Is.EqualTo("kitchen"));
+            Assert.That(restored.Tenants["tenant_alpha"].PlayerFlag, Is.EqualTo(3));
             Assert.That(restored.Rooms["room_01"].OccupantIds, Is.EqualTo(new[] { "tenant_alpha" }));
             Assert.That(restored.ResolvedReviewCandidateIds, Is.EqualTo(new[] { "tenant_alpha" }));
             Assert.That(restored.ReviewHistory[0].Decision, Is.EqualTo(ReviewDecision.Recruit));
