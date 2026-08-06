@@ -5,14 +5,12 @@ public class TenantAvatarListItem : MonoBehaviour
 {
     [SerializeField] private Image avatarImage;
     [SerializeField] private TMPro.TextMeshProUGUI nameLabel;
-    [SerializeField] private float longPressDuration = 0.4f;
     [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private TenantInfoHoverTrigger hoverTrigger;
 
     private string _tenantId;
     private Color _itemColor;
 
-    private bool _isHolding;
-    private float _holdTimer;
     private bool _isDragging;
     private bool _dragFinished;
     private float _authoredAlpha;
@@ -23,29 +21,13 @@ public class TenantAvatarListItem : MonoBehaviour
         _itemColor = color;
         _authoredAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
 
+        if (hoverTrigger != null)
+            hoverTrigger.tenantIdProvider = () => _tenantId;
+
         if (avatarImage != null)
             avatarImage.color = color;
         if (nameLabel != null)
             nameLabel.text = displayName;
-    }
-
-    private void Update()
-    {
-        if (!_isHolding || _isDragging || _dragFinished)
-            return;
-
-        _holdTimer += Time.unscaledDeltaTime;
-
-        if (_holdTimer >= longPressDuration)
-        {
-            _isDragging = true;
-            if (canvasGroup != null)
-                canvasGroup.alpha = 0.45f;
-            if (TenantAssignmentCoordinator.Instance != null)
-                TenantAssignmentCoordinator.Instance.SetDragging(true);
-            if (TenantDragOverlay.Instance != null)
-                TenantDragOverlay.Instance.Show(_itemColor);
-        }
     }
 
     private void LateUpdate()
@@ -56,23 +38,22 @@ public class TenantAvatarListItem : MonoBehaviour
 
     public void BeginAvatarHold()
     {
-        _isHolding = true;
-        _holdTimer = 0f;
-        _isDragging = false;
+        _isDragging = true;
         _dragFinished = false;
+
+        if (canvasGroup != null)
+            canvasGroup.alpha = 0.45f;
+
+        if (TenantAssignmentCoordinator.Instance != null)
+            TenantAssignmentCoordinator.Instance.SetDragging(true);
+
+        if (TenantDragOverlay.Instance != null)
+            TenantDragOverlay.Instance.Show(_itemColor);
     }
 
     public void EndAvatarHold()
     {
-        if (_isDragging)
-        {
-            FinishDrag();
-            return;
-        }
-
-        _isHolding = false;
-        _holdTimer = 0f;
-        RestoreAlpha();
+        FinishDrag();
     }
 
     public void FinishDrag()
@@ -83,7 +64,6 @@ public class TenantAvatarListItem : MonoBehaviour
         _dragFinished = true;
 
         bool wasDragging = _isDragging;
-        _isHolding = false;
         _isDragging = false;
 
         if (wasDragging)
@@ -136,7 +116,6 @@ public class TenantAvatarListItem : MonoBehaviour
                 TenantAssignmentCoordinator.Instance.SetDragging(false);
         }
 
-        _isHolding = false;
         _isDragging = false;
         _dragFinished = false;
         RestoreAlpha();

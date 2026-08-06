@@ -15,6 +15,11 @@ public class TenantReviewPanel : MonoBehaviour
     public Button confirmButton;
     public Button rejectButton;
 
+    [Header("Ability Tags")]
+    public GameObject tagPanel;
+    public GameObject tagPrefab;
+    public string tagTextPath = "Text (TMP)";
+
     private Action _onConfirm;
     private Action _onReject;
     private Sprite _fallbackAvatarSprite;
@@ -63,8 +68,11 @@ public class TenantReviewPanel : MonoBehaviour
         }
         if (nameLabel != null)
             nameLabel.text = displayName;
+        RefreshTagPanel(ability == TenantAbility.None
+            ? new TenantAbility[0]
+            : new[] { ability });
         if (shortDescriptionLabel != null)
-            shortDescriptionLabel.text = $"能力：{GetAbilityLabel(ability)}　活跃：{GetActivityLabel(activityType)}\n{shortDescription ?? string.Empty}";
+            shortDescriptionLabel.text = $"能力：{AbilityDisplayName.Get(ability)}　活跃：{GetActivityLabel(activityType)}\n{shortDescription ?? string.Empty}";
         if (detailedDescriptionLabel != null)
         {
             detailedDescriptionLabel.text = detailedDescription ?? string.Empty;
@@ -88,21 +96,50 @@ public class TenantReviewPanel : MonoBehaviour
         }
     }
 
-    private static string GetAbilityLabel(TenantAbility ability)
+    private void RefreshTagPanel(TenantAbility[] abilities)
     {
-        return ability switch
+        if (tagPanel == null || tagPrefab == null)
         {
-            TenantAbility.Doctor => "医生",
-            TenantAbility.Cook => "厨师",
-            TenantAbility.Engineer => "工程师",
-            TenantAbility.NightWatch => "守夜人",
-            TenantAbility.FormerEmployee => "前员工",
-            TenantAbility.Merchant => "商贩",
-            TenantAbility.Carpenter => "木工",
-            TenantAbility.Farmer => "农民",
-            _ => "无标签",
-        };
+            if (tagPanel != null) tagPanel.SetActive(false);
+            return;
+        }
 
+        tagPrefab.SetActive(false);
+
+        for (int i = tagPanel.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = tagPanel.transform.GetChild(i);
+            if (child.gameObject == tagPrefab)
+                continue;
+            Destroy(child.gameObject);
+        }
+
+        int generated = 0;
+        if (abilities != null)
+        {
+            for (int i = 0; i < abilities.Length; i++)
+            {
+                TenantAbility ability = abilities[i];
+                if (ability == TenantAbility.None) continue;
+
+                GameObject clone = Instantiate(tagPrefab, tagPanel.transform);
+                clone.gameObject.SetActive(true);
+
+                TextMeshProUGUI label = FindTMP(clone, tagTextPath);
+                if (label != null)
+                    label.text = AbilityDisplayName.Get(ability);
+                generated++;
+            }
+        }
+
+        tagPanel.SetActive(generated > 0);
+    }
+
+    private static TextMeshProUGUI FindTMP(GameObject root, string path)
+    {
+        if (root == null || string.IsNullOrEmpty(path)) return null;
+        Transform target = root.transform.Find(path);
+        return target != null ? target.GetComponent<TextMeshProUGUI>() : null;
     }
 
     private static string GetActivityLabel(TenantActivityType activityType)

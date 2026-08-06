@@ -11,6 +11,8 @@ public class TenantAvatarDragTrigger : MonoBehaviour,
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (eventData.button != PointerEventData.InputButton.Left)
+            return;
         _finished = false;
         if (owner != null)
             owner.BeginAvatarHold();
@@ -18,6 +20,8 @@ public class TenantAvatarDragTrigger : MonoBehaviour,
 
     public void OnPointerUp(PointerEventData eventData)
     {
+        if (eventData.button != PointerEventData.InputButton.Left)
+            return;
         if (_finished)
             return;
         _finished = true;
@@ -35,6 +39,8 @@ public class TenantAvatarDragTrigger : MonoBehaviour,
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (eventData.button != PointerEventData.InputButton.Left)
+            return;
         if (_finished)
             return;
         _finished = true;

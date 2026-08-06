@@ -6,6 +6,7 @@ public class AnchorDropTarget : MonoBehaviour
     [SerializeField] private string roomId;
     [SerializeField] private TenantAvatarDisplay coloredCircle;
     [SerializeField] private SpriteRenderer detailBackground;
+    [SerializeField] private TenantInfoHoverTrigger hoverTrigger;
 
     public string RoomId => roomId;
 
@@ -23,7 +24,16 @@ public class AnchorDropTarget : MonoBehaviour
 
     private void Start()
     {
+        if (hoverTrigger != null)
+            hoverTrigger.tenantIdProvider = () => GetOccupantId();
         Refresh();
+    }
+
+    private string GetOccupantId()
+    {
+        if (TenantAssignmentCoordinator.Instance == null)
+            return null;
+        return TenantAssignmentCoordinator.Instance.GetRoomOccupantId(roomId);
     }
 
     public void Refresh()
