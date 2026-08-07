@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -76,7 +77,9 @@ public class CameraController : MonoBehaviour
 
     private void HandleZoomInput()
     {
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        if (cam == null)
+            return;
+        if (EventSystem.current != null && IsPointerOverBlockingUi())
             return;
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -87,12 +90,71 @@ public class CameraController : MonoBehaviour
         targetZoom = Mathf.Clamp(targetZoom, minZoom, effectiveMax);
     }
 
+    private static bool IsPointerOverBlockingUi()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null)
+            return false;
+        if (!eventSystem.IsPointerOverGameObject())
+            return false;
+
+        PointerEventData pointerEventData = new PointerEventData(eventSystem);
+        pointerEventData.position = Input.mousePosition;
+        List<RaycastResult> results = new List<RaycastResult>();
+        eventSystem.RaycastAll(pointerEventData, results);
+        if (results.Count == 0)
+            return false;
+
+        for (int i = 0; i < results.Count; i++)
+        {
+            GameObject hitObject = results[i].gameObject;
+            if (hitObject == null)
+                continue;
+            if (!IsZoomWhitelisted(hitObject))
+                return true;
+        }
+        return false;
+    }
+
+    private static bool IsZoomWhitelisted(GameObject hitObject)
+    {
+        if (hitObject.GetComponentInParent<RoomTenantAvatarSlot>() != null)
+            return true;
+        TenantInfoPanel panel = hitObject.GetComponentInParent<TenantInfoPanel>();
+        return panel != null
+            && panel.Mode == TenantInfoPanel.PanelMode.Hover
+            && panel.Source == TenantInfoPanel.DisplaySource.RoomSlot;
+    }
+
     private void ApplyZoom()
     {
+        if (cam == null)
+            return;
+
         float effectiveMax = GetEffectiveMaxZoom();
         targetZoom = Mathf.Clamp(targetZoom, minZoom, effectiveMax);
+
+        Vector3 worldBefore = GetMouseWorldPoint();
+
         cam.orthographicSize = Mathf.SmoothDamp(
             cam.orthographicSize, targetZoom, ref zoomVelocity, zoomSmoothTime);
+
+        Vector3 worldAfter = GetMouseWorldPoint();
+        Vector3 offset = worldBefore - worldAfter;
+        if (offset.sqrMagnitude > 0.000001f)
+        {
+            Transform cameraTransform = cam.transform;
+            cameraTransform.position = cameraTransform.position + offset;
+        }
+    }
+
+    private Vector3 GetMouseWorldPoint()
+    {
+        if (cam == null || !cam.orthographic)
+            return Vector3.zero;
+        Vector3 screenPoint = Input.mousePosition;
+        screenPoint.z = -cam.transform.position.z;
+        return cam.ScreenToWorldPoint(screenPoint);
     }
 
     private void HandleDragInput()

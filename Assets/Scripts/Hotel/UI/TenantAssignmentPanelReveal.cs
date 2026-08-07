@@ -44,8 +44,11 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
         if (!active)
             return;
 
-        bool infoPanelShowing = (hoverInfoPanel != null && hoverInfoPanel.IsShowing)
-            || (pinnedInfoPanel != null && pinnedInfoPanel.IsShowing);
+        bool infoPanelShowing =
+            (hoverInfoPanel != null && hoverInfoPanel.IsShowing
+                && hoverInfoPanel.Source == TenantInfoPanel.DisplaySource.ListItem)
+            || (pinnedInfoPanel != null && pinnedInfoPanel.IsShowing
+                && pinnedInfoPanel.Source == TenantInfoPanel.DisplaySource.ListItem);
 
         bool blockAutoExpand = (eventPanel != null && eventPanel.activeInHierarchy)
             || (reviewPanel != null && reviewPanel.activeInHierarchy);

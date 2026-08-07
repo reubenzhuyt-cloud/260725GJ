@@ -10,6 +10,8 @@ public class TenantInfoPanel : MonoBehaviour,
 {
     public enum PanelMode { Hidden, Hover, Pinned }
 
+    public enum DisplaySource { None, ListItem, RoomSlot }
+
     [Header("UI References")]
     public TextMeshProUGUI nameLabel;
     public Image tenantImage;
@@ -28,6 +30,7 @@ public class TenantInfoPanel : MonoBehaviour,
     public string[] flagLabels;
 
     public PanelMode Mode { get; private set; } = PanelMode.Hidden;
+    public DisplaySource Source { get; private set; } = DisplaySource.None;
     public bool IsPointerOver { get; private set; }
     public bool IsShowing => gameObject.activeSelf;
     public string CurrentTenantId => _currentTenantId;
@@ -89,7 +92,7 @@ public class TenantInfoPanel : MonoBehaviour,
         Hide();
     }
 
-    public void ShowHover(string tenantId, Vector2 screenPoint, bool preferLeft)
+    public void ShowHover(string tenantId, Vector2 screenPoint, bool preferLeft, DisplaySource source)
     {
         EnsureInitialized();
         if (!FillContent(tenantId))
@@ -99,13 +102,14 @@ public class TenantInfoPanel : MonoBehaviour,
         }
         _currentTenantId = tenantId;
         Mode = PanelMode.Hover;
+        Source = source;
         ApplyInteractionMode();
         gameObject.SetActive(true);
         ApplyFlagToPanel(tenantId);
         PositionAt(screenPoint, preferLeft);
     }
 
-    public void ShowPinned(string tenantId, Vector2 screenPoint)
+    public void ShowPinned(string tenantId, Vector2 screenPoint, DisplaySource source)
     {
         EnsureInitialized();
         if (!FillContent(tenantId))
@@ -115,6 +119,7 @@ public class TenantInfoPanel : MonoBehaviour,
         }
         _currentTenantId = tenantId;
         Mode = PanelMode.Pinned;
+        Source = source;
         ApplyInteractionMode();
         gameObject.SetActive(true);
         ApplyFlagToPanel(tenantId);
@@ -124,6 +129,7 @@ public class TenantInfoPanel : MonoBehaviour,
     public void Hide()
     {
         Mode = PanelMode.Hidden;
+        Source = DisplaySource.None;
         _currentTenantId = null;
         IsPointerOver = false;
         ApplyInteractionMode();

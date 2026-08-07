@@ -24,7 +24,10 @@ public class TenantAvatarListItem : MonoBehaviour
         _authoredAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
 
         if (hoverTrigger != null)
+        {
             hoverTrigger.tenantIdProvider = () => _tenantId;
+            hoverTrigger.source = TenantInfoPanel.DisplaySource.ListItem;
+        }
 
         if (avatarImage != null)
             avatarImage.color = color;

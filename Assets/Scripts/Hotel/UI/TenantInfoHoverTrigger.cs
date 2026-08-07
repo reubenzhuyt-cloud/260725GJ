@@ -19,6 +19,8 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
     /// <summary>When true, right-click opens the pinned panel (UI mode).</summary>
     public bool enableUiRightClick;
 
+    public TenantInfoPanel.DisplaySource source;
+
     public Func<string> tenantIdProvider;
 
     private bool _hovering;
@@ -56,7 +58,7 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
             return;
         if (Time.unscaledTime - _hoverStart < hoverDelay)
             return;
-        hoverInfoPanel.ShowHover(tenantId, Input.mousePosition, preferLeftPlacement);
+        hoverInfoPanel.ShowHover(tenantId, Input.mousePosition, preferLeftPlacement, source);
         _shownHoverTenantId = tenantId;
     }
 
@@ -108,7 +110,7 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         _hidePendingStart = 0f;
         if (hoverInfoPanel != null)
             hoverInfoPanel.Hide();
-        pinnedInfoPanel.ShowPinned(tenantId, Input.mousePosition);
+        pinnedInfoPanel.ShowPinned(tenantId, Input.mousePosition, source);
     }
 
     public void HideHoverPanel()
