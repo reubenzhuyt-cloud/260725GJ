@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class TenantAvatarListItem : MonoBehaviour
@@ -86,22 +88,9 @@ public class TenantAvatarListItem : MonoBehaviour
             if (TenantAssignmentCoordinator.Instance != null)
                 TenantAssignmentCoordinator.Instance.SetDragging(false);
 
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 worldPoint = new Vector2(worldPos.x, worldPos.y);
-            Collider2D hit = Physics2D.OverlapPoint(worldPoint);
-
-            if (hit != null)
-            {
-                AnchorDropTarget target = hit.GetComponent<AnchorDropTarget>();
-                if (target == null)
-                    target = hit.GetComponentInParent<AnchorDropTarget>();
-
-                if (target != null)
-                {
-                    if (TenantAssignmentCoordinator.Instance != null)
-                        TenantAssignmentCoordinator.Instance.TryAssign(_tenantId, target.RoomId);
-                }
-            }
+            RoomTenantAvatarSlot slot = FindRoomSlotUnderPointer();
+            if (slot != null && TenantAssignmentCoordinator.Instance != null)
+                TenantAssignmentCoordinator.Instance.TryAssign(_tenantId, slot.RoomId);
         }
 
         RestoreAlpha();
@@ -137,5 +126,28 @@ public class TenantAvatarListItem : MonoBehaviour
     {
         if (canvasGroup != null)
             canvasGroup.alpha = _authoredAlpha;
+    }
+
+    private static RoomTenantAvatarSlot FindRoomSlotUnderPointer()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null)
+            return null;
+
+        PointerEventData pointer = new PointerEventData(eventSystem);
+        pointer.position = Input.mousePosition;
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        eventSystem.RaycastAll(pointer, results);
+
+        for (int i = 0; i < results.Count; i++)
+        {
+            if (results[i].gameObject == null)
+                continue;
+            RoomTenantAvatarSlot slot = results[i].gameObject.GetComponentInParent<RoomTenantAvatarSlot>();
+            if (slot != null)
+                return slot;
+        }
+        return null;
     }
 }

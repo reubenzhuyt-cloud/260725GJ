@@ -2,51 +2,32 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// UI-driven hover / pinned info trigger. Hover shows a small panel after
+/// hoverDelay seconds; right-click opens the pinned (large) panel.
+/// Works purely through UI pointer events - no world colliders or Physics2D.
+/// </summary>
 public class TenantInfoHoverTrigger : MonoBehaviour,
-    IPointerEnterHandler, IPointerExitHandler
+    IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     public TenantInfoPanel hoverInfoPanel;
     public TenantInfoPanel pinnedInfoPanel;
     public float hoverDelay = 0.5f;
     public float hideDelay = 0.15f;
-    public bool useWorldHitTest = false;
-    public LayerMask hitMask = ~0;
     public bool preferLeftPlacement;
 
-    public Func<string> tenantIdProvider;
+    /// <summary>When true, right-click opens the pinned panel (UI mode).</summary>
+    public bool enableUiRightClick;
 
-    private static readonly Collider2D[] _hitBuffer = new Collider2D[32];
+    public Func<string> tenantIdProvider;
 
     private bool _hovering;
     private float _hoverStart;
     private float _hidePendingStart;
     private string _shownHoverTenantId;
-    private AnchorDropTarget _cachedAnchor;
 
     private void Update()
     {
-        if (useWorldHitTest)
-        {
-            bool over = IsPointerOverWorldTarget();
-            if (over && !_hovering)
-            {
-                _hovering = true;
-                _hoverStart = Time.unscaledTime;
-            }
-            else if (!over && _hovering)
-            {
-                _hovering = false;
-            }
-
-            if (over)
-            {
-                if (Input.GetMouseButtonDown(1))
-                    OpenPinned();
-                else if (Input.GetMouseButtonDown(0))
-                    HideHoverPanel();
-            }
-        }
-
         TryOpenHover();
         UpdateHoverHide();
     }
@@ -64,6 +45,7 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         }
         if (Input.GetMouseButton(0))
         {
+            // While the left button is held (drag/click in progress) never open hover.
             _hoverStart = Time.unscaledTime;
             return;
         }
@@ -153,6 +135,15 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         _hovering = false;
     }
 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Right)
+            return;
+        if (!enableUiRightClick)
+            return;
+        OpenPinned();
+    }
+
     private void OnDisable()
     {
         TryHideOwnedHover();
@@ -180,26 +171,6 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     private string GetTenantId()
     {
-        if (tenantIdProvider != null)
-            return tenantIdProvider();
-        if (_cachedAnchor == null)
-            _cachedAnchor = GetComponent<AnchorDropTarget>();
-        return _cachedAnchor != null ? _cachedAnchor.GetOccupantId() : null;
-    }
-
-    private bool IsPointerOverWorldTarget()
-    {
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            return false;
-        Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 point = new Vector2(worldPos.x, worldPos.y);
-        int count = Physics2D.OverlapPointNonAlloc(point, _hitBuffer, hitMask);
-        for (int i = 0; i < count; i++)
-        {
-            Transform t = _hitBuffer[i].transform;
-            if (t == transform || t.IsChildOf(transform))
-                return !string.IsNullOrEmpty(GetTenantId());
-        }
-        return false;
+        return tenantIdProvider != null ? tenantIdProvider() : null;
     }
 }

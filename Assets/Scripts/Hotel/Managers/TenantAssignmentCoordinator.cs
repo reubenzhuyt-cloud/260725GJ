@@ -62,7 +62,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         RebuildLoadedTenantViews();
         RebuildUnassigned();
 
-        AnchorDropTarget.RefreshAll();
+        RoomTenantAvatarSlot.RefreshAll();
         TenantAssignmentPanel.RefreshAll();
     }
 
@@ -108,7 +108,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
         _tenantOrder.Add(tenantId);
         RebuildUnassigned();
-        AnchorDropTarget.RefreshAll();
+        RoomTenantAvatarSlot.RefreshAll();
         TenantAssignmentPanel.RefreshAll();
     }
 
@@ -159,7 +159,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         {
             RebuildUnassigned();
             AssignmentChanged?.Invoke();
-            AnchorDropTarget.RefreshAll();
+            RoomTenantAvatarSlot.RefreshAll();
             TenantAssignmentPanel.RefreshAll();
         }
 
