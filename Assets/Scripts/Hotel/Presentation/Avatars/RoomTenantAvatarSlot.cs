@@ -16,6 +16,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
+    private bool _isDragVisual;
+
     public string RoomId => roomId;
 
     private void Awake()
@@ -28,6 +30,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
             hoverTrigger.enableUiRightClick = true;
             hoverTrigger.source = TenantInfoPanel.DisplaySource.RoomSlot;
         }
+        if (GetComponent<RoomTenantSlotDragTrigger>() == null)
+            gameObject.AddComponent<RoomTenantSlotDragTrigger>();
     }
 
     private void OnEnable()
@@ -111,6 +115,21 @@ public class RoomTenantAvatarSlot : MonoBehaviour
             avatarImage.color = c;
             avatarImage.enabled = true;
         }
+
+        if (_isDragVisual && occupied)
+        {
+            Color dragColor = avatarImage.color;
+            dragColor.a *= 0.4f;
+            avatarImage.color = dragColor;
+        }
+    }
+
+    public void SetDragVisual(bool active)
+    {
+        if (_isDragVisual == active)
+            return;
+        _isDragVisual = active;
+        Refresh();
     }
 
     private void TrackAnchorPosition()

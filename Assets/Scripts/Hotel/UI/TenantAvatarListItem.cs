@@ -131,7 +131,7 @@ public class TenantAvatarListItem : MonoBehaviour
             canvasGroup.alpha = _authoredAlpha;
     }
 
-    private static RoomTenantAvatarSlot FindRoomSlotUnderPointer()
+    public static RoomTenantAvatarSlot FindRoomSlotUnderPointer()
     {
         EventSystem eventSystem = EventSystem.current;
         if (eventSystem == null)

@@ -166,6 +166,47 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         return result.Succeeded;
     }
 
+    public bool TryMoveToEmptyRoom(string tenantId, string targetRoomId)
+    {
+        if (_runState == null)
+            return false;
+
+        if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(targetRoomId))
+            return false;
+
+        if (!_runState.Tenants.ContainsKey(tenantId) || !_runState.Rooms.ContainsKey(targetRoomId))
+            return false;
+
+        string currentRoomId = _runState.Tenants[tenantId].RoomId;
+        if (string.IsNullOrEmpty(currentRoomId))
+            return false;
+
+        if (currentRoomId == targetRoomId)
+            return false;
+
+        if (IsRoomOccupied(targetRoomId))
+            return false;
+
+        var changeSet = AuthorizedChangeSet.Domain(
+            _runState.RunId,
+            _runState.StateVersion,
+            "TenantAssignmentCoordinator",
+            "MoveRoom");
+        changeSet.Add(new AssignRoomChange(tenantId, targetRoomId));
+
+        CommitResult result = _reducer.TryCommit(_runState, changeSet);
+
+        if (result.Succeeded)
+        {
+            RebuildUnassigned();
+            AssignmentChanged?.Invoke();
+            RoomTenantAvatarSlot.RefreshAll();
+            TenantAssignmentPanel.RefreshAll();
+        }
+
+        return result.Succeeded;
+    }
+
     public bool TryGetTenantColor(string tenantId, out Color color)
     {
         if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
