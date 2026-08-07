@@ -17,6 +17,8 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
     private float exitTime;
     private bool active;
 
+    public bool IsExpanded { get; private set; }
+
     private void Awake()
     {
         if (panel == null)
@@ -26,12 +28,14 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
         }
 
         active = true;
+        panel.SetAsLastSibling();
         expandedPosition = panel.anchoredPosition;
         panel.anchoredPosition = expandedPosition + Vector2.right * retractedOffset;
     }
 
     private void OnDisable()
     {
+        IsExpanded = false;
         hoverCount = 0;
         exitTime = 0f;
 
@@ -42,7 +46,10 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
     private void Update()
     {
         if (!active)
+        {
+            IsExpanded = false;
             return;
+        }
 
         bool infoPanelShowing =
             (hoverInfoPanel != null && hoverInfoPanel.IsShowing
@@ -57,6 +64,7 @@ public class TenantAssignmentPanelReveal : MonoBehaviour, IPointerEnterHandler, 
             || Time.unscaledTime < exitTime + retractDelay
             || infoPanelShowing)
             && !blockAutoExpand;
+        IsExpanded = shouldExpand;
         Vector2 target = shouldExpand
             ? expandedPosition
             : expandedPosition + Vector2.right * retractedOffset;

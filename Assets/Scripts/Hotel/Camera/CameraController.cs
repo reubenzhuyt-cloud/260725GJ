@@ -118,6 +118,8 @@ public class CameraController : MonoBehaviour
 
     private static bool IsZoomWhitelisted(GameObject hitObject)
     {
+        if (hitObject.GetComponentInParent<TenantAssignmentPanelReveal>() != null)
+            return false;
         if (hitObject.GetComponentInParent<RoomTenantAvatarSlot>() != null)
             return true;
         TenantInfoPanel panel = hitObject.GetComponentInParent<TenantInfoPanel>();
