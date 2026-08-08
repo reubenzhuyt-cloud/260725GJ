@@ -139,6 +139,28 @@ namespace Hotel.Runtime
                         return false;
                     break;
                 }
+                case AddBuffChange add:
+                {
+                    if (add.Value == null || string.IsNullOrEmpty(add.Value.BuffId))
+                        return false;
+                    if (s.Buffs.ContainsKey(add.Value.BuffId))
+                        return false;
+                    break;
+                }
+                case RemoveBuffChange remove:
+                {
+                    if (!s.Buffs.ContainsKey(remove.BuffId))
+                        return false;
+                    break;
+                }
+                case UpdateBuffTicksChange update:
+                {
+                    if (!s.Buffs.ContainsKey(update.BuffId))
+                        return false;
+                    if (update.RemainingTicks < -1)
+                        return false;
+                    break;
+                }
                 case AddTenantChange add:
                 {
                     if (s.Tenants.ContainsKey(add.TenantId))
@@ -251,6 +273,21 @@ namespace Hotel.Runtime
                 case AdjustResourceChange x:
                     s.Resources[x.ResourceId].Amount += x.Delta;
                     break;
+                case AddBuffChange x:
+                    s.Buffs[x.Value.BuffId] = x.Value.Clone();
+                    break;
+                case RemoveBuffChange x:
+                    s.Buffs.Remove(x.BuffId);
+                    break;
+                case UpdateBuffTicksChange x:
+                {
+                    if (s.Buffs.TryGetValue(x.BuffId, out BuffRunState buff))
+                    {
+                        buff.RemainingTicks = x.RemainingTicks;
+                        buff.LastTickDay = x.LastTickDay;
+                    }
+                    break;
+                }
                 case AddTenantChange x:
                     s.Tenants[x.TenantId] = new TenantRunState
                     {

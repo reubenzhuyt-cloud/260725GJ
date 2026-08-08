@@ -6,7 +6,7 @@ public enum GamePhase { Day, Dawn, Night, Dusk }
 
 public enum GameEventType { Confirm, Choice }
 
-public enum EffectType { None, ModifyTenantErosion }
+public enum EffectType { None, ModifyTenantErosion, ModifyResource, ApplyBuff }
 
 [System.Flags]
 public enum EventPhase
@@ -26,6 +26,10 @@ public class EventEffect
 {
     public EffectType effectType = EffectType.None;
     public float floatValue;
+    public EffectTarget target = EffectTarget.OwnerTenant;
+    public string stringValue = "";
+    public int intValue;
+    public int durationTicks;
 }
 
 /// <summary>

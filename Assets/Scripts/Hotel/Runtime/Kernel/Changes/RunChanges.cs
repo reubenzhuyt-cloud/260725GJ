@@ -99,6 +99,31 @@ namespace Hotel.Runtime
         public int Delta { get; }
     }
 
+    public sealed class AddBuffChange : RunChange
+    {
+        public AddBuffChange(BuffRunState value) { Value = value; }
+        public BuffRunState Value { get; }
+    }
+
+    public sealed class RemoveBuffChange : RunChange
+    {
+        public RemoveBuffChange(string buffId) { BuffId = buffId; }
+        public string BuffId { get; }
+    }
+
+    public sealed class UpdateBuffTicksChange : RunChange
+    {
+        public UpdateBuffTicksChange(string buffId, int remainingTicks, int lastTickDay)
+        {
+            BuffId = buffId;
+            RemainingTicks = remainingTicks;
+            LastTickDay = lastTickDay;
+        }
+        public string BuffId { get; }
+        public int RemainingTicks { get; }
+        public int LastTickDay { get; }
+    }
+
     public sealed class AddTenantChange : RunChange
     {
         public AddTenantChange(string tenantId, string definitionId, float initialErosion = 0f)

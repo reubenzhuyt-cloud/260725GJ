@@ -24,6 +24,7 @@ namespace Hotel.Runtime
         public List<TenantRunState> Tenants = new List<TenantRunState>();
         public List<RoomRunState> Rooms = new List<RoomRunState>();
         public List<ResourceRunState> Resources = new List<ResourceRunState>();
+        public List<BuffRunState> Buffs = new List<BuffRunState>();
         public RunSummaryState Summary = new RunSummaryState();
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
@@ -87,10 +88,13 @@ namespace Hotel.Runtime
                 save.Rooms.Add(CloneRoom(pair.Value));
             foreach (var pair in state.Resources)
                 save.Resources.Add(CloneResource(pair.Value));
+            foreach (var pair in state.Buffs)
+                save.Buffs.Add(CloneBuff(pair.Value));
 
             save.Tenants.Sort((a, b) => string.CompareOrdinal(a.TenantId, b.TenantId));
             save.Rooms.Sort((a, b) => string.CompareOrdinal(a.RoomId, b.RoomId));
             save.Resources.Sort((a, b) => string.CompareOrdinal(a.ResourceId, b.ResourceId));
+            save.Buffs.Sort((a, b) => string.CompareOrdinal(a.BuffId, b.BuffId));
             return save;
         }
 
@@ -136,6 +140,15 @@ namespace Hotel.Runtime
                 }
             }
 
+            if (save.Buffs != null)
+            {
+                foreach (var buff in save.Buffs)
+                {
+                    if (buff != null && !string.IsNullOrEmpty(buff.BuffId))
+                        state.Buffs[buff.BuffId] = CloneBuff(buff);
+                }
+            }
+
             return state;
         }
 
@@ -173,6 +186,11 @@ namespace Hotel.Runtime
                 DefinitionId = value.DefinitionId,
                 Amount = value.Amount
             };
+        }
+
+        private static BuffRunState CloneBuff(BuffRunState value)
+        {
+            return value.Clone();
         }
 
         private static RunSummaryState CloneSummary(RunSummaryState value)

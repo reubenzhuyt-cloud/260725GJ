@@ -48,6 +48,24 @@ public class SettlementBridge : MonoBehaviour
                 Amount = def.initialAmount
             };
         }
+
+        MigrateLegacyMedicineToCurrency(_runState);
+    }
+
+    private static void MigrateLegacyMedicineToCurrency(GameRunState state)
+    {
+        if (state == null) return;
+        if (!state.Resources.TryGetValue("medicine", out ResourceRunState legacy))
+            return;
+        if (state.Resources.ContainsKey("currency"))
+            return;
+        state.Resources["currency"] = new ResourceRunState
+        {
+            ResourceId = "currency",
+            DefinitionId = "currency",
+            Amount = legacy.Amount
+        };
+        state.Resources.Remove("medicine");
     }
 
     private void OnDestroy()
@@ -91,6 +109,9 @@ public class SettlementBridge : MonoBehaviour
         _runState.Phase.Current = ToHotelPhase(data.phase);
         _runState.Phase.Lifecycle = PhaseLifecycleState.Entered;
         _lastPhase = data.phase;
+
+        if (data.phase == GamePhase.Dawn)
+            EventEffectManager.TickBuffs(_runState, _reducer, RoomFloorRegistry.Instance);
 
         bool shouldAutosave = data.phase == GamePhase.Dawn || completedNewDaySettlement;
         if (shouldAutosave && !SaveGameService.TrySave(_runState, out var error))

@@ -6,9 +6,9 @@ public class InfoPanelResourceDisplay : MonoBehaviour
 {
     [Header("UI References")]
     public TextMeshProUGUI foodAmountText;
-    public TextMeshProUGUI medicineAmountText;
+    public TextMeshProUGUI currencyAmountText;
     public Image foodIcon;
-    public Image medicineIcon;
+    public Image currencyIcon;
 
     [Header("Event Channels")]
     public ResourceAdjustedEvent onResourceAdjusted;
@@ -39,8 +39,8 @@ public class InfoPanelResourceDisplay : MonoBehaviour
     {
         if (data.resourceId == "food" && foodAmountText != null)
             foodAmountText.text = data.newAmount.ToString();
-        else if (data.resourceId == "medicine" && medicineAmountText != null)
-            medicineAmountText.text = data.newAmount.ToString();
+        else if (data.resourceId == "currency" && currencyAmountText != null)
+            currencyAmountText.text = data.newAmount.ToString();
     }
 
     private void OnPhaseEntered(PhaseEnterData data)
@@ -59,7 +59,7 @@ public class InfoPanelResourceDisplay : MonoBehaviour
 
         if (foodAmountText != null)
             foodAmountText.text = SettlementBridge.Instance.GetResourceAmount("food").ToString();
-        if (medicineAmountText != null)
-            medicineAmountText.text = SettlementBridge.Instance.GetResourceAmount("medicine").ToString();
+        if (currencyAmountText != null)
+            currencyAmountText.text = SettlementBridge.Instance.GetResourceAmount("currency").ToString();
     }
 }

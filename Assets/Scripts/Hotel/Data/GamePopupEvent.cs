@@ -19,6 +19,7 @@ public struct PopupData
     public string[] choiceTexts;
     public string[] choiceResults;
     public string[] choiceEffectTexts;
+    public string[] choiceIds;
     public TenantAbility[][] choiceRequiredTags;
     public EventEffect[][] choiceEffects;
 }

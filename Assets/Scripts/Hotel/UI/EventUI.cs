@@ -276,41 +276,42 @@ public class EventUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
-        ApplyEffects(currentConfirmEffects);
         Close();
+        if (onEventProcessed != null && currentEventId != null)
+            onEventProcessed.RaiseProcessed(new EventProcessedData
+            {
+                eventId = currentEventId,
+                optionId = string.Empty,
+                effects = currentConfirmEffects
+            });
     }
 
     private void OnChoiceSelected(int index, PopupData data)
     {
         Debug.Log($"[EventUI] Choice: {data.choiceTexts[index]} → {data.choiceResults[index]}");
 
-        if (data.choiceEffects != null && index < data.choiceEffects.Length)
-            ApplyEffects(data.choiceEffects[index]);
-
         Close();
+        if (onEventProcessed == null || currentEventId == null)
+            return;
+
+        string optionId = (data.choiceIds != null && index >= 0 && index < data.choiceIds.Length)
+            ? data.choiceIds[index]
+            : string.Empty;
+        EventEffect[] effects = (data.choiceEffects != null && index >= 0 && index < data.choiceEffects.Length)
+            ? data.choiceEffects[index]
+            : null;
+
+        onEventProcessed.RaiseProcessed(new EventProcessedData
+        {
+            eventId = currentEventId,
+            optionId = optionId,
+            effects = effects
+        });
     }
 
     private void Close()
     {
         if (eventPanel != null) eventPanel.SetActive(false);
         if (eventOverlay != null) eventOverlay.SetActive(false);
-
-        if (onEventProcessed != null && currentEventId != null)
-            onEventProcessed.Raise(currentEventId);
-    }
-
-    private void ApplyEffects(EventEffect[] effects)
-    {
-        if (effects == null) return;
-
-        foreach (var effect in effects)
-        {
-            switch (effect.effectType)
-            {
-                case EffectType.ModifyTenantErosion:
-                    Debug.LogWarning("[EventUI] ModifyTenantErosion effect requires tenant context — deferred");
-                    break;
-            }
-        }
     }
 }

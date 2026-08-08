@@ -26,6 +26,10 @@ public class EventManager : MonoBehaviour
     public PhaseEnteredEvent onPhaseEntered;
 
     private readonly Queue<EventConfig> eventQueue = new Queue<EventConfig>();
+    private EventConfig _currentConfig;
+    private string _currentProtagonistTenantId;
+    private EventProcessedData _pendingPayload;
+    private EventEffectManager _effectManager;
     private bool waitingForPhaseGate;
 
     private readonly Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents =
@@ -42,6 +46,7 @@ public class EventManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        _effectManager = new EventEffectManager();
         runtimeWeightModifiers.Clear();
     }
 
@@ -85,6 +90,7 @@ public class EventManager : MonoBehaviour
         waitingForPhaseGate = false;
         PhaseProcessingStarted?.Invoke();
         eventQueue.Clear();
+        _pendingPayload = null;
 
         if (preGeneratedEvents.TryGetValue(data.phase, out var planned))
         {
@@ -274,6 +280,10 @@ public class EventManager : MonoBehaviour
     private void TriggerEvent(EventConfig config)
     {
         if (onPopupEvent == null) return;
+        _currentConfig = config;
+
+        var bridge = SettlementBridge.Instance;
+        _currentProtagonistTenantId = ResolveProtagonist(bridge != null ? bridge.RunState : null);
 
         // Record the event as planned (unresolved) before it is shown, so that
         // OncePerRun / cooldown selection on later days excludes it. The record is
@@ -300,6 +310,7 @@ public class EventManager : MonoBehaviour
             data.choiceTexts = new string[config.choices.Count];
             data.choiceResults = new string[config.choices.Count];
             data.choiceEffectTexts = new string[config.choices.Count];
+            data.choiceIds = new string[config.choices.Count];
             data.choiceRequiredTags = new TenantAbility[config.choices.Count][];
             data.choiceEffects = new EventEffect[config.choices.Count][];
 
@@ -308,6 +319,7 @@ public class EventManager : MonoBehaviour
                 data.choiceTexts[i] = config.choices[i].choiceText;
                 data.choiceResults[i] = config.choices[i].choiceResult;
                 data.choiceEffectTexts[i] = config.choices[i].effectText;
+                data.choiceIds[i] = config.choices[i].choiceId;
                 data.choiceRequiredTags[i] = config.choices[i].requiredTags != null
                     ? config.choices[i].requiredTags.ToArray()
                     : new TenantAbility[0];
@@ -321,9 +333,124 @@ public class EventManager : MonoBehaviour
 
     private void OnEventProcessed(string eventId)
     {
+        if (_pendingPayload != null)
+            return;
+
         Debug.Log($"[EventManager] Event processed: {eventId}");
-        ResolveRecordedEvent(eventId);
-        ProcessNextEvent();
+        EventProcessedData payload = ResolveProcessedPayload(eventId);
+        if (TrySettleProcessedEvent(payload))
+        {
+            _pendingPayload = null;
+            _currentConfig = null;
+            _currentProtagonistTenantId = null;
+            ProcessNextEvent();
+        }
+        else
+        {
+            _pendingPayload = payload;
+        }
+    }
+
+    private void Update()
+    {
+        if (_pendingPayload == null)
+            return;
+
+        if (TrySettleProcessedEvent(_pendingPayload))
+        {
+            _pendingPayload = null;
+            _currentConfig = null;
+            _currentProtagonistTenantId = null;
+            ProcessNextEvent();
+        }
+    }
+
+    private EventProcessedData ResolveProcessedPayload(string eventId)
+    {
+        EventProcessedData data;
+        if (onEventProcessed != null
+            && onEventProcessed.LastProcessedData != null
+            && onEventProcessed.LastProcessedData.eventId == eventId)
+        {
+            EventProcessedData source = onEventProcessed.LastProcessedData;
+            data = new EventProcessedData
+            {
+                eventId = source.eventId,
+                optionId = source.optionId,
+                effects = source.effects,
+                ownerTenantId = source.ownerTenantId
+            };
+        }
+        else
+        {
+            data = new EventProcessedData { eventId = eventId, optionId = string.Empty, effects = null };
+        }
+
+        if (string.IsNullOrEmpty(data.ownerTenantId))
+            data.ownerTenantId = _currentProtagonistTenantId;
+        return data;
+    }
+
+    private bool TrySettleProcessedEvent(EventProcessedData payload)
+    {
+        var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
+            return false;
+        if (_effectManager == null)
+            return false;
+        return _effectManager.TrySettle(bridge.RunState, bridge.Reducer, payload) == EventSettleResult.Settled;
+    }
+
+    private string ResolveProtagonist(GameRunState state)
+    {
+        if (state == null)
+            return null;
+
+        string preferred = _currentConfig != null && _currentConfig.trigger != null
+            ? _currentConfig.trigger.requiresTenantId
+            : null;
+        if (!string.IsNullOrEmpty(preferred)
+            && state.Tenants.TryGetValue(preferred, out TenantRunState preferredState)
+            && !string.IsNullOrEmpty(preferredState.RoomId))
+        {
+            return preferred;
+        }
+
+        var assigned = new List<string>();
+        foreach (var pair in state.Tenants)
+        {
+            if (pair.Value == null || string.IsNullOrEmpty(pair.Key))
+                continue;
+            if (string.IsNullOrEmpty(pair.Value.RoomId))
+                continue;
+            assigned.Add(pair.Key);
+        }
+        if (assigned.Count == 0)
+            return null;
+
+        assigned.Sort(System.StringComparer.Ordinal);
+        string eventId = _currentConfig != null ? _currentConfig.eventId : null;
+        int seed = ComputeProtagonistSeed(state, eventId);
+        int index = new System.Random(seed).Next(assigned.Count);
+        return assigned[index];
+    }
+
+    private static int ComputeProtagonistSeed(GameRunState state, string eventId)
+    {
+        unchecked
+        {
+            int h = 17;
+            h = h * 31 + state.Seed;
+            h = h * 31 + state.Day;
+            h = h * 31 + (int)state.Phase.Current;
+            h = h * 31 + state.Phase.Occurrence;
+            if (eventId != null)
+            {
+                for (int i = 0; i < eventId.Length; i++)
+                    h = h * 31 + eventId[i];
+            }
+            return h;
+        }
     }
 
     private void NotifyQueueEmpty()
@@ -412,29 +539,5 @@ public class EventManager : MonoBehaviour
         CommitResult result = bridge.Reducer.TryCommit(state, set);
         if (!result.Succeeded)
             Debug.Log($"[EventManager] Event history plan rejected for '{config.eventId}'.");
-    }
-
-    /// <summary>
-    /// Resolves the matching (unresolved) history record after the player completes
-    /// the popup. The current EventProcessedEvent channel carries only the eventId,
-    /// so no option id is available; the record is marked resolved with an empty
-    /// OptionId. No-op when nothing is pending, and never blocks queue flow.
-    /// </summary>
-    private void ResolveRecordedEvent(string eventId)
-    {
-        if (string.IsNullOrEmpty(eventId)) return;
-
-        var bridge = SettlementBridge.Instance;
-        if (bridge == null || bridge.RunState == null) return;
-
-        var state = bridge.RunState;
-        if (!EventSelectionService.HasUnresolvedOccurrence(state.EventHistory, eventId))
-            return;
-
-        var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "EventManager", "ResolveEvent");
-        set.Add(new ResolveEventHistoryChange(eventId, string.Empty));
-        CommitResult result = bridge.Reducer.TryCommit(state, set);
-        if (!result.Succeeded)
-            Debug.Log($"[EventManager] Event history resolve rejected for '{eventId}'.");
     }
 }

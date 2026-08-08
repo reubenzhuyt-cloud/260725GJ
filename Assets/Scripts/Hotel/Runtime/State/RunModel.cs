@@ -146,6 +146,63 @@ namespace Hotel.Runtime
         public int Amount;
     }
 
+    public enum BuffTickTiming
+    {
+        Dawn
+    }
+
+    public enum EffectTarget
+    {
+        OwnerTenant,
+        AllAssignedTenants,
+        SameRoomOtherTenants,
+        SameFloorTenants,
+        ByPlayerFlag,
+        RandomAssignedTenants
+    }
+
+    [Serializable]
+    public sealed class BuffRunState
+    {
+        public string BuffId;
+        public string SourceEventId;
+        public string OwnerTenantId;
+        public EffectTarget Target = EffectTarget.OwnerTenant;
+        public float ErosionPerTick;
+        public string ResourceId;
+        public int ResourceDeltaPerTick;
+        public int TargetParam;
+        public int TargetSeedIndex;
+        public BuffTickTiming TickTiming = BuffTickTiming.Dawn;
+        public int RemainingTicks;
+        public int StartDay;
+        public int LastTickDay;
+        public List<string> TargetTenantIds = new List<string>();
+
+        public BuffRunState Clone()
+        {
+            return new BuffRunState
+            {
+                BuffId = BuffId,
+                SourceEventId = SourceEventId,
+                OwnerTenantId = OwnerTenantId,
+                Target = Target,
+                ErosionPerTick = ErosionPerTick,
+                ResourceId = ResourceId,
+                ResourceDeltaPerTick = ResourceDeltaPerTick,
+                TargetParam = TargetParam,
+                TargetSeedIndex = TargetSeedIndex,
+                TickTiming = TickTiming,
+                RemainingTicks = RemainingTicks,
+                StartDay = StartDay,
+                LastTickDay = LastTickDay,
+                TargetTenantIds = TargetTenantIds != null
+                    ? new List<string>(TargetTenantIds)
+                    : new List<string>()
+            };
+        }
+    }
+
     [Serializable]
     public sealed class RunSummaryState
     {
@@ -169,6 +226,7 @@ namespace Hotel.Runtime
         public Dictionary<string, TenantRunState> Tenants = new Dictionary<string, TenantRunState>();
         public Dictionary<string, RoomRunState> Rooms = new Dictionary<string, RoomRunState>();
         public Dictionary<string, ResourceRunState> Resources = new Dictionary<string, ResourceRunState>();
+        public Dictionary<string, BuffRunState> Buffs = new Dictionary<string, BuffRunState>();
         public RunSummaryState Summary = new RunSummaryState();
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();

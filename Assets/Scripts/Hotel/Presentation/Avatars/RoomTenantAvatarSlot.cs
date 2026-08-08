@@ -20,6 +20,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     public string RoomId => roomId;
 
+    public Transform PositionAnchor => positionAnchor;
+
     private void Awake()
     {
         if (hoverTrigger == null)
