@@ -271,8 +271,13 @@ namespace Hotel.Runtime
                     s.Tenants[x.TenantId].JobId = x.JobId;
                     break;
                 case AdjustResourceChange x:
-                    s.Resources[x.ResourceId].Amount += x.Delta;
+                {
+                    var resource = s.Resources[x.ResourceId];
+                    var amount = resource.Amount + x.Delta;
+                    if (amount < 0) amount = 0;
+                    resource.Amount = amount;
                     break;
+                }
                 case AddBuffChange x:
                     s.Buffs[x.Value.BuffId] = x.Value.Clone();
                     break;

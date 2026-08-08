@@ -37,6 +37,8 @@ public class SettlementBridge : MonoBehaviour
         _lastSettlementDay = _runState.Day;
         _lastPhase = ToGamePhase(_runState.Phase.Current);
 
+        MigrateLegacyMedicineToCurrency(_runState);
+
         foreach (var def in resourceDefinitions)
         {
             if (def == null) continue;
@@ -48,8 +50,6 @@ public class SettlementBridge : MonoBehaviour
                 Amount = def.initialAmount
             };
         }
-
-        MigrateLegacyMedicineToCurrency(_runState);
     }
 
     private static void MigrateLegacyMedicineToCurrency(GameRunState state)
