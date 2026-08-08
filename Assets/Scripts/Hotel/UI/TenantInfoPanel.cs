@@ -12,6 +12,8 @@ public class TenantInfoPanel : MonoBehaviour,
 
     public enum DisplaySource { None, ListItem, RoomSlot }
 
+    public static event System.Action<string, int> TenantFlagChanged;
+
     [Header("UI References")]
     public TextMeshProUGUI nameLabel;
     public Image tenantImage;
@@ -232,8 +234,14 @@ public class TenantInfoPanel : MonoBehaviour,
             "SetTenantFlag");
         set.Add(new SetTenantFlagChange(_currentTenantId, value));
         CommitResult result = bridge.Reducer.TryCommit(bridge.RunState, set);
-        if (!result.Succeeded)
+        if (result.Succeeded)
+        {
+            TenantFlagChanged?.Invoke(_currentTenantId, value);
+        }
+        else
+        {
             ApplyFlagToPanel(_currentTenantId);
+        }
     }
 
     private void ApplyFlagToPanel(string tenantId)
