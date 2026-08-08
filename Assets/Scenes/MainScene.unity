@@ -5971,8 +5971,8 @@ RectTransform:
   - {fileID: 2017123642}
   - {fileID: 613680944}
   - {fileID: 371217396}
-  - {fileID: 233011889}
   - {fileID: 877334263}
+  - {fileID: 233011889}
   - {fileID: 1369214793}
   - {fileID: 1674227784}
   - {fileID: 423411130}
@@ -9473,9 +9473,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foodAmountText: {fileID: 68303660}
-  medicineAmountText: {fileID: 848258287}
+  currencyAmountText: {fileID: 0}
   foodIcon: {fileID: 185871836}
-  medicineIcon: {fileID: 769715911}
+  currencyIcon: {fileID: 0}
   onResourceAdjusted: {fileID: 11400000, guid: b4be3f8a941747d41b7994af0ab32c76, type: 2}
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
 --- !u!114 &1114996822
