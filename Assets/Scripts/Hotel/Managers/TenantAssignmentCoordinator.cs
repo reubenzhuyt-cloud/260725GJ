@@ -35,15 +35,30 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         }
 
         Instance = this;
+        TryBindRuntimeState();
     }
 
     private void Start()
     {
-        if (SettlementBridge.Instance == null)
+        TryBindRuntimeState();
+
+        if (_runState == null)
         {
             Debug.LogError("[TenantAssignmentCoordinator] SettlementBridge.Instance is null!");
             return;
         }
+
+        RoomTenantAvatarSlot.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
+        AssignmentChanged?.Invoke();
+    }
+
+    private void TryBindRuntimeState()
+    {
+        if (_runState != null)
+            return;
+        if (SettlementBridge.Instance == null)
+            return;
 
         _reducer = SettlementBridge.Instance.Reducer;
         _runState = SettlementBridge.Instance.RunState;
@@ -61,9 +76,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
         RebuildLoadedTenantViews();
         RebuildUnassigned();
-
-        RoomTenantAvatarSlot.RefreshAll();
-        TenantAssignmentPanel.RefreshAll();
     }
 
     private void OnDestroy()

@@ -50,6 +50,12 @@ public class UIManager : MonoBehaviour
             gameSettingController.ClosePauseMenu();
     }
 
+    public void SaveAndQuit()
+    {
+        if (gameSettingController != null)
+            gameSettingController.SaveAndQuit();
+    }
+
     public void ResetToDefaults()
     {
         if (gameSettingController != null)

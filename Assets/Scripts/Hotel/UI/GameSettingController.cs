@@ -92,6 +92,26 @@ public sealed class GameSettingController : MonoBehaviour
         Time.timeScale = timeScaleBeforePause;
     }
 
+    public void SaveAndQuit()
+    {
+        SaveAndQuitFlow.Execute(
+            isPauseMenuOpen,
+            SettlementBridge.Instance != null ? SettlementBridge.Instance.RunState : null,
+            SaveGameService.TrySave,
+            ClosePauseMenu,
+            QuitGame,
+            message => Debug.LogError(message));
+    }
+
+    private static void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     public void OnDisplayModeChanged(int value)
     {
         if (!isPauseMenuOpen) return;
