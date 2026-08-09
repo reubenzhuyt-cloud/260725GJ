@@ -10,12 +10,19 @@ public class TenantAvatarListItem : MonoBehaviour
 
     private string _tenantId;
     private Color _itemColor;
+    private Sprite _placeholderSprite;
 
     private bool _isDragging;
     private bool _dragFinished;
     private float _authoredAlpha;
 
-    public void Initialize(string tenantId, string displayName, Color color)
+    private void Awake()
+    {
+        if (avatarImage != null)
+            _placeholderSprite = avatarImage.sprite;
+    }
+
+    public void Initialize(string tenantId, string displayName, Color color, string avatarKey)
     {
         _tenantId = tenantId;
         _itemColor = color;
@@ -28,7 +35,18 @@ public class TenantAvatarListItem : MonoBehaviour
         }
 
         if (avatarImage != null)
-            avatarImage.color = color;
+        {
+            if (!string.IsNullOrEmpty(avatarKey) && TenantAvatarResolver.TryResolve(avatarKey, out Sprite avatar))
+            {
+                avatarImage.sprite = avatar;
+                avatarImage.color = Color.white;
+            }
+            else
+            {
+                avatarImage.sprite = _placeholderSprite;
+                avatarImage.color = color;
+            }
+        }
         if (nameLabel != null)
             nameLabel.text = displayName;
     }

@@ -44,12 +44,15 @@ public class TenantInfoPanel : MonoBehaviour,
     private string _currentTenantId;
     private bool _suppressFlagWrite;
     private Color _defaultFlagBackgroundColor;
+    private Sprite _defaultAvatarSprite;
 
     private void Awake()
     {
         _dropdown = flagDropdown;
         if (flagBackground != null)
             _defaultFlagBackgroundColor = flagBackground.color;
+        if (tenantImage != null)
+            _defaultAvatarSprite = tenantImage.sprite;
         if (flagDropdown != null)
             flagDropdown.onValueChanged.AddListener(OnFlagChanged);
     }
@@ -184,8 +187,15 @@ public class TenantInfoPanel : MonoBehaviour,
             return false;
         if (nameLabel != null)
             nameLabel.text = candidate.displayName;
-        if (tenantImage != null && candidate.portrait != null)
-            tenantImage.sprite = candidate.portrait;
+        if (tenantImage != null)
+        {
+            Sprite resolved = ResolveAvatarByKey(tenantId);
+            if (resolved == null && candidate.portrait != null)
+                resolved = candidate.portrait;
+
+            tenantImage.sprite = resolved != null ? resolved : _defaultAvatarSprite;
+            tenantImage.color = resolved != null ? Color.white : candidate.avatarColor;
+        }
         RefreshTagPanel(candidate.ability);
         if (titleLabel != null)
             titleLabel.text = GetActivityLabel(candidate.activityType);
@@ -330,6 +340,21 @@ public class TenantInfoPanel : MonoBehaviour,
                 return c;
         }
         return null;
+    }
+
+    private static Sprite ResolveAvatarByKey(string tenantId)
+    {
+        if (string.IsNullOrEmpty(tenantId))
+            return null;
+        SettlementBridge bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null)
+            return null;
+        if (!bridge.RunState.Tenants.TryGetValue(tenantId, out TenantRunState tenant))
+            return null;
+        if (string.IsNullOrEmpty(tenant.AvatarKey))
+            return null;
+        TenantAvatarResolver.TryResolve(tenant.AvatarKey, out Sprite sprite);
+        return sprite;
     }
 
     private void RefreshTagPanel(TenantAbility ability)

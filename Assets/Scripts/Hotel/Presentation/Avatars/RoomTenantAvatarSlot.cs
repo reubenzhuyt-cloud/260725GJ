@@ -17,6 +17,7 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
     private bool _isDragVisual;
+    private Sprite _placeholderSprite;
 
     public string RoomId => roomId;
 
@@ -24,6 +25,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private void Awake()
     {
+        if (avatarImage != null)
+            _placeholderSprite = avatarImage.sprite;
         if (hoverTrigger == null)
             hoverTrigger = GetComponent<TenantInfoHoverTrigger>();
         if (hoverTrigger != null)
@@ -104,14 +107,22 @@ public class RoomTenantAvatarSlot : MonoBehaviour
         // The Image stays enabled at all times so the slot remains a valid
         // UI drop target and pointer surface even when the room is empty.
         // "Hidden" is expressed via a transparent color, not SetActive(false).
-        if (occupied && TenantAssignmentCoordinator.Instance.TryGetTenantColor(occupantId, out Color color))
+        if (occupied && TenantAssignmentCoordinator.Instance.TryGetTenantAvatar(occupantId, out Sprite avatar))
         {
+            avatarImage.sprite = avatar;
+            avatarImage.color = Color.white;
+            avatarImage.enabled = true;
+        }
+        else if (occupied && TenantAssignmentCoordinator.Instance.TryGetTenantColor(occupantId, out Color color))
+        {
+            avatarImage.sprite = _placeholderSprite;
             color.a = 1f;
             avatarImage.color = color;
             avatarImage.enabled = true;
         }
         else
         {
+            avatarImage.sprite = _placeholderSprite;
             Color c = avatarImage.color;
             c.a = 0f;
             avatarImage.color = c;

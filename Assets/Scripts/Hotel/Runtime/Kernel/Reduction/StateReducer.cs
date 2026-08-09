@@ -298,7 +298,8 @@ namespace Hotel.Runtime
                     {
                         TenantId = x.TenantId,
                         DefinitionId = x.DefinitionId,
-                        TrueErosion = x.InitialErosion
+                        TrueErosion = x.InitialErosion,
+                        AvatarKey = x.AvatarKey
                     };
                     break;
                 case ResolveCandidateChange x:

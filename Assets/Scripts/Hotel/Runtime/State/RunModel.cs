@@ -153,6 +153,7 @@ namespace Hotel.Runtime
         public int PlayerFlag;
         public string RoomId;
         public string JobId;
+        public string AvatarKey;
     }
 
     [Serializable]

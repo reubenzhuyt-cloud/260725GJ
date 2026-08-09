@@ -9,6 +9,7 @@ public class TenantReviewCandidateSO : ScriptableObject
 
     [Header("Display")]
     public string displayName;
+    public string avatarKey;
     public Sprite portrait;
     public Color avatarColor = Color.white;
 

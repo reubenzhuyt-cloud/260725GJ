@@ -67,7 +67,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
     }
 
-    public bool TryGetCandidatePresentation(string candidateId, out string displayName, out Color color)
+    public bool TryGetCandidatePresentation(string candidateId, out string displayName, out Color color, out string avatarKey)
     {
         for (int i = 0; i < candidates.Count; i++)
         {
@@ -75,11 +75,13 @@ public class TenantReviewCoordinator : MonoBehaviour
             if (candidate == null || candidate.candidateId != candidateId) continue;
             displayName = candidate.displayName;
             color = candidate.avatarColor;
+            avatarKey = candidate.avatarKey;
             return true;
         }
 
         displayName = candidateId;
         color = Color.white;
+        avatarKey = null;
         return false;
     }
 
@@ -269,7 +271,7 @@ public class TenantReviewCoordinator : MonoBehaviour
             _runState.StateVersion,
             "TenantReviewCoordinator",
             "ConfirmCandidate");
-        changeSet.Add(new AddTenantChange(candidate.candidateId, candidate.candidateId, initialErosion));
+        changeSet.Add(new AddTenantChange(candidate.candidateId, candidate.candidateId, initialErosion, candidate.avatarKey));
         changeSet.Add(new ResolveCandidateChange(new ReviewDecisionRecord
         {
             CandidateId = candidate.candidateId,
@@ -283,7 +285,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         if (result.Succeeded)
         {
             if (TenantAssignmentCoordinator.Instance != null)
-                TenantAssignmentCoordinator.Instance.RegisterTenant(candidate.candidateId, candidate.displayName, candidate.avatarColor);
+                TenantAssignmentCoordinator.Instance.RegisterTenant(candidate.candidateId, candidate.displayName, candidate.avatarColor, candidate.avatarKey);
 
             PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
                 PlayerLogCategory.TenantRecruit,

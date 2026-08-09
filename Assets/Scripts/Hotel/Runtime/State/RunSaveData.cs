@@ -177,7 +177,8 @@ namespace Hotel.Runtime
                 PlayerMarked = value.PlayerMarked,
                 PlayerFlag = value.PlayerFlag,
                 RoomId = value.RoomId,
-                JobId = value.JobId
+                JobId = value.JobId,
+                AvatarKey = value.AvatarKey
             };
         }
 

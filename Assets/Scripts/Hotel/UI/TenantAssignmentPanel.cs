@@ -48,7 +48,7 @@ public class TenantAssignmentPanel : MonoBehaviour
             TenantAssignmentItemView data = tenants[i];
             TenantAvatarListItem item = Instantiate(avatarItemPrefab, listContainer);
             item.gameObject.SetActive(true);
-            item.Initialize(data.TenantId, data.DisplayName, data.Color);
+            item.Initialize(data.TenantId, data.DisplayName, data.Color, data.AvatarKey);
             _spawnedItems.Add(item.gameObject);
         }
     }

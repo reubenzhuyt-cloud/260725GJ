@@ -127,14 +127,15 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             Instance = null;
     }
 
-    private void AddTenant(string tenantId, string displayName, Color color)
+    private void AddTenant(string tenantId, string displayName, Color color, string avatarKey)
     {
         _runState.Tenants[tenantId] = new TenantRunState
         {
             TenantId = tenantId,
-            DefinitionId = tenantId
+            DefinitionId = tenantId,
+            AvatarKey = avatarKey
         };
-        _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
+        _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color, avatarKey);
         _tenantOrder.Add(tenantId);
     }
 
@@ -147,20 +148,24 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         {
             string displayName = pair.Key;
             Color color = Color.white;
+            string avatarKey = null;
             if (TenantReviewCoordinator.Instance != null)
-                TenantReviewCoordinator.Instance.TryGetCandidatePresentation(pair.Key, out displayName, out color);
+                TenantReviewCoordinator.Instance.TryGetCandidatePresentation(pair.Key, out displayName, out color, out avatarKey);
 
-            _displayLookup[pair.Key] = new TenantAssignmentItemView(pair.Key, displayName, color);
+            if (!string.IsNullOrEmpty(pair.Value.AvatarKey))
+                avatarKey = pair.Value.AvatarKey;
+
+            _displayLookup[pair.Key] = new TenantAssignmentItemView(pair.Key, displayName, color, avatarKey);
             _tenantOrder.Add(pair.Key);
         }
 
         _tenantOrder.Sort(StringComparer.Ordinal);
     }
 
-    public void RegisterTenant(string tenantId, string displayName, Color color)
+    public void RegisterTenant(string tenantId, string displayName, Color color, string avatarKey)
     {
         if (_displayLookup.ContainsKey(tenantId)) return;
-        _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color);
+        _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color, avatarKey);
         _tenantOrder.Add(tenantId);
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
@@ -294,6 +299,17 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             return true;
         }
         color = default;
+        return false;
+    }
+
+    public bool TryGetTenantAvatar(string tenantId, out Sprite avatar)
+    {
+        avatar = null;
+        if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view)
+            && !string.IsNullOrEmpty(view.AvatarKey))
+        {
+            return TenantAvatarResolver.TryResolve(view.AvatarKey, out avatar);
+        }
         return false;
     }
 
