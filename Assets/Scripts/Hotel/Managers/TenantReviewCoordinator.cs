@@ -285,6 +285,14 @@ public class TenantReviewCoordinator : MonoBehaviour
             if (TenantAssignmentCoordinator.Instance != null)
                 TenantAssignmentCoordinator.Instance.RegisterTenant(candidate.candidateId, candidate.displayName, candidate.avatarColor);
 
+            PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+                PlayerLogCategory.TenantRecruit,
+                _activeDay,
+                _activePhase,
+                "租客招募",
+                $"已招募 {candidate.displayName}",
+                candidate.candidateId));
+
             Debug.Log($"[TenantReviewCoordinator] Confirmed candidate: {candidate.displayName}");
         }
         else
@@ -320,6 +328,14 @@ public class TenantReviewCoordinator : MonoBehaviour
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
         if (result.Succeeded)
         {
+            PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+                PlayerLogCategory.TenantReject,
+                _activeDay,
+                _activePhase,
+                "租客拒绝",
+                $"拒绝 {candidate.displayName}",
+                candidate.candidateId));
+
             Debug.Log($"[TenantReviewCoordinator] Rejected candidate: {candidate.displayName}");
         }
         else

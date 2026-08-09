@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class TenantAvatarListItem : MonoBehaviour
@@ -88,12 +86,14 @@ public class TenantAvatarListItem : MonoBehaviour
             if (TenantDragOverlay.Instance != null)
                 TenantDragOverlay.Instance.Hide();
 
-            if (TenantAssignmentCoordinator.Instance != null)
-                TenantAssignmentCoordinator.Instance.SetDragging(false);
+            TenantAssignmentCoordinator coordinator = TenantAssignmentCoordinator.Instance;
+            if (coordinator != null)
+            {
+                coordinator.SetDragging(false);
 
-            RoomTenantAvatarSlot slot = FindRoomSlotUnderPointer();
-            if (slot != null && TenantAssignmentCoordinator.Instance != null)
-                TenantAssignmentCoordinator.Instance.TryAssign(_tenantId, slot.RoomId);
+                if (RoomWorldHitArea.TryResolveRoomUnderPointer(Input.mousePosition, out string roomId))
+                    coordinator.TryAssign(_tenantId, roomId);
+            }
         }
 
         RestoreAlpha();
@@ -129,28 +129,5 @@ public class TenantAvatarListItem : MonoBehaviour
     {
         if (canvasGroup != null)
             canvasGroup.alpha = _authoredAlpha;
-    }
-
-    public static RoomTenantAvatarSlot FindRoomSlotUnderPointer()
-    {
-        EventSystem eventSystem = EventSystem.current;
-        if (eventSystem == null)
-            return null;
-
-        PointerEventData pointer = new PointerEventData(eventSystem);
-        pointer.position = Input.mousePosition;
-
-        List<RaycastResult> results = new List<RaycastResult>();
-        eventSystem.RaycastAll(pointer, results);
-
-        for (int i = 0; i < results.Count; i++)
-        {
-            if (results[i].gameObject == null)
-                continue;
-            RoomTenantAvatarSlot slot = results[i].gameObject.GetComponentInParent<RoomTenantAvatarSlot>();
-            if (slot != null)
-                return slot;
-        }
-        return null;
     }
 }

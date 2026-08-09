@@ -12,6 +12,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     private StateReducer _reducer;
     private GameRunState _runState;
+    private bool _runStateRestoredSubscribed;
 
     private readonly Dictionary<string, TenantAssignmentItemView> _displayLookup =
         new Dictionary<string, TenantAssignmentItemView>();
@@ -38,6 +39,24 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         TryBindRuntimeState();
     }
 
+    private void OnEnable()
+    {
+        if (_runStateRestoredSubscribed)
+            return;
+
+        SettlementBridge.RunStateRestored += OnRunStateRestored;
+        _runStateRestoredSubscribed = true;
+    }
+
+    private void OnDisable()
+    {
+        if (!_runStateRestoredSubscribed)
+            return;
+
+        SettlementBridge.RunStateRestored -= OnRunStateRestored;
+        _runStateRestoredSubscribed = false;
+    }
+
     private void Start()
     {
         TryBindRuntimeState();
@@ -48,6 +67,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             return;
         }
 
+        RebuildLoadedTenantViews();
+        RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
         TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
@@ -63,7 +84,32 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         _reducer = SettlementBridge.Instance.Reducer;
         _runState = SettlementBridge.Instance.RunState;
 
-        for (int i = 1; i <= 9; i++)
+        EnsureRooms();
+
+        RebuildLoadedTenantViews();
+        RebuildUnassigned();
+    }
+
+    private void OnRunStateRestored(GameRunState state)
+    {
+        if (state == null)
+            return;
+
+        if (SettlementBridge.Instance != null)
+            _reducer = SettlementBridge.Instance.Reducer;
+
+        _runState = state;
+
+        RebuildLoadedTenantViews();
+        RebuildUnassigned();
+        RoomTenantAvatarSlot.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
+        AssignmentChanged?.Invoke();
+    }
+
+    private void EnsureRooms()
+    {
+        for (int i = 1; i <= 10; i++)
         {
             string roomId = string.Format("room_{0:D2}", i);
             if (_runState.Rooms.ContainsKey(roomId)) continue;
@@ -73,9 +119,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
                 DefinitionId = roomId
             };
         }
-
-        RebuildLoadedTenantViews();
-        RebuildUnassigned();
     }
 
     private void OnDestroy()
@@ -173,6 +216,18 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
             TenantAssignmentPanel.RefreshAll();
+
+            string displayName = tenantId;
+            if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
+                displayName = view.DisplayName;
+
+            PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+                PlayerLogCategory.RoomAssignment,
+                _runState.Day,
+                _runState.Phase.Current,
+                "房间分配",
+                $"{displayName} → {roomId}",
+                tenantId));
         }
 
         return result.Succeeded;
@@ -214,6 +269,18 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
             TenantAssignmentPanel.RefreshAll();
+
+            string displayName = tenantId;
+            if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
+                displayName = view.DisplayName;
+
+            PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+                PlayerLogCategory.RoomAssignment,
+                _runState.Day,
+                _runState.Phase.Current,
+                "房间移动",
+                $"{displayName}：{currentRoomId} → {targetRoomId}",
+                tenantId));
         }
 
         return result.Succeeded;

@@ -8,6 +8,7 @@ public class RoomAvatarFlagRing : MonoBehaviour
 
     private RoomTenantAvatarSlot _slot;
     private bool _subscribed;
+    private bool _runStateRestoredSubscribed;
 
     private void Awake()
     {
@@ -17,6 +18,7 @@ public class RoomAvatarFlagRing : MonoBehaviour
     private void OnEnable()
     {
         Subscribe();
+        SubscribeRunStateRestored();
         TenantInfoPanel.TenantFlagChanged += OnTenantFlagChanged;
         Refresh();
     }
@@ -30,6 +32,7 @@ public class RoomAvatarFlagRing : MonoBehaviour
     private void OnDisable()
     {
         Unsubscribe();
+        UnsubscribeRunStateRestored();
         TenantInfoPanel.TenantFlagChanged -= OnTenantFlagChanged;
     }
 
@@ -51,6 +54,27 @@ public class RoomAvatarFlagRing : MonoBehaviour
         if (TenantAssignmentCoordinator.Instance != null)
             TenantAssignmentCoordinator.Instance.AssignmentChanged -= OnAssignmentChanged;
         _subscribed = false;
+    }
+
+    private void SubscribeRunStateRestored()
+    {
+        if (_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored += OnRunStateRestored;
+        _runStateRestoredSubscribed = true;
+    }
+
+    private void UnsubscribeRunStateRestored()
+    {
+        if (!_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored -= OnRunStateRestored;
+        _runStateRestoredSubscribed = false;
+    }
+
+    private void OnRunStateRestored(GameRunState state)
+    {
+        Refresh();
     }
 
     private void OnAssignmentChanged()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Hotel.Runtime;
 using Hotel.Authoring.Resources;
@@ -8,6 +9,8 @@ using UnityEngine;
 public class SettlementBridge : MonoBehaviour
 {
     public static SettlementBridge Instance { get; private set; }
+
+    public static event Action<GameRunState> RunStateRestored;
 
     [Header("Resource Definitions")]
     public List<ResourceDefinition> resourceDefinitions = new List<ResourceDefinition>();
@@ -50,6 +53,16 @@ public class SettlementBridge : MonoBehaviour
                 Amount = def.initialAmount
             };
         }
+
+        StartCoroutine(DispatchRunStateRestored());
+    }
+
+    private IEnumerator DispatchRunStateRestored()
+    {
+        yield return null;
+        if (_runState == null)
+            yield break;
+        RunStateRestored?.Invoke(_runState);
     }
 
     private static void MigrateLegacyMedicineToCurrency(GameRunState state)
@@ -71,7 +84,10 @@ public class SettlementBridge : MonoBehaviour
     private void OnDestroy()
     {
         if (Instance == this)
+        {
             Instance = null;
+            RunStateRestored = null;
+        }
     }
 
     private void OnEnable()
@@ -94,11 +110,19 @@ public class SettlementBridge : MonoBehaviour
             return;
         }
 
+        PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+            PlayerLogCategory.PhaseTransition,
+            data.day,
+            ToHotelPhase(data.phase),
+            "阶段推进",
+            $"第 {data.day} 天 · {PhaseName(data.phase)} 开始",
+            null));
+
         bool crossedNewDayBoundary = _lastPhase == GamePhase.Night && data.day > _lastSettlementDay;
         bool completedNewDaySettlement = false;
         if (crossedNewDayBoundary)
         {
-            if (ExecuteFoodSettlement(data.day))
+            if (ExecuteFoodSettlement(data.day, ToHotelPhase(data.phase)))
             {
                 _lastSettlementDay = data.day;
                 completedNewDaySettlement = true;
@@ -118,7 +142,7 @@ public class SettlementBridge : MonoBehaviour
             Debug.LogError($"[SettlementBridge] Dawn autosave failed: {error}");
     }
 
-    private bool ExecuteFoodSettlement(int day)
+    private bool ExecuteFoodSettlement(int day, HotelPhase phase)
     {
         int countTenants = 0;
         foreach (var kvp in _runState.Tenants)
@@ -151,6 +175,16 @@ public class SettlementBridge : MonoBehaviour
 
         if (result.Succeeded)
         {
+            PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+                PlayerLogCategory.ResourceFood,
+                day,
+                phase,
+                "食物结算",
+                shortage > 0
+                    ? $"第 {day} 天食物结算：消耗 {consumed}、短缺 {shortage}"
+                    : $"第 {day} 天食物结算：消耗 {consumed}",
+                "food"));
+
             if (onResourceAdjusted != null && _runState.Resources.TryGetValue("food", out var foodAfter))
             {
                 onResourceAdjusted.Raise(new ResourceAdjustedData
@@ -193,6 +227,17 @@ public class SettlementBridge : MonoBehaviour
             case GamePhase.Dusk: return HotelPhase.Dusk;
             case GamePhase.Night: return HotelPhase.Night;
             default: return HotelPhase.Day;
+        }
+    }
+
+    private static string PhaseName(GamePhase phase)
+    {
+        switch (phase)
+        {
+            case GamePhase.Dawn: return "黎明";
+            case GamePhase.Dusk: return "黄昏";
+            case GamePhase.Night: return "黑夜";
+            default: return "白天";
         }
     }
 

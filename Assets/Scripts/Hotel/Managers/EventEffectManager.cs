@@ -8,8 +8,10 @@ public class EventEffectManager
 {
     private string _lastFailureKey;
 
-    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload)
+    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload, out PlayerLogWriteDto effectSummary, out bool committed)
     {
+        effectSummary = default;
+        committed = false;
         if (payload == null || string.IsNullOrEmpty(payload.eventId))
             return EventSettleResult.Settled;
         if (state == null || reducer == null)
@@ -26,6 +28,7 @@ public class EventEffectManager
 
         EventEffect[] effects = payload.effects;
         int effectCount = effects != null ? effects.Length : 0;
+        PlayerLogWriteDto pendingEffectSummary = default;
         if (effectCount == 0)
         {
             Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: no effects to apply");
@@ -40,17 +43,34 @@ public class EventEffectManager
             LogEffects(state, eventId, optionId, effects, changes, ownerTenantId);
             for (int i = 0; i < changes.Count; i++)
                 set.Add(changes[i]);
+            if (changes.Count > 0)
+            {
+                pendingEffectSummary = new PlayerLogWriteDto(
+                    PlayerLogCategory.EffectSettlement,
+                    state.Day,
+                    state.Phase.Current,
+                    "效果结算",
+                    BuildEffectSummaryText(changes),
+                    eventId);
+            }
         }
 
         CommitResult result = reducer.TryCommit(state, set);
         if (result.Succeeded)
+        {
+            committed = true;
+            effectSummary = pendingEffectSummary;
             return EventSettleResult.Settled;
+        }
 
         var resolveOnly = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "EventEffectManager", "ResolveEventHistoryOnly");
         resolveOnly.Add(new ResolveEventHistoryChange(eventId, optionId));
         CommitResult degraded = reducer.TryCommit(state, resolveOnly);
         if (degraded.Succeeded)
+        {
+            committed = true;
             return EventSettleResult.Settled;
+        }
 
         string failureKey = $"{eventId}|{optionId}|{state.StateVersion}";
         if (_lastFailureKey != failureKey)
@@ -70,6 +90,7 @@ public class EventEffectManager
 
         var changes = new List<RunChange>();
         var expired = new List<string>();
+        var pendingBuffs = new List<PlayerLogWriteDto>();
 
         foreach (var pair in state.Buffs)
         {
@@ -103,6 +124,17 @@ public class EventEffectManager
             if (buff.RemainingTicks > 0 && newRemaining == 0)
                 expired.Add(buff.BuffId);
 
+            bool willExpire = buff.RemainingTicks > 0 && newRemaining == 0;
+            pendingBuffs.Add(new PlayerLogWriteDto(
+                PlayerLogCategory.BuffTick,
+                state.Day,
+                state.Phase.Current,
+                "Buff 结算",
+                willExpire
+                    ? $"{buff.BuffId}：已到期移除"
+                    : $"{buff.BuffId}：效果已生效 / 剩余 {newRemaining} 天",
+                buff.BuffId));
+
             string targetsText = targets != null ? string.Join(",", targets) : "none";
             Debug.Log($"[EventEffectManager] buff={buff.BuffId} day={state.Day} target={buff.Target} tenants=[{targetsText}] erosion={buff.ErosionPerTick} resource={buff.ResourceId ?? string.Empty} resDelta={buff.ResourceDeltaPerTick} remaining={newRemaining}");
         }
@@ -120,6 +152,11 @@ public class EventEffectManager
         for (int i = 0; i < changes.Count; i++)
             set.Add(changes[i]);
         CommitResult result = reducer.TryCommit(state, set);
+        if (result.Succeeded)
+        {
+            for (int i = 0; i < pendingBuffs.Count; i++)
+                PlayerLogManager.Record(state, pendingBuffs[i]);
+        }
         return result.Succeeded;
     }
 
@@ -187,6 +224,35 @@ public class EventEffectManager
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: resource={resource.ResourceId} delta={resource.Delta}");
             else if (change is AddBuffChange buff)
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: buff={buff.Value.BuffId} target={buff.Value.Target} remaining={buff.Value.RemainingTicks}");
+        }
+    }
+
+    private static string BuildEffectSummaryText(List<RunChange> changes)
+    {
+        var parts = new List<string>();
+        for (int i = 0; i < changes.Count; i++)
+        {
+            RunChange change = changes[i];
+            if (change is AdjustTenantErosionChange erosion)
+                parts.Add("效果已生效");
+            else if (change is AdjustResourceChange resource)
+                parts.Add($"{ResourceName(resource.ResourceId)} {resource.Delta:+#;-#;0}");
+            else if (change is AddBuffChange buff)
+                parts.Add($"状态「{buff.Value.BuffId}」{buff.Value.RemainingTicks} 天");
+        }
+        return string.Join("；", parts);
+    }
+
+    private static string ResourceName(string resourceId)
+    {
+        switch (resourceId)
+        {
+            case "food": return "食物";
+            case "currency": return "货币";
+            case "ingredients": return "食材";
+            case "resources": return "物资";
+            case "medicine": return "药品";
+            default: return resourceId;
         }
     }
 }

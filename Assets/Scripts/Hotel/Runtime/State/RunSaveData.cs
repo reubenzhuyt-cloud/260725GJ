@@ -28,6 +28,7 @@ namespace Hotel.Runtime
         public RunSummaryState Summary = new RunSummaryState();
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
+        public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
     }
 
     public static class RunSaveCodec
@@ -82,6 +83,9 @@ namespace Hotel.Runtime
             save.ResolvedReviewCandidateIds.AddRange(state.ResolvedReviewCandidateIds);
             save.ReviewHistory.AddRange(state.ReviewHistory);
 
+            foreach (var entry in state.PlayerLogs)
+                save.PlayerLogs.Add(CloneLogEntry(entry));
+
             foreach (var pair in state.Tenants)
                 save.Tenants.Add(CloneTenant(pair.Value));
             foreach (var pair in state.Rooms)
@@ -112,6 +116,17 @@ namespace Hotel.Runtime
             state.Summary = save.Summary ?? new RunSummaryState();
             state.ResolvedReviewCandidateIds = save.ResolvedReviewCandidateIds ?? new List<string>();
             state.ReviewHistory = save.ReviewHistory ?? new List<ReviewDecisionRecord>();
+
+            state.PlayerLogs = new List<PlayerLogEntry>();
+            if (save.PlayerLogs != null)
+            {
+                foreach (var entry in save.PlayerLogs)
+                {
+                    if (entry == null)
+                        continue;
+                    state.PlayerLogs.Add(CloneLogEntry(entry));
+                }
+            }
 
             if (save.Tenants != null)
             {
@@ -202,6 +217,22 @@ namespace Hotel.Runtime
                 CompletedDay = value.CompletedDay,
                 MisclassificationCount = value.MisclassificationCount,
                 FinalTenantCount = value.FinalTenantCount
+            };
+        }
+
+        private static PlayerLogEntry CloneLogEntry(PlayerLogEntry value)
+        {
+            if (value == null)
+                return null;
+            return new PlayerLogEntry
+            {
+                Sequence = value.Sequence,
+                Day = value.Day,
+                Phase = value.Phase,
+                Category = value.Category,
+                Title = value.Title,
+                Summary = value.Summary,
+                DetailKey = value.DetailKey
             };
         }
     }

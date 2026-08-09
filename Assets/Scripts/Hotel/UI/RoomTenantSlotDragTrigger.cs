@@ -127,13 +127,14 @@ public class RoomTenantSlotDragTrigger : MonoBehaviour,
         if (coordinator == null)
             return;
 
-        RoomTenantAvatarSlot target = TenantAvatarListItem.FindRoomSlotUnderPointer();
-        if (target == null || target == _slot)
+        if (!RoomWorldHitArea.TryResolveRoomUnderPointer(Input.mousePosition, out string targetRoomId))
             return;
-        if (!string.IsNullOrEmpty(target.GetOccupantId()))
+        if (targetRoomId == _slot.RoomId)
+            return;
+        if (!string.IsNullOrEmpty(coordinator.GetRoomOccupantId(targetRoomId)))
             return;
 
-        coordinator.TryMoveToEmptyRoom(tenantId, target.RoomId);
+        coordinator.TryMoveToEmptyRoom(tenantId, targetRoomId);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

@@ -43,7 +43,11 @@ public sealed class GameSettingController : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (PlayerLogOverlayController.IsAnyLogOverlayOpen || PlayerLogOverlayController.WasEscapeConsumedThisFrame)
+                return;
             TogglePauseMenu();
+        }
     }
 
     private void OnDisable()

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Hotel.Runtime;
 
 public class InfoPanelResourceDisplay : MonoBehaviour
 {
@@ -14,12 +15,15 @@ public class InfoPanelResourceDisplay : MonoBehaviour
     public ResourceAdjustedEvent onResourceAdjusted;
     public PhaseEnteredEvent onPhaseEntered;
 
+    private bool _runStateRestoredSubscribed;
+
     private void OnEnable()
     {
         if (onResourceAdjusted != null)
             onResourceAdjusted.Register(OnResourceAdjusted);
         if (onPhaseEntered != null)
             onPhaseEntered.Register(OnPhaseEntered);
+        SubscribeRunStateRestored();
     }
 
     private void OnDisable()
@@ -28,6 +32,23 @@ public class InfoPanelResourceDisplay : MonoBehaviour
             onResourceAdjusted.Unregister(OnResourceAdjusted);
         if (onPhaseEntered != null)
             onPhaseEntered.Unregister(OnPhaseEntered);
+        UnsubscribeRunStateRestored();
+    }
+
+    private void SubscribeRunStateRestored()
+    {
+        if (_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored += OnRunStateRestored;
+        _runStateRestoredSubscribed = true;
+    }
+
+    private void UnsubscribeRunStateRestored()
+    {
+        if (!_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored -= OnRunStateRestored;
+        _runStateRestoredSubscribed = false;
     }
 
     private void Start()
@@ -47,6 +68,13 @@ public class InfoPanelResourceDisplay : MonoBehaviour
     {
         if (data.phase == GamePhase.Dawn)
             RefreshDisplay();
+    }
+
+    private void OnRunStateRestored(GameRunState state)
+    {
+        if (state == null)
+            return;
+        RefreshDisplay();
     }
 
     private void RefreshDisplay()

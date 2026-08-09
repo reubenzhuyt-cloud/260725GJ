@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using Hotel.Runtime;
 
 public class PhaseUI : MonoBehaviour
 {
@@ -16,16 +17,36 @@ public class PhaseUI : MonoBehaviour
     [Header("Event Listener")]
     public PhaseEnteredEvent onPhaseEntered;
 
+    private bool _runStateRestoredSubscribed;
+
     private void OnEnable()
     {
         if (onPhaseEntered != null)
             onPhaseEntered.Register(OnPhaseEntered);
+        SubscribeRunStateRestored();
     }
 
     private void OnDisable()
     {
         if (onPhaseEntered != null)
             onPhaseEntered.Unregister(OnPhaseEntered);
+        UnsubscribeRunStateRestored();
+    }
+
+    private void SubscribeRunStateRestored()
+    {
+        if (_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored += OnRunStateRestored;
+        _runStateRestoredSubscribed = true;
+    }
+
+    private void UnsubscribeRunStateRestored()
+    {
+        if (!_runStateRestoredSubscribed)
+            return;
+        SettlementBridge.RunStateRestored -= OnRunStateRestored;
+        _runStateRestoredSubscribed = false;
     }
 
     private void Start()
@@ -37,6 +58,24 @@ public class PhaseUI : MonoBehaviour
     private void OnPhaseEntered(PhaseEnterData data)
     {
         UpdateDisplay(data.day, data.phase);
+    }
+
+    private void OnRunStateRestored(GameRunState state)
+    {
+        if (state == null || state.Phase == null)
+            return;
+        UpdateDisplay(state.Day, ToGamePhase(state.Phase.Current));
+    }
+
+    private static GamePhase ToGamePhase(HotelPhase phase)
+    {
+        switch (phase)
+        {
+            case HotelPhase.Dawn: return GamePhase.Dawn;
+            case HotelPhase.Dusk: return GamePhase.Dusk;
+            case HotelPhase.Night: return GamePhase.Night;
+            default: return GamePhase.Day;
+        }
     }
 
     private void UpdateDisplay(int day, GamePhase phase)

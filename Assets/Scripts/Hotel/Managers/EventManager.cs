@@ -6,7 +6,7 @@ public class EventManager : MonoBehaviour
 {
     public static EventManager Instance { get; private set; }
     public event System.Action PhaseProcessingStarted;
-    public bool IsPhaseComplete { get; private set; }
+    public bool IsPhaseComplete { get; private set; } = true;
 
     [Header("Event Catalog (single list; filtered at runtime by TriggerSpec)")]
     public List<EventConfig> allEvents = new List<EventConfig>();
@@ -398,7 +398,51 @@ public class EventManager : MonoBehaviour
             return false;
         if (_effectManager == null)
             return false;
-        return _effectManager.TrySettle(bridge.RunState, bridge.Reducer, payload) == EventSettleResult.Settled;
+
+        if (_effectManager.TrySettle(bridge.RunState, bridge.Reducer, payload, out PlayerLogWriteDto effectSummary, out bool committed) != EventSettleResult.Settled)
+            return false;
+        if (!committed)
+            return true;
+
+        RecordEventLog(bridge.RunState, payload);
+        if (effectSummary.Summary != null)
+            PlayerLogManager.Record(bridge.RunState, effectSummary);
+        return true;
+    }
+
+    private void RecordEventLog(GameRunState state, EventProcessedData payload)
+    {
+        if (_currentConfig == null)
+            return;
+
+        EventKind kind = _currentConfig.trigger != null ? _currentConfig.trigger.kind : EventKind.Normal;
+        PlayerLogCategory category = kind == EventKind.Normal
+            ? PlayerLogCategory.EventChoice
+            : PlayerLogCategory.SpecialStory;
+        string optionText = ResolveOptionText(payload.optionId);
+
+        PlayerLogManager.Record(state, new PlayerLogWriteDto(
+            category,
+            state.Day,
+            state.Phase.Current,
+            _currentConfig.eventTitle,
+            $"选择『{optionText}』",
+            _currentConfig.eventId));
+    }
+
+    private string ResolveOptionText(string optionId)
+    {
+        if (string.IsNullOrEmpty(optionId))
+            return "确认";
+        if (_currentConfig == null)
+            return optionId;
+        for (int i = 0; i < _currentConfig.choices.Count; i++)
+        {
+            ChoiceOption choice = _currentConfig.choices[i];
+            if (choice != null && choice.choiceId == optionId && !string.IsNullOrEmpty(choice.choiceText))
+                return choice.choiceText;
+        }
+        return optionId;
     }
 
     private string ResolveProtagonist(GameRunState state)

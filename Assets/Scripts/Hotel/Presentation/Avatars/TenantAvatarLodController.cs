@@ -45,12 +45,12 @@ public class TenantAvatarLodController : MonoBehaviour
             multiplier = Mathf.Lerp(1f, maximumDetailScale, t);
         }
 
-        bool showBackground = zoom <= detailThreshold;
+        bool showAvatarLayer = zoom <= detailThreshold;
 
         for (int i = 0; i < targets.Count; i++)
         {
             if (targets[i] != null)
-                targets[i].Apply(showBackground, multiplier);
+                targets[i].Apply(showAvatarLayer, multiplier);
         }
     }
 }
@@ -58,30 +58,22 @@ public class TenantAvatarLodController : MonoBehaviour
 [System.Serializable]
 public sealed class TenantAvatarLodTarget
 {
-    [SerializeField] private Transform coloredCircle;
-    [SerializeField] private GameObject detailBackground;
+    [SerializeField] private Transform avatarLayer;
 
     private Vector3 baseScale;
-    private Vector3 backgroundBaseScale;
 
     public void CaptureBaseScale()
     {
-        if (coloredCircle != null)
-            baseScale = coloredCircle.localScale;
-
-        if (detailBackground != null)
-            backgroundBaseScale = detailBackground.transform.localScale;
+        if (avatarLayer != null)
+            baseScale = avatarLayer.localScale;
     }
 
-    public void Apply(bool showBackground, float multiplier)
+    public void Apply(bool showAvatarLayer, float multiplier)
     {
-        if (detailBackground != null)
-        {
-            detailBackground.SetActive(showBackground);
-            detailBackground.transform.localScale = new Vector3(backgroundBaseScale.x * multiplier, backgroundBaseScale.y * multiplier, backgroundBaseScale.z);
-        }
+        if (avatarLayer == null)
+            return;
 
-        if (coloredCircle != null)
-            coloredCircle.localScale = new Vector3(baseScale.x * multiplier, baseScale.y * multiplier, baseScale.z);
+        avatarLayer.gameObject.SetActive(showAvatarLayer);
+        avatarLayer.localScale = new Vector3(baseScale.x * multiplier, baseScale.y * multiplier, baseScale.z);
     }
 }

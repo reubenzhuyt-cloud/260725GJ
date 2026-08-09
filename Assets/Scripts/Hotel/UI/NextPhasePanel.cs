@@ -1,3 +1,4 @@
+using Hotel.Runtime;
 using UnityEngine;
 
 public class NextPhasePanel : MonoBehaviour
@@ -8,6 +9,7 @@ public class NextPhasePanel : MonoBehaviour
 
     private CanvasGroup canvasGroup;
     private RectTransform rectTransform;
+    private bool _runStateRestoredSubscribed;
 
     private void Awake()
     {
@@ -29,12 +31,20 @@ public class NextPhasePanel : MonoBehaviour
 
         if (onPopupEvent != null)
             onPopupEvent.Register(OnEventTriggered);
+
+        if (!_runStateRestoredSubscribed)
+        {
+            SettlementBridge.RunStateRestored += OnRunStateRestored;
+            _runStateRestoredSubscribed = true;
+        }
     }
 
     private void Start()
     {
         if (EventManager.Instance != null)
             EventManager.Instance.PhaseProcessingStarted += OnPhaseProcessingStarted;
+
+        SyncFromAuthoritativeState();
     }
 
     private void OnDisable()
@@ -43,6 +53,12 @@ public class NextPhasePanel : MonoBehaviour
             onEventQueueEmpty.Unregister(OnQueueEmpty);
         if (onPopupEvent != null)
             onPopupEvent.Unregister(OnEventTriggered);
+
+        if (_runStateRestoredSubscribed)
+        {
+            SettlementBridge.RunStateRestored -= OnRunStateRestored;
+            _runStateRestoredSubscribed = false;
+        }
     }
 
     private void OnDestroy()
@@ -64,6 +80,19 @@ public class NextPhasePanel : MonoBehaviour
     private void OnQueueEmpty(int data)
     {
         SetVisible(true);
+    }
+
+    private void OnRunStateRestored(GameRunState state)
+    {
+        SyncFromAuthoritativeState();
+    }
+
+    private void SyncFromAuthoritativeState()
+    {
+        if (EventManager.Instance == null)
+            return;
+
+        SetVisible(EventManager.Instance.IsPhaseComplete);
     }
 
     private void SetVisible(bool visible)
