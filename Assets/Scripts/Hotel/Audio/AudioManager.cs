@@ -75,6 +75,10 @@ namespace Hotel.Audio
                 bgmSource.volume = bgmVolume;
         }
 
+        public float BgmVolume => bgmVolume;
+
+        public float SfxVolume => soundEffectVolume;
+
         public void SetSoundEffectVolume(float volume)
         {
             // Applied as the volume scale of each new PlayOneShot call
