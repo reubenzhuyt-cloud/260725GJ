@@ -49,6 +49,14 @@ namespace Hotel.Runtime
         PhaseTransition
     }
 
+    public enum TenantLogCategory
+    {
+        Recruit,
+        RoomAssignment,
+        RoomMove,
+        Behavior
+    }
+
     public enum ReviewDecision
     {
         Recruit,
@@ -139,6 +147,18 @@ namespace Hotel.Runtime
         public HotelPhase Phase;
         public PlayerLogCategory Category;
         public string Title;
+        public string Summary;
+        public string DetailKey;
+        public string TenantId;
+    }
+
+    [Serializable]
+    public sealed class TenantLogEntry
+    {
+        public int Sequence;
+        public int Day;
+        public HotelPhase Phase;
+        public TenantLogCategory Category;
         public string Summary;
         public string DetailKey;
     }
@@ -257,6 +277,7 @@ namespace Hotel.Runtime
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
         public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
+        public Dictionary<string, List<TenantLogEntry>> TenantLogs = new Dictionary<string, List<TenantLogEntry>>();
 
         public static GameRunState New(RunId id, int seed = 1)
         {

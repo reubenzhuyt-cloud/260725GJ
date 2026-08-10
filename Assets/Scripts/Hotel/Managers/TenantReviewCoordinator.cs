@@ -293,6 +293,15 @@ public class TenantReviewCoordinator : MonoBehaviour
                 _activePhase,
                 "租客招募",
                 $"已招募 {candidate.displayName}",
+                candidate.candidateId,
+                candidate.candidateId));
+
+            TenantLogManager.Record(_runState, new TenantLogWriteDto(
+                candidate.candidateId,
+                TenantLogCategory.Recruit,
+                _activeDay,
+                _activePhase,
+                $"已招募 {candidate.displayName}",
                 candidate.candidateId));
 
             Debug.Log($"[TenantReviewCoordinator] Confirmed candidate: {candidate.displayName}");
