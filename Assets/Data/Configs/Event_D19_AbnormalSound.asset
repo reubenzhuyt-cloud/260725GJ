@@ -37,7 +37,8 @@ MonoBehaviour:
     choiceText: "【司机】派司机探查方向"
     choiceResult: "派司机探查方向，成功获线索，失败司机侵蚀+5。"
     effectText: "成功获线索，失败司机侵蚀+5"
-    requiredTags: []
+    requiredTags:
+    - 9
     choiceEffects: []
   - choiceId: B
     choiceText: "安抚房客"

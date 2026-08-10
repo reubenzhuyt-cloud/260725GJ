@@ -53,7 +53,8 @@ MonoBehaviour:
     choiceText: "【教师】成功安抚"
     choiceResult: "教师成功安抚，侵蚀度-6，消耗3货币。"
     effectText: "侵蚀度-6，消耗3货币"
-    requiredTags: []
+    requiredTags:
+    - 10
     choiceEffects:
     - effectType: 1
       floatValue: -6

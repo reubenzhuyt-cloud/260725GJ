@@ -44,7 +44,8 @@ MonoBehaviour:
     choiceText: "【教师】解读内容"
     choiceResult: "教师解读内容，获得线索。"
     effectText: "获得线索"
-    requiredTags: []
+    requiredTags:
+    - 10
     choiceEffects: []
   - choiceId: B
     choiceText: "无人处理"

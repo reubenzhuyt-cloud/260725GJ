@@ -73,7 +73,9 @@ namespace Hotel.Runtime
         FormerEmployee,
         Merchant,
         Carpenter,
-        Farmer
+        Farmer,
+        Driver = 9,
+        Teacher = 10
     }
 
     public enum TenantActivityType

@@ -52,7 +52,8 @@ MonoBehaviour:
     choiceText: "【教师】压制谣言"
     choiceResult: "教师压制谣言，消耗2食物。"
     effectText: "消耗2食物"
-    requiredTags: []
+    requiredTags:
+    - 10
     choiceEffects: []
   - choiceId: C
     choiceText: "无视"

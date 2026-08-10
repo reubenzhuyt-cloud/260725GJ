@@ -44,7 +44,8 @@ MonoBehaviour:
     choiceText: "【教师】陪伴聊天至入睡"
     choiceResult: "教师陪伴聊天至入睡，侵蚀度-4。"
     effectText: "侵蚀度-4"
-    requiredTags: []
+    requiredTags:
+    - 10
     choiceEffects:
     - effectType: 1
       floatValue: -4

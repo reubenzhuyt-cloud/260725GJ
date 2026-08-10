@@ -14,6 +14,8 @@ public static class AbilityDisplayName
             case TenantAbility.Merchant: return "商贩";
             case TenantAbility.Carpenter: return "木工";
             case TenantAbility.Farmer: return "农民";
+            case TenantAbility.Driver: return "司机";
+            case TenantAbility.Teacher: return "教师";
             default: return "无标签";
         }
     }

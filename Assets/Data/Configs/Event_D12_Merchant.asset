@@ -43,7 +43,8 @@ MonoBehaviour:
     choiceText: "【司机】用情报换物资"
     choiceResult: "司机用情报换物资。"
     effectText: "用情报换物资"
-    requiredTags: []
+    requiredTags:
+    - 9
     choiceEffects: []
   - choiceId: C
     choiceText: "赶走"

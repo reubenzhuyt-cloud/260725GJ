@@ -37,7 +37,8 @@ MonoBehaviour:
     choiceText: "【教师】介入调解"
     choiceResult: "教师介入调解，消耗2食物。"
     effectText: "消耗2食物"
-    requiredTags: []
+    requiredTags:
+    - 10
     choiceEffects: []
   - choiceId: B
     choiceText: "给他们单独房间"
