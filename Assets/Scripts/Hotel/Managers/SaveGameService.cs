@@ -5,19 +5,30 @@ using UnityEngine;
 
 public static class GameLaunchContext
 {
+    private const int DefaultSlot = 1;
     private static GameRunState pendingState;
     private static bool forceNewGame;
 
-    public static void StartNewGame()
+    /// <summary>The save slot the current run reads from and writes to (1..SaveGameService.MaxSlots).</summary>
+    public static int ActiveSlot { get; private set; } = DefaultSlot;
+
+    public static void StartNewGame(int slot = DefaultSlot)
     {
         pendingState = null;
         forceNewGame = true;
+        ActiveSlot = slot;
     }
 
     public static void ContinueWith(GameRunState state)
     {
+        ContinueWith(DefaultSlot, state);
+    }
+
+    public static void ContinueWith(int slot, GameRunState state)
+    {
         pendingState = state ?? throw new ArgumentNullException(nameof(state));
         forceNewGame = false;
+        ActiveSlot = slot;
     }
 
     public static bool TryConsume(out GameRunState state, out bool startFresh)
@@ -48,14 +59,28 @@ public readonly struct SaveSlotSummary
 
 public static class SaveGameService
 {
-    public const string SaveFileName = "hotel-save-slot-1.json";
+    public const int MaxSlots = 3;
     private const string BackupSuffix = ".bak";
     private const string TemporarySuffix = ".tmp";
 
-    public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
-    public static bool HasSave => File.Exists(SavePath) || File.Exists(SavePath + BackupSuffix);
+    public static string SlotPath(int slot)
+    {
+        slot = Mathf.Clamp(slot, 1, MaxSlots);
+        return Path.Combine(Application.persistentDataPath, $"hotel-save-slot-{slot}.json");
+    }
+
+    public static bool HasSave(int slot = 1)
+    {
+        string path = SlotPath(slot);
+        return File.Exists(path) || File.Exists(path + BackupSuffix);
+    }
 
     public static bool TrySave(GameRunState state, out string error)
+    {
+        return TrySave(GameLaunchContext.ActiveSlot, state, out error);
+    }
+
+    public static bool TrySave(int slot, GameRunState state, out string error)
     {
         error = null;
         if (state == null)
@@ -64,7 +89,7 @@ public static class SaveGameService
             return false;
         }
 
-        var path = SavePath;
+        var path = SlotPath(slot);
         var temporaryPath = path + TemporarySuffix;
         var backupPath = path + BackupSuffix;
 
@@ -78,7 +103,7 @@ public static class SaveGameService
             else
                 File.Move(temporaryPath, path);
 
-            Debug.Log($"[SaveGameService] Saved Day {state.Day} {state.Phase.Current} to {path}");
+            Debug.Log($"[SaveGameService] Saved Day {state.Day} {state.Phase.Current} to slot {slot} ({path})");
             return true;
         }
         catch (Exception exception)
@@ -92,10 +117,16 @@ public static class SaveGameService
 
     public static bool TryLoad(out GameRunState state, out string error)
     {
-        if (TryLoadPath(SavePath, out state, out error)) return true;
+        return TryLoad(GameLaunchContext.ActiveSlot, out state, out error);
+    }
+
+    public static bool TryLoad(int slot, out GameRunState state, out string error)
+    {
+        string path = SlotPath(slot);
+        if (TryLoadPath(path, out state, out error)) return true;
 
         var primaryError = error;
-        if (TryLoadPath(SavePath + BackupSuffix, out state, out error))
+        if (TryLoadPath(path + BackupSuffix, out state, out error))
         {
             Debug.LogWarning($"[SaveGameService] Primary save failed; loaded backup instead. {primaryError}");
             return true;
@@ -107,13 +138,19 @@ public static class SaveGameService
 
     public static bool TryGetSummary(out SaveSlotSummary summary)
     {
+        return TryGetSummary(GameLaunchContext.ActiveSlot, out summary);
+    }
+
+    public static bool TryGetSummary(int slot, out SaveSlotSummary summary)
+    {
         summary = default;
-        if (!TryReadSaveData(SavePath, out var save) && !TryReadSaveData(SavePath + BackupSuffix, out save))
+        string path = SlotPath(slot);
+        if (!TryReadSaveData(path, out var save) && !TryReadSaveData(path + BackupSuffix, out save))
             return false;
 
         DateTime savedAt;
         if (!DateTime.TryParse(save.SavedAtUtc, null, System.Globalization.DateTimeStyles.RoundtripKind, out savedAt))
-            savedAt = File.GetLastWriteTimeUtc(SavePath);
+            savedAt = File.GetLastWriteTimeUtc(path);
 
         summary = new SaveSlotSummary(
             Math.Max(1, save.Day),
@@ -123,14 +160,32 @@ public static class SaveGameService
         return true;
     }
 
+    /// <summary>Summaries of all slots in order 1..MaxSlots; null when a slot is empty.</summary>
+    public static SaveSlotSummary?[] GetAllSummaries()
+    {
+        var result = new SaveSlotSummary?[MaxSlots];
+        for (int i = 0; i < MaxSlots; i++)
+        {
+            if (TryGetSummary(i + 1, out SaveSlotSummary summary))
+                result[i] = summary;
+        }
+        return result;
+    }
+
     public static bool DeleteSave(out string error)
     {
+        return DeleteSave(GameLaunchContext.ActiveSlot, out error);
+    }
+
+    public static bool DeleteSave(int slot, out string error)
+    {
         error = null;
+        string path = SlotPath(slot);
         try
         {
-            DeleteIfPresent(SavePath);
-            DeleteIfPresent(SavePath + BackupSuffix);
-            DeleteIfPresent(SavePath + TemporarySuffix);
+            DeleteIfPresent(path);
+            DeleteIfPresent(path + BackupSuffix);
+            DeleteIfPresent(path + TemporarySuffix);
             return true;
         }
         catch (Exception exception)

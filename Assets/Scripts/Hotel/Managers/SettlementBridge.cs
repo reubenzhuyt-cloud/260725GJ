@@ -138,7 +138,7 @@ public class SettlementBridge : MonoBehaviour
             EventEffectManager.TickBuffs(_runState, _reducer, RoomFloorRegistry.Instance);
 
         bool shouldAutosave = data.phase == GamePhase.Dawn || completedNewDaySettlement;
-        if (shouldAutosave && !SaveGameService.TrySave(_runState, out var error))
+        if (shouldAutosave && !SaveGameService.TrySave(GameLaunchContext.ActiveSlot, _runState, out var error))
             Debug.LogError($"[SettlementBridge] Dawn autosave failed: {error}");
     }
 
