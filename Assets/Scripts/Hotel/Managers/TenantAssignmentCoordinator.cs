@@ -232,6 +232,15 @@ public class TenantAssignmentCoordinator : MonoBehaviour
                 _runState.Phase.Current,
                 "房间分配",
                 $"{displayName} → {roomId}",
+                tenantId,
+                tenantId));
+
+            TenantLogManager.Record(_runState, new TenantLogWriteDto(
+                tenantId,
+                TenantLogCategory.RoomAssignment,
+                _runState.Day,
+                _runState.Phase.Current,
+                $"{displayName} → {roomId}",
                 tenantId));
         }
 
@@ -284,6 +293,15 @@ public class TenantAssignmentCoordinator : MonoBehaviour
                 _runState.Day,
                 _runState.Phase.Current,
                 "房间移动",
+                $"{displayName}：{currentRoomId} → {targetRoomId}",
+                tenantId,
+                tenantId));
+
+            TenantLogManager.Record(_runState, new TenantLogWriteDto(
+                tenantId,
+                TenantLogCategory.RoomMove,
+                _runState.Day,
+                _runState.Phase.Current,
                 $"{displayName}：{currentRoomId} → {targetRoomId}",
                 tenantId));
         }

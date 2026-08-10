@@ -29,8 +29,16 @@ namespace Hotel.Runtime
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
         public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
-        public bool HotelHasMirror = true;
+public bool HotelHasMirror = true;
         public bool IsStorm;
+        public List<TenantLogListEntry> TenantLogs = new List<TenantLogListEntry>();
+    }
+
+    [Serializable]
+    public sealed class TenantLogListEntry
+    {
+        public string TenantId;
+        public List<TenantLogEntry> Entries = new List<TenantLogEntry>();
     }
 
     public static class RunSaveCodec
@@ -90,6 +98,19 @@ namespace Hotel.Runtime
             foreach (var entry in state.PlayerLogs)
                 save.PlayerLogs.Add(CloneLogEntry(entry));
 
+            if (state.TenantLogs != null)
+            {
+                foreach (var pair in state.TenantLogs)
+                {
+                    if (pair.Value == null)
+                        continue;
+                    var logList = new TenantLogListEntry { TenantId = pair.Key };
+                    for (int i = 0; i < pair.Value.Count; i++)
+                        logList.Entries.Add(CloneTenantLogEntry(pair.Value[i]));
+                    save.TenantLogs.Add(logList);
+                }
+            }
+
             foreach (var pair in state.Tenants)
                 save.Tenants.Add(CloneTenant(pair.Value));
             foreach (var pair in state.Rooms)
@@ -103,6 +124,7 @@ namespace Hotel.Runtime
             save.Rooms.Sort((a, b) => string.CompareOrdinal(a.RoomId, b.RoomId));
             save.Resources.Sort((a, b) => string.CompareOrdinal(a.ResourceId, b.ResourceId));
             save.Buffs.Sort((a, b) => string.CompareOrdinal(a.BuffId, b.BuffId));
+            save.TenantLogs.Sort((a, b) => string.CompareOrdinal(a.TenantId, b.TenantId));
             return save;
         }
 
@@ -131,6 +153,25 @@ namespace Hotel.Runtime
                     if (entry == null)
                         continue;
                     state.PlayerLogs.Add(CloneLogEntry(entry));
+                }
+            }
+
+            state.TenantLogs = new Dictionary<string, List<TenantLogEntry>>();
+            if (save.TenantLogs != null)
+            {
+                foreach (var logList in save.TenantLogs)
+                {
+                    if (logList == null || string.IsNullOrEmpty(logList.TenantId) || logList.Entries == null)
+                        continue;
+                    var entries = new List<TenantLogEntry>();
+                    for (int i = 0; i < logList.Entries.Count; i++)
+                    {
+                        TenantLogEntry entry = logList.Entries[i];
+                        if (entry == null)
+                            continue;
+                        entries.Add(CloneTenantLogEntry(entry));
+                    }
+                    state.TenantLogs[logList.TenantId] = entries;
                 }
             }
 
@@ -239,6 +280,22 @@ namespace Hotel.Runtime
                 Phase = value.Phase,
                 Category = value.Category,
                 Title = value.Title,
+                Summary = value.Summary,
+                DetailKey = value.DetailKey,
+                TenantId = value.TenantId
+            };
+        }
+
+        private static TenantLogEntry CloneTenantLogEntry(TenantLogEntry value)
+        {
+            if (value == null)
+                return null;
+            return new TenantLogEntry
+            {
+                Sequence = value.Sequence,
+                Day = value.Day,
+                Phase = value.Phase,
+                Category = value.Category,
                 Summary = value.Summary,
                 DetailKey = value.DetailKey
             };
