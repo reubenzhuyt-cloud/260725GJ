@@ -9,10 +9,7 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     [SerializeField] private Image avatarImage;
     [SerializeField] private TenantInfoHoverTrigger hoverTrigger;
     [SerializeField] private Transform positionAnchor;
-    [SerializeField] private float baseWorldSize = 0.96f;
-    [SerializeField] private float lodDetailThreshold = 20f;
-    [SerializeField] private float lodClosestZoom = 12f;
-    [SerializeField] private float lodMaxScale = 2f;
+    [SerializeField, Min(1f)] private float screenSize = 120f;
 
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
@@ -86,7 +83,7 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     private void LateUpdate()
     {
         TrackAnchorPosition();
-        UpdateSizeForZoom();
+        UpdateFixedScreenSize();
     }
 
     public string GetOccupantId()
@@ -173,35 +170,14 @@ public class RoomTenantAvatarSlot : MonoBehaviour
         }
     }
 
-    private void UpdateSizeForZoom()
+    private void UpdateFixedScreenSize()
     {
-        Camera cam = Camera.main;
-        if (cam == null || !cam.orthographic)
-            return;
-
-        float zoom = cam.orthographicSize;
-        if (zoom <= 0f)
-            return;
-
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas == null || canvas.scaleFactor <= 0f)
-            return;
-
         RectTransform self = transform as RectTransform;
         if (self == null)
             return;
 
-        float multiplier = 1f;
-        float range = lodDetailThreshold - lodClosestZoom;
-        if (range > 0f)
-            multiplier = Mathf.Lerp(1f, lodMaxScale,
-                Mathf.InverseLerp(lodDetailThreshold, lodClosestZoom, zoom));
-
-        float effectiveWorldSize = baseWorldSize * multiplier;
-        float screenPixels = effectiveWorldSize * Screen.height / (2f * zoom);
-        float canvasUnits = screenPixels / canvas.scaleFactor;
-
-        self.sizeDelta = new Vector2(canvasUnits, canvasUnits);
+        float size = Mathf.Max(screenSize, 1f);
+        self.sizeDelta = new Vector2(size, size);
     }
 
     public static IReadOnlyList<RoomTenantAvatarSlot> GetSlotsForRoom(string roomId)
