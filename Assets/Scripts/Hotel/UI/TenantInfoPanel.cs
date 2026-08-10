@@ -23,6 +23,7 @@ public class TenantInfoPanel : MonoBehaviour,
     public TextMeshProUGUI titleLabel;
     public TextMeshProUGUI shortDescriptionLabel;
     public TextMeshProUGUI detailedDescriptionLabel;
+    public TenantLogPanelController tenantLogPanel;
 
     [Header("Player Flag")]
     public TMP_Dropdown flagDropdown;
@@ -125,6 +126,8 @@ public class TenantInfoPanel : MonoBehaviour,
         _currentTenantId = tenantId;
         Mode = PanelMode.Pinned;
         Source = source;
+        if (tenantLogPanel != null)
+            tenantLogPanel.RefreshForTenant(tenantId);
         ApplyInteractionMode();
         gameObject.SetActive(true);
         ApplyFlagToPanel(tenantId);
@@ -135,6 +138,8 @@ public class TenantInfoPanel : MonoBehaviour,
     {
         Mode = PanelMode.Hidden;
         Source = DisplaySource.None;
+        if (tenantLogPanel != null)
+            tenantLogPanel.ClearLog();
         _currentTenantId = null;
         IsPointerOver = false;
         ApplyInteractionMode();
