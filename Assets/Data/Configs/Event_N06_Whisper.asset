@@ -25,6 +25,13 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions:
+    - condition: 2
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+    requireAll: true
+    weightScale: 0
     baseWeight: 10
     category: night_pollution
   eventTitle: "低语"

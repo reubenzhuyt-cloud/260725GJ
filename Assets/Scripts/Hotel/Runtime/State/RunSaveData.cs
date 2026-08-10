@@ -29,6 +29,8 @@ namespace Hotel.Runtime
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
         public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
+        public bool HotelHasMirror = true;
+        public bool IsStorm;
     }
 
     public static class RunSaveCodec
@@ -82,6 +84,8 @@ namespace Hotel.Runtime
             save.AuditLog.AddRange(state.AuditLog);
             save.ResolvedReviewCandidateIds.AddRange(state.ResolvedReviewCandidateIds);
             save.ReviewHistory.AddRange(state.ReviewHistory);
+            save.HotelHasMirror = state.HotelHasMirror;
+            save.IsStorm = state.IsStorm;
 
             foreach (var entry in state.PlayerLogs)
                 save.PlayerLogs.Add(CloneLogEntry(entry));
@@ -116,6 +120,8 @@ namespace Hotel.Runtime
             state.Summary = save.Summary ?? new RunSummaryState();
             state.ResolvedReviewCandidateIds = save.ResolvedReviewCandidateIds ?? new List<string>();
             state.ReviewHistory = save.ReviewHistory ?? new List<ReviewDecisionRecord>();
+            state.HotelHasMirror = save.HotelHasMirror;
+            state.IsStorm = save.IsStorm;
 
             state.PlayerLogs = new List<PlayerLogEntry>();
             if (save.PlayerLogs != null)
@@ -178,7 +184,8 @@ namespace Hotel.Runtime
                 PlayerFlag = value.PlayerFlag,
                 RoomId = value.RoomId,
                 JobId = value.JobId,
-                AvatarKey = value.AvatarKey
+                AvatarKey = value.AvatarKey,
+                Vulnerable = value.Vulnerable
             };
         }
 

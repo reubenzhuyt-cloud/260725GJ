@@ -154,6 +154,7 @@ namespace Hotel.Runtime
         public string RoomId;
         public string JobId;
         public string AvatarKey;
+        public bool Vulnerable;
     }
 
     [Serializable]
@@ -257,6 +258,8 @@ namespace Hotel.Runtime
         public List<string> ResolvedReviewCandidateIds = new List<string>();
         public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
         public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
+        public bool HotelHasMirror = true;
+        public bool IsStorm;
 
         public static GameRunState New(RunId id, int seed = 1)
         {

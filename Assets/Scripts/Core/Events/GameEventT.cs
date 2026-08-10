@@ -4,8 +4,8 @@ using UnityEngine;
 
 public abstract class GameEvent<T> : ScriptableObject
 {
-    private List<GameEventListener<T>> listeners = new List<GameEventListener<T>>();
-    private List<Action<T>> callbacks = new List<Action<T>>();
+    private List<GameEventListener<T>> listeners = new();
+    private List<Action<T>> callbacks = new();
 
     public void Raise(T data)
     {

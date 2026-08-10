@@ -21,6 +21,51 @@ public enum EventKind { Normal, ChainStep, Personal, SpecialVisitor }
 
 public enum RepeatPolicy { OncePerRun, Repeatable }
 
+/// <summary>
+/// State-dependent eligibility conditions (EVENTS.md 触发条件 column).
+/// Conditions are evaluated against the live GameRunState at event-planning time.
+/// </summary>
+public enum ConditionType
+{
+    None = 0,
+    YellowTenantExists = 1,
+    RedTenantExists = 2,
+    RedCountAtLeast = 3,
+    YellowCountAtLeast = 4,
+    GreenRedSameFloor = 5,
+    RedYellowSameFloor = 6,
+    TenantErosionAbove = 7,
+    TenantErosionBelow = 8,
+    FoodBelowDays = 9,
+    FoodOrCurrencyAbove = 10,
+    TenantWithAbility = 11,
+    SpecificTenantPresent = 12,
+    VulnerableTenantExists = 13,
+    HotelHasMirror = 14,
+    IsStorm = 15
+}
+
+/// <summary>
+/// Optional state-correlated selection-weight scaling. When set, the event's
+/// effective weight becomes baseWeight * max(1, matching tenant count), so
+/// events like Nightmare Spread grow likelier as Red tenants accumulate.
+/// </summary>
+public enum EventWeightScale
+{
+    None = 0,
+    RedTenantCount = 1,
+    YellowTenantCount = 2
+}
+
+[System.Serializable]
+public class EventCondition
+{
+    public ConditionType condition = ConditionType.None;
+    public int intValue;
+    public float floatValue;
+    public string stringValue = "";
+}
+
 [System.Serializable]
 public class EventEffect
 {
@@ -33,8 +78,7 @@ public class EventEffect
 }
 
 /// <summary>
-/// Per-event trigger/selection specification. Replaces the legacy single
-/// triggerPhase field and dead triggerCondition string.
+/// Per-event trigger/selection specification.
 /// </summary>
 [System.Serializable]
 public class TriggerSpec
@@ -73,6 +117,16 @@ public class TriggerSpec
 
     [Tooltip("1-based step within the chain. Required when kind == ChainStep.")]
     public int chainStep = 0;
+
+    [Header("Conditions")]
+    [Tooltip("State-dependent eligibility conditions (EVENTS.md 触发条件). Empty list = always eligible (随机). When state is unavailable these make the event ineligible.")]
+    public List<EventCondition> conditions = new List<EventCondition>();
+
+    [Tooltip("true: every condition must pass (AND). false: any passing condition is enough (OR).")]
+    public bool requireAll = true;
+
+    [Tooltip("Optional state-correlated weight scaling: baseWeight * max(1, count of matching tenants).")]
+    public EventWeightScale weightScale = EventWeightScale.None;
 
     [Header("Selection")]
     [Tooltip("Relative selection weight among eligible candidates (must be >= 1).")]
@@ -157,6 +211,20 @@ public class EventConfig : ScriptableObject
             int oldCooldown = t.cooldownDays;
             t.cooldownDays = 0;
             Debug.LogWarning($"[EventConfig:{name}] Trigger.cooldownDays ({oldCooldown}) clamped to 0.", this);
+        }
+
+        if (t.conditions != null)
+        {
+            for (int i = 0; i < t.conditions.Count; i++)
+            {
+                EventCondition c = t.conditions[i];
+                if (c == null) continue;
+                if (c.condition == ConditionType.TenantWithAbility &&
+                    !System.Enum.IsDefined(typeof(TenantAbility), c.stringValue))
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] TenantWithAbility references unknown ability '{c.stringValue}'; condition can never pass.", this);
+                }
+            }
         }
 
         if (t.kind == EventKind.ChainStep)

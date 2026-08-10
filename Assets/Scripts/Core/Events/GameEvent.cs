@@ -5,8 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewGameEvent", menuName = "Events/GameEvent")]
 public class GameEvent : ScriptableObject
 {
-    private List<GameEventListener> listeners = new List<GameEventListener>();
-    private List<Action> callbacks = new List<Action>();
+    private List<GameEventListener> listeners = new();
+    private List<Action> callbacks = new();
 
     public void Raise()
     {

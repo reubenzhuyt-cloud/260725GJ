@@ -17,7 +17,7 @@ MonoBehaviour:
   trigger:
     eligiblePhases: 1
     kind: 0
-    minDay: 9999
+    minDay: 1
     maxDay: 0
     repeatPolicy: 1
     cooldownDays: 1
@@ -25,6 +25,13 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions:
+    - condition: 8
+      intValue: 0
+      floatValue: 30
+      stringValue: 
+    requireAll: true
+    weightScale: 0
     baseWeight: 8
     category: day_management
   eventTitle: "房客请求"

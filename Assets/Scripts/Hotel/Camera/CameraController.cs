@@ -6,7 +6,7 @@ public class CameraController : MonoBehaviour
 {
     [Header("Map Bounds")]
     public SpriteRenderer hotelMapRenderer;
-    [HideInInspector] public Vector2 mapSize = new Vector2(200f, 160f);
+    [HideInInspector] public Vector2 mapSize = new(200f, 160f);
     private Vector2 clampSize; // expanded size for camera clamping (matches camera aspect)
     private Vector2 mapOrigin;
 
@@ -98,9 +98,11 @@ public class CameraController : MonoBehaviour
         if (!eventSystem.IsPointerOverGameObject())
             return false;
 
-        PointerEventData pointerEventData = new PointerEventData(eventSystem);
-        pointerEventData.position = Input.mousePosition;
-        List<RaycastResult> results = new List<RaycastResult>();
+        PointerEventData pointerEventData = new(eventSystem)
+        {
+            position = Input.mousePosition
+        };
+        List<RaycastResult> results = new();
         eventSystem.RaycastAll(pointerEventData, results);
         if (results.Count == 0)
             return false;
@@ -146,7 +148,7 @@ public class CameraController : MonoBehaviour
         if (offset.sqrMagnitude > 0.000001f)
         {
             Transform cameraTransform = cam.transform;
-            cameraTransform.position = cameraTransform.position + offset;
+            cameraTransform.position += offset;
         }
     }
 
@@ -269,12 +271,12 @@ public class CameraController : MonoBehaviour
     {
         // Map bounds - green
         Gizmos.color = Color.green;
-        Vector3 mapCenter = new Vector3(mapOrigin.x + mapSize.x / 2f, mapOrigin.y + mapSize.y / 2f, 0f);
-        Gizmos.DrawWireCube(mapCenter, new Vector3(mapSize.x, mapSize.y, 0f));
+        Vector3 mapCenter = new(mapOrigin.x + mapSize.x / 2f, mapOrigin.y + mapSize.y / 2f, 0f);
+        Gizmos.DrawWireCube(mapCenter, mapSize);
 
         // Clamp bounds - yellow
         Gizmos.color = Color.yellow;
-        Vector3 clampCenter = new Vector3(mapOrigin.x + clampSize.x / 2f, mapOrigin.y + clampSize.y / 2f, 0f);
-        Gizmos.DrawWireCube(clampCenter, new Vector3(clampSize.x, clampSize.y, 0f));
+        Vector3 clampCenter = new(mapOrigin.x + clampSize.x / 2f, mapOrigin.y + clampSize.y / 2f, 0f);
+        Gizmos.DrawWireCube(clampCenter, clampSize);
     }
 }

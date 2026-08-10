@@ -179,6 +179,10 @@ public class EventManager : MonoBehaviour
         IReadOnlyList<EventHistoryRecord> history = state.EventHistory;
         int occurrence = history != null ? history.Count : 0;
 
+        TenantReviewCoordinator coordinator = TenantReviewCoordinator.Instance;
+        IReadOnlyList<TenantReviewCandidateSO> candidates =
+            coordinator != null ? coordinator.candidates : null;
+
         preGeneratedEvents.Clear();
 
         foreach (GamePhase phase in System.Enum.GetValues(typeof(GamePhase)))
@@ -186,28 +190,35 @@ public class EventManager : MonoBehaviour
             // Dawn belongs to the next calendar day in the phase cycle.
             int phaseDay = phase == GamePhase.Dawn ? day + 1 : day;
 
-            List<EventConfig> candidates = EventSelectionService.FilterCandidates(allEvents, phaseDay, phase, history);
-            if (candidates == null || candidates.Count == 0) continue;
+            List<EventConfig> candidatesForPhase = EventSelectionService.FilterCandidates(
+                allEvents,
+                phaseDay,
+                phase,
+                history,
+                bridge.RunState,
+                candidates,
+                RoomFloorRegistry.Instance);
+            if (candidatesForPhase == null || candidatesForPhase.Count == 0) continue;
 
             int baseSeed = EventSelectionService.ComputeSelectionSeed(state.Seed, phaseDay, phase, occurrence);
 
             if (phase == GamePhase.Night)
             {
                 // Black night guarantees at least one eligible Normal event.
-                preGeneratedEvents[phase] = PickEvents(candidates, baseSeed);
+                preGeneratedEvents[phase] = PickEvents(candidatesForPhase, baseSeed, bridge.RunState);
             }
             else if (phase == GamePhase.Day)
             {
                 int rollSeed = EventSelectionService.DeriveSeed(baseSeed, EventSelectionService.SaltRoll);
                 if (RollPercent(rollSeed) < dayEventChance)
-                    preGeneratedEvents[phase] = PickEvents(candidates, baseSeed);
+                    preGeneratedEvents[phase] = PickEvents(candidatesForPhase, baseSeed, bridge.RunState);
             }
             else
             {
                 // Dawn/Dusk retain the legacy hidden-phase chance behavior.
                 int rollSeed = EventSelectionService.DeriveSeed(baseSeed, EventSelectionService.SaltRoll);
                 if (RollPercent(rollSeed) < hiddenPhaseChance)
-                    preGeneratedEvents[phase] = PickEvents(candidates, baseSeed);
+                    preGeneratedEvents[phase] = PickEvents(candidatesForPhase, baseSeed, bridge.RunState);
             }
         }
 
@@ -229,7 +240,7 @@ public class EventManager : MonoBehaviour
     /// helper. Robustly guarantees at least one event whenever candidates existed,
     /// even if an unexpected invalid effective weight makes every weighted pick fail.
     /// </summary>
-    private List<EventConfig> PickEvents(List<EventConfig> candidates, int baseSeed)
+    private List<EventConfig> PickEvents(List<EventConfig> candidates, int baseSeed, GameRunState state)
     {
         var picked = new List<EventConfig>();
         if (candidates == null || candidates.Count == 0) return picked;
@@ -245,6 +256,13 @@ public class EventManager : MonoBehaviour
 
         for (int i = 0; i < count && remaining.Count > 0; i++)
         {
+            runtimeWeightModifiers.Clear();
+            for (int j = 0; j < remaining.Count; j++)
+            {
+                runtimeWeightModifiers[remaining[j].eventId] =
+                    EventConditionEvaluator.ComputeWeightModifier(remaining[j].trigger, state);
+            }
+
             int pickSeed = EventSelectionService.DeriveSeed(baseSeed, i + 1);
             EventConfig config = EventSelectionService.PickWeighted(remaining, runtimeWeightModifiers, pickSeed);
             if (config == null) break;
@@ -255,7 +273,12 @@ public class EventManager : MonoBehaviour
         // Night (and any phase) guarantee: never return an empty list when candidates
         // existed. A runtime modifier must never be able to disable the guaranteed event.
         if (picked.Count == 0 && candidates.Count > 0)
-            picked.Add(candidates[0]);
+        {
+            const int FallbackSalt = unchecked((int)0xDEADBEEF);
+            int fallbackSeed = EventSelectionService.DeriveSeed(baseSeed, FallbackSalt);
+            int fallbackIndex = new System.Random(fallbackSeed).Next(candidates.Count);
+            picked.Add(candidates[fallbackIndex]);
+        }
 
         return picked;
     }

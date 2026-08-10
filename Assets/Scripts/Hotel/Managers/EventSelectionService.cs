@@ -2,12 +2,8 @@ using System.Collections.Generic;
 using Hotel.Runtime;
 
 /// <summary>
-/// Pure, deterministic event candidate filtering and weighted selection.
-/// No UnityEngine.Random global state is used; all randomness derives from a
+/// Event candidate filtering and weighted selection. All randomness derives from a
 /// caller-supplied seed (computed from run seed / day / phase / history occurrence).
-/// Assembly note: this file lives in the default assembly (Assembly-CSharp) because
-/// it depends on EventConfig (which is not visible from Hotel.Runtime); the runtime
-/// state types it reads (EventHistoryRecord) come from Hotel.Runtime.
 /// </summary>
 public static class EventSelectionService
 {
@@ -30,7 +26,7 @@ public static class EventSelectionService
     }
 
     /// <summary>
-    /// Returns configs from <paramref name="catalog"/> eligible to fire on the given
+    /// Returns configs from catalog eligible to fire on the given
     /// day/phase, in catalog order. In this phase only EventKind.Normal events are
     /// eligible; ChainStep/Personal/SpecialVisitor are excluded until their owning
     /// systems exist. RepeatPolicy.OncePerRun excludes events already present in
@@ -41,7 +37,10 @@ public static class EventSelectionService
         IReadOnlyList<EventConfig> catalog,
         int day,
         GamePhase phase,
-        IReadOnlyList<EventHistoryRecord> history)
+        IReadOnlyList<EventHistoryRecord> history,
+        GameRunState state = null,
+        IReadOnlyList<TenantReviewCandidateSO> candidates = null,
+        RoomFloorRegistry floorRegistry = null)
     {
         var result = new List<EventConfig>();
         if (catalog == null) return result;
@@ -66,6 +65,10 @@ public static class EventSelectionService
             if (day < trigger.minDay) continue;
             if (trigger.maxDay > 0 && day > trigger.maxDay) continue;
 
+            // State-dependent conditions (EVENTS.md 触发条件). A non-empty list
+            // with no available state is treated as ineligible (conservative).
+            if (!EventConditionEvaluator.Matches(trigger, state, candidates, floorRegistry)) continue;
+
             if (trigger.repeatPolicy == RepeatPolicy.OncePerRun)
             {
                 if (HasOccurred(history, config.eventId)) continue;
@@ -83,7 +86,7 @@ public static class EventSelectionService
     }
 
     /// <summary>
-    /// Deterministic weighted pick from <paramref name="candidates"/> using effective
+    /// Deterministic weighted pick from candidates using effective
     /// weights (baseWeight * runtime modifier). Invalid/missing ids and non-positive
     /// or NaN effective weights are skipped gracefully. Returns null when no candidate
     /// is selectable. Cumulative totals are kept in double precision throughout.

@@ -17,7 +17,7 @@ MonoBehaviour:
   trigger:
     eligiblePhases: 2
     kind: 0
-    minDay: 9999
+    minDay: 1
     maxDay: 0
     repeatPolicy: 1
     cooldownDays: 1
@@ -25,6 +25,13 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions:
+    - condition: 3
+      intValue: 3
+      floatValue: 0
+      stringValue: 
+    requireAll: true
+    weightScale: 1
     baseWeight: 8
     category: night_erosion
   eventTitle: "侵蚀爆发"
