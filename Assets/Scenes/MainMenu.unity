@@ -166,9 +166,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58f2b99eaf1b4aa69f673640981d56da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveInfoText: {fileID: 1191191194}
+  slotGridPanel: {fileID: 0}
+  backButton: {fileID: 0}
+  slotCards:
+  - cardButton: {fileID: 0}
+    numberText: {fileID: 0}
+    dayText: {fileID: 0}
+    timeText: {fileID: 0}
+    deleteButton: {fileID: 0}
+  - cardButton: {fileID: 0}
+    numberText: {fileID: 0}
+    dayText: {fileID: 0}
+    timeText: {fileID: 0}
+    deleteButton: {fileID: 0}
+  - cardButton: {fileID: 0}
+    numberText: {fileID: 0}
+    dayText: {fileID: 0}
+    timeText: {fileID: 0}
+    deleteButton: {fileID: 0}
+  confirmOverlay: {fileID: 0}
+  confirmTitle: {fileID: 0}
+  confirmYesButton: {fileID: 0}
+  confirmNoButton: {fileID: 0}
   statusText: {fileID: 1717346258}
-  continueButton: {fileID: 549331775}
 --- !u!1 &38737029
 GameObject:
   m_ObjectHideFlags: 0

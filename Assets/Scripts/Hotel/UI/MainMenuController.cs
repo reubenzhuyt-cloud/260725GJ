@@ -30,6 +30,7 @@ public sealed class MainMenuController : MonoBehaviour
     [SerializeField] private Button confirmNoButton;
 
     [Header("Status")]
+    [SerializeField] private TextMeshProUGUI saveInfoText;
     [SerializeField] private TextMeshProUGUI statusText;
 
     private enum PendingAction : byte { None, NewGame, Delete }
@@ -53,6 +54,8 @@ public sealed class MainMenuController : MonoBehaviour
             backButton.onClick.AddListener(OnBackPressed);
 
         CloseSlotGrid();
+
+        RefreshSaveInfo();
     }
 
     private void Update()
@@ -97,16 +100,30 @@ public sealed class MainMenuController : MonoBehaviour
         SetStatus(string.Empty, false);
     }
 
-    /// <summary>Single entry point: opens the grid; each card decides on its own what to do.</summary>
+    /// <summary>Starts a fresh default-slot game and loads the main scene.</summary>
     public void OnNewGamePressed()
     {
-        OpenSlotGrid();
+        GameLaunchContext.StartNewGame();
+        SceneManager.LoadScene(GameSceneName);
     }
 
-    /// <summary>Same as OnNewGamePressed — kept for the old Continue binding, now redundant.</summary>
+    /// <summary>Continues from the default slot 1 save; reports if none exists or loading fails.</summary>
     public void OnContinuePressed()
     {
-        OpenSlotGrid();
+        if (!SaveGameService.HasSave(1))
+        {
+            SetStatus("暂无存档可继续", true);
+            return;
+        }
+
+        if (!SaveGameService.TryLoad(1, out var state, out var error))
+        {
+            SetStatus($"读取失败：{error}", true);
+            return;
+        }
+
+        GameLaunchContext.ContinueWith(1, state);
+        SceneManager.LoadScene(GameSceneName);
     }
 
     /// <summary>Deleting happens per slot card inside the grid.</summary>
@@ -257,6 +274,19 @@ public sealed class MainMenuController : MonoBehaviour
         if (statusText == null) return;
         statusText.text = message;
         statusText.color = isWarning ? WarningColor : MutedTextColor;
+    }
+
+    private void RefreshSaveInfo()
+    {
+        if (saveInfoText == null) return;
+
+        if (!SaveGameService.TryGetSummary(1, out SaveSlotSummary summary))
+        {
+            saveInfoText.text = "暂无存档";
+            return;
+        }
+
+        saveInfoText.text = $"第 {summary.Day} 天 · {GetPhaseName(summary.Phase)} · {summary.TenantCount} 位房客\n{summary.SavedAtLocal:MM-dd HH:mm}";
     }
 
     private static string GetPhaseName(HotelPhase phase)
