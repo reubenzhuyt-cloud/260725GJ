@@ -4,6 +4,7 @@ using Hotel.Audio;
 using Hotel.Runtime;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public sealed class GameSettingController : MonoBehaviour
@@ -103,17 +104,13 @@ public sealed class GameSettingController : MonoBehaviour
             SettlementBridge.Instance != null ? SettlementBridge.Instance.RunState : null,
             SaveGameService.TrySave,
             ClosePauseMenu,
-            QuitGame,
+            ReturnToMainMenu,
             message => Debug.LogError(message));
     }
 
-    private static void QuitGame()
+    private static void ReturnToMainMenu()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void OnDisplayModeChanged(int value)

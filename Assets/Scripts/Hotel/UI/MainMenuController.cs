@@ -18,22 +18,22 @@ public sealed class MainMenuController : MonoBehaviour
         public Button deleteButton;
     }
 
-    [Header("Slot Grid")]
+    [Header("Screens")]
+    [SerializeField] private GameObject menuCard;
     [SerializeField] private GameObject slotGridPanel;
-    [SerializeField] private Button backButton;
-    [SerializeField] private SlotCardView[] slotCards = new SlotCardView[SaveGameService.MaxSlots];
 
-    [Header("Confirm Overlay")]
+    [Header("Save Slots")]
+    [SerializeField] private SlotCardView[] slotCards = new SlotCardView[SaveGameService.MaxSlots];
+    [SerializeField] private TextMeshProUGUI statusText;
+
+    [Header("Confirmation")]
     [SerializeField] private GameObject confirmOverlay;
     [SerializeField] private TextMeshProUGUI confirmTitle;
     [SerializeField] private Button confirmYesButton;
     [SerializeField] private Button confirmNoButton;
 
-    [Header("Status")]
-    [SerializeField] private TextMeshProUGUI saveInfoText;
-    [SerializeField] private TextMeshProUGUI statusText;
-
     private enum PendingAction : byte { None, NewGame, Delete }
+
     private PendingAction pendingAction;
     private int pendingSlotIndex;
 
@@ -42,20 +42,12 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void Awake()
     {
-        if (confirmNoButton != null) confirmNoButton.onClick.AddListener(OnConfirmNo);
-        if (confirmYesButton != null) confirmYesButton.onClick.AddListener(OnConfirmYes);
-
-        if (slotGridPanel == null)
-            slotGridPanel = FindGameObjectByName("SlotGridPanel");
-
-        if (backButton == null)
-            TryFindButtonByName("BackButton", out backButton);
-        if (backButton != null)
-            backButton.onClick.AddListener(OnBackPressed);
+        if (confirmYesButton != null)
+            confirmYesButton.onClick.AddListener(OnConfirmYes);
+        if (confirmNoButton != null)
+            confirmNoButton.onClick.AddListener(OnConfirmNo);
 
         CloseSlotGrid();
-
-        RefreshSaveInfo();
     }
 
     private void Update()
@@ -68,26 +60,29 @@ public sealed class MainMenuController : MonoBehaviour
             OnBackPressed();
     }
 
-    private static GameObject FindGameObjectByName(string name)
+    public void OnPlayPressed()
     {
-        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+        OpenSlotGrid();
+    }
+
+    // Kept while the existing Play button still uses this older scene callback.
+    public void OnDeleteSavePressed()
+    {
+        OnPlayPressed();
+    }
+
+    // Kept for the disabled legacy Continue button in the scene.
+    public void OnContinuePressed()
+    {
+        if (!SaveGameService.HasSave(1))
         {
-            if (go.name == name)
-                return go;
+            SetStatus("暂无存档可继续", true);
+            return;
         }
-        return null;
+
+        LoadSlot(1);
     }
 
-    private static bool TryFindButtonByName(string name, out Button button)
-    {
-        button = null;
-        var go = FindGameObjectByName(name);
-        if (go == null) return false;
-        button = go.GetComponent<Button>();
-        return button != null;
-    }
-
-    /// <summary>Closes the confirm overlay, then the slot grid (also bound to ESC and the grid's Back button).</summary>
     public void OnBackPressed()
     {
         if (confirmOverlay != null && confirmOverlay.activeSelf)
@@ -97,40 +92,6 @@ public sealed class MainMenuController : MonoBehaviour
         }
 
         CloseSlotGrid();
-        SetStatus(string.Empty, false);
-    }
-
-    /// <summary>Starts a fresh default-slot game and loads the main scene.</summary>
-    public void OnNewGamePressed()
-    {
-        GameLaunchContext.StartNewGame();
-        SceneManager.LoadScene(GameSceneName);
-    }
-
-    /// <summary>Continues from the default slot 1 save; reports if none exists or loading fails.</summary>
-    public void OnContinuePressed()
-    {
-        if (!SaveGameService.HasSave(1))
-        {
-            SetStatus("暂无存档可继续", true);
-            return;
-        }
-
-        if (!SaveGameService.TryLoad(1, out var state, out var error))
-        {
-            SetStatus($"读取失败：{error}", true);
-            return;
-        }
-
-        GameLaunchContext.ContinueWith(1, state);
-        SceneManager.LoadScene(GameSceneName);
-    }
-
-    /// <summary>Deleting happens per slot card inside the grid.</summary>
-    public void OnDeleteSavePressed()
-    {
-        OpenSlotGrid();
-        SetStatus("点击存档位卡片上的删除按钮", false);
     }
 
     public void OnQuitPressed()
@@ -145,55 +106,62 @@ public sealed class MainMenuController : MonoBehaviour
     private void OpenSlotGrid()
     {
         pendingAction = PendingAction.None;
+        SetStatus(string.Empty, false);
         RefreshSlots();
+
+        if (menuCard != null) menuCard.SetActive(false);
         if (slotGridPanel != null) slotGridPanel.SetActive(true);
-        if (backButton != null) backButton.gameObject.SetActive(true);
     }
 
     private void CloseSlotGrid()
     {
         pendingAction = PendingAction.None;
+        if (confirmOverlay != null) confirmOverlay.SetActive(false);
         if (slotGridPanel != null) slotGridPanel.SetActive(false);
-        if (backButton != null) backButton.gameObject.SetActive(false);
+        if (menuCard != null) menuCard.SetActive(true);
     }
 
     private void OnSlotPressed(int index)
     {
         int slot = index + 1;
-
         if (SaveGameService.HasSave(slot))
         {
-            if (!SaveGameService.TryLoad(slot, out var state, out var error))
-            {
-                SetStatus($"读取失败：{error}", true);
-                RefreshSlots();
-                return;
-            }
-
-            GameLaunchContext.ContinueWith(slot, state);
-            SceneManager.LoadScene(GameSceneName);
+            LoadSlot(slot);
             return;
         }
 
         pendingAction = PendingAction.NewGame;
         pendingSlotIndex = index;
-        confirmTitle.text = $"新游戏将保存在存档位 {slot}？";
-        confirmOverlay.SetActive(true);
+        ShowConfirmation($"新游戏将保存在存档位 {slot}？");
+    }
+
+    private void LoadSlot(int slot)
+    {
+        if (!SaveGameService.TryLoad(slot, out var state, out var error))
+        {
+            SetStatus($"读取失败：{error}", true);
+            RefreshSlots();
+            return;
+        }
+
+        GameLaunchContext.ContinueWith(slot, state);
+        SceneManager.LoadScene(GameSceneName);
     }
 
     private void OnDeletePressed(int index)
     {
         int slot = index + 1;
-        if (!SaveGameService.HasSave(slot))
-        {
-            SetStatus("该存档位没有存档", false);
-            return;
-        }
+        if (!SaveGameService.HasSave(slot)) return;
 
         pendingAction = PendingAction.Delete;
         pendingSlotIndex = index;
-        confirmTitle.text = $"删除存档位 {slot} 的存档？";
-        confirmOverlay.SetActive(true);
+        ShowConfirmation($"删除存档位 {slot} 的存档？此操作无法撤销。");
+    }
+
+    private void ShowConfirmation(string message)
+    {
+        if (confirmTitle != null) confirmTitle.text = message;
+        if (confirmOverlay != null) confirmOverlay.SetActive(true);
     }
 
     private void OnConfirmYes()
@@ -228,7 +196,7 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void RefreshSlots()
     {
-        var summaries = SaveGameService.GetAllSummaries();
+        SaveSlotSummary?[] summaries = SaveGameService.GetAllSummaries();
         int count = slotCards != null ? Mathf.Min(slotCards.Length, SaveGameService.MaxSlots) : 0;
 
         for (int i = 0; i < count; i++)
@@ -237,20 +205,20 @@ public sealed class MainMenuController : MonoBehaviour
             if (card == null) continue;
 
             int slot = i + 1;
-            SaveSlotSummary? summary = summaries != null && i < summaries.Length ? summaries[i] : null;
-            bool hasSave = summary.HasValue;
+            SaveSlotSummary? summary = summaries[i];
+            bool hasValidSave = summary.HasValue;
+            bool hasSaveFile = SaveGameService.HasSave(slot);
 
-            if (card.numberText != null) card.numberText.text = $"存档位 {slot}";
-
+            if (card.numberText != null)
+                card.numberText.text = $"存档位 {slot}";
             if (card.dayText != null)
-                card.dayText.text = hasSave
+                card.dayText.text = hasValidSave
                     ? $"第 {summary.Value.Day} 天 · {GetPhaseName(summary.Value.Phase)} · {summary.Value.TenantCount} 位房客"
-                    : "空存档";
-
+                    : hasSaveFile ? "存档无法读取" : "空存档";
             if (card.timeText != null)
-                card.timeText.text = hasSave
-                    ? summary.Value.SavedAtLocal.ToString("MM-dd HH:mm")
-                    : "点击开始新游戏";
+                card.timeText.text = hasValidSave
+                    ? summary.Value.SavedAtLocal.ToString("yyyy-MM-dd HH:mm")
+                    : hasSaveFile ? "可以删除后重新开始" : "点击开始新游戏";
 
             if (card.cardButton != null)
             {
@@ -261,7 +229,7 @@ public sealed class MainMenuController : MonoBehaviour
 
             if (card.deleteButton != null)
             {
-                card.deleteButton.interactable = hasSave;
+                card.deleteButton.gameObject.SetActive(hasSaveFile);
                 card.deleteButton.onClick.RemoveAllListeners();
                 int captured = i;
                 card.deleteButton.onClick.AddListener(() => OnDeletePressed(captured));
@@ -274,19 +242,6 @@ public sealed class MainMenuController : MonoBehaviour
         if (statusText == null) return;
         statusText.text = message;
         statusText.color = isWarning ? WarningColor : MutedTextColor;
-    }
-
-    private void RefreshSaveInfo()
-    {
-        if (saveInfoText == null) return;
-
-        if (!SaveGameService.TryGetSummary(1, out SaveSlotSummary summary))
-        {
-            saveInfoText.text = "暂无存档";
-            return;
-        }
-
-        saveInfoText.text = $"第 {summary.Day} 天 · {GetPhaseName(summary.Phase)} · {summary.TenantCount} 位房客\n{summary.SavedAtLocal:MM-dd HH:mm}";
     }
 
     private static string GetPhaseName(HotelPhase phase)
