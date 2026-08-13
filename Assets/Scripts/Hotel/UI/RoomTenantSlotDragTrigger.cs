@@ -131,7 +131,7 @@ public class RoomTenantSlotDragTrigger : MonoBehaviour,
             return;
         if (targetRoomId == _slot.RoomId)
             return;
-        if (!string.IsNullOrEmpty(coordinator.GetRoomOccupantId(targetRoomId)))
+        if (!coordinator.CanAssign(targetRoomId))
             return;
 
         coordinator.TryMoveToEmptyRoom(tenantId, targetRoomId);

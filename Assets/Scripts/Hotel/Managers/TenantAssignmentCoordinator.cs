@@ -10,6 +10,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     public event Action AssignmentChanged;
     public bool IsDragging { get; private set; }
 
+    private static bool _warnedMissingRoomProperty;
+
     private StateReducer _reducer;
     private GameRunState _runState;
     private bool _runStateRestoredSubscribed;
@@ -24,7 +26,21 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     public IReadOnlyList<TenantAssignmentItemView> UnassignedTenants => _unassignedTenants;
     public int UnassignedCount => _unassignedTenants.Count;
-    public int AvailableCapacity => _runState == null ? 0 : Mathf.Max(0, _runState.Rooms.Count - _runState.Tenants.Count);
+    public int AvailableCapacity
+    {
+        get
+        {
+            if (_runState == null)
+                return 0;
+            int totalCapacity = 0;
+            foreach (string roomId in _runState.Rooms.Keys)
+            {
+                TryGetRoomCapacity(roomId, out int capacity);
+                totalCapacity += capacity;
+            }
+            return Mathf.Max(0, totalCapacity - _runState.Tenants.Count);
+        }
+    }
     public bool HasUnassignedTenants => UnassignedCount > 0;
 
     private void Awake()
@@ -200,7 +216,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         if (!_runState.Tenants.ContainsKey(tenantId) || !_runState.Rooms.ContainsKey(roomId))
             return false;
 
-        if (IsRoomOccupied(roomId))
+        if (!CanAssign(roomId))
             return false;
 
         if (!string.IsNullOrEmpty(_runState.Tenants[tenantId].RoomId))
@@ -265,7 +281,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         if (currentRoomId == targetRoomId)
             return false;
 
-        if (IsRoomOccupied(targetRoomId))
+        if (!CanAssign(targetRoomId))
             return false;
 
         var changeSet = AuthorizedChangeSet.Domain(
@@ -348,5 +364,47 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             return null;
         var occupants = _runState.Rooms[roomId].OccupantIds;
         return occupants.Count > 0 ? occupants[0] : null;
+    }
+
+    public bool TryGetRoomCapacity(string roomId, out int capacity)
+    {
+        if (RoomAvatarProperty.TryGetCapacity(roomId, out capacity))
+            return true;
+
+        capacity = 1;
+        if (!_warnedMissingRoomProperty)
+        {
+            _warnedMissingRoomProperty = true;
+            Debug.LogWarning($"[TenantAssignmentCoordinator] RoomAvatarProperty missing or invalid for room '{roomId}'; falling back to capacity 1 (single occupancy).", this);
+        }
+        return false;
+    }
+
+    public bool CanAssign(string roomId)
+    {
+        if (_runState == null)
+            return false;
+        if (!_runState.Rooms.ContainsKey(roomId))
+            return false;
+        TryGetRoomCapacity(roomId, out int capacity);
+        return _runState.Rooms[roomId].OccupantIds.Count < capacity;
+    }
+
+    public IReadOnlyList<string> GetRoomOccupantIds(string roomId)
+    {
+        if (_runState == null)
+            return Array.Empty<string>();
+        if (!_runState.Rooms.TryGetValue(roomId, out RoomRunState room))
+            return Array.Empty<string>();
+        return new List<string>(room.OccupantIds);
+    }
+
+    public int GetRoomOccupantCount(string roomId)
+    {
+        if (_runState == null)
+            return 0;
+        if (!_runState.Rooms.TryGetValue(roomId, out RoomRunState room))
+            return 0;
+        return room.OccupantIds.Count;
     }
 }

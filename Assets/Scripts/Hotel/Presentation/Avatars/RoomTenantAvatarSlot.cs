@@ -10,13 +10,23 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     [SerializeField] private TenantInfoHoverTrigger hoverTrigger;
     [SerializeField] private Transform positionAnchor;
     [SerializeField, Min(1f)] private float screenSize = 120f;
+    [SerializeField] private int occupantIndex;
 
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        AllSlots.Clear();
+    }
+
     private bool _isDragVisual;
     private Sprite _placeholderSprite;
+    private RoomAvatarSlotLayoutController _parentLayoutController;
 
     public string RoomId => roomId;
+
+    public int OccupantIndex => occupantIndex;
 
     public Transform PositionAnchor => positionAnchor;
 
@@ -34,6 +44,9 @@ public class RoomTenantAvatarSlot : MonoBehaviour
         }
         if (GetComponent<RoomTenantSlotDragTrigger>() == null)
             gameObject.AddComponent<RoomTenantSlotDragTrigger>();
+        _parentLayoutController = transform.parent != null
+            ? transform.parent.GetComponentInParent<RoomAvatarSlotLayoutController>()
+            : null;
     }
 
     private void OnEnable()
@@ -82,6 +95,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_parentLayoutController != null)
+            return;
         TrackAnchorPosition();
         UpdateFixedScreenSize();
     }
@@ -90,7 +105,10 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     {
         if (TenantAssignmentCoordinator.Instance == null)
             return null;
-        return TenantAssignmentCoordinator.Instance.GetRoomOccupantId(roomId);
+        IReadOnlyList<string> occupants = TenantAssignmentCoordinator.Instance.GetRoomOccupantIds(roomId);
+        if (occupantIndex < 0 || occupantIndex >= occupants.Count)
+            return null;
+        return occupants[occupantIndex];
     }
 
     public void Refresh()
