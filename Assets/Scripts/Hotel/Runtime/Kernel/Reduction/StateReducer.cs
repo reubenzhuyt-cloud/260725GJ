@@ -34,6 +34,7 @@ namespace Hotel.Runtime
             var plannedTenantIds = new HashSet<string>();
             var plannedCandidateIds = new HashSet<string>();
             var plannedTenantErosion = new Dictionary<string, float>();
+            var plannedBuffIds = new HashSet<string>();
             var reviewRecords = new List<ReviewDecisionRecord>();
 
             foreach (var c in set.Changes)
@@ -144,6 +145,8 @@ namespace Hotel.Runtime
                     if (add.Value == null || string.IsNullOrEmpty(add.Value.BuffId))
                         return false;
                     if (s.Buffs.ContainsKey(add.Value.BuffId))
+                        return false;
+                    if (!plannedBuffIds.Add(add.Value.BuffId))
                         return false;
                     break;
                 }

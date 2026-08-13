@@ -47,7 +47,7 @@ public static class EventEffectExecutor
             case EffectTarget.AllAssignedTenants:
                 return AssignedTenants(state, null);
             case EffectTarget.SameRoomOtherTenants:
-                return null;
+                return SameRoomOtherTenants(state, ownerTenantId);
             case EffectTarget.SameFloorTenants:
                 return SameFloorTenants(state, ownerTenantId, floorRegistry);
             case EffectTarget.ByPlayerFlag:
@@ -130,6 +130,38 @@ public static class EventEffectExecutor
             if (excludeTenantId != null && pair.Key == excludeTenantId)
                 continue;
             result.Add(pair.Key);
+        }
+        return result;
+    }
+
+    private static List<string> SameRoomOtherTenants(GameRunState state, string ownerTenantId)
+    {
+        if (string.IsNullOrEmpty(ownerTenantId))
+            return null;
+        if (!state.Tenants.TryGetValue(ownerTenantId, out TenantRunState owner))
+            return null;
+        if (string.IsNullOrEmpty(owner.RoomId))
+            return null;
+        if (!state.Rooms.TryGetValue(owner.RoomId, out RoomRunState room))
+            return null;
+
+        var result = new List<string>();
+        if (room.OccupantIds == null)
+            return result;
+
+        var seen = new HashSet<string>();
+        for (int i = 0; i < room.OccupantIds.Count; i++)
+        {
+            string occupantId = room.OccupantIds[i];
+            if (string.IsNullOrEmpty(occupantId))
+                continue;
+            if (occupantId == ownerTenantId)
+                continue;
+            if (!state.Tenants.ContainsKey(occupantId))
+                continue;
+            if (!seen.Add(occupantId))
+                continue;
+            result.Add(occupantId);
         }
         return result;
     }

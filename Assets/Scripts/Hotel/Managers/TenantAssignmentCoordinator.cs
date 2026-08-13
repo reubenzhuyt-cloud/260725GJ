@@ -10,7 +10,13 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     public event Action AssignmentChanged;
     public bool IsDragging { get; private set; }
 
-    private static bool _warnedMissingRoomProperty;
+    private static readonly HashSet<string> _warnedMissingRoomProperties = new HashSet<string>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _warnedMissingRoomProperties.Clear();
+    }
 
     private StateReducer _reducer;
     private GameRunState _runState;
@@ -38,7 +44,16 @@ public class TenantAssignmentCoordinator : MonoBehaviour
                 TryGetRoomCapacity(roomId, out int capacity);
                 totalCapacity += capacity;
             }
-            return Mathf.Max(0, totalCapacity - _runState.Tenants.Count);
+            int assignedCount = 0;
+            foreach (var pair in _runState.Tenants)
+            {
+                if (pair.Value == null)
+                    continue;
+                if (string.IsNullOrEmpty(pair.Value.RoomId))
+                    continue;
+                assignedCount++;
+            }
+            return Mathf.Max(0, totalCapacity - assignedCount);
         }
     }
     public bool HasUnassignedTenants => UnassignedCount > 0;
@@ -372,9 +387,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             return true;
 
         capacity = 1;
-        if (!_warnedMissingRoomProperty)
+        if (!string.IsNullOrEmpty(roomId) && _warnedMissingRoomProperties.Add(roomId))
         {
-            _warnedMissingRoomProperty = true;
             Debug.LogWarning($"[TenantAssignmentCoordinator] RoomAvatarProperty missing or invalid for room '{roomId}'; falling back to capacity 1 (single occupancy).", this);
         }
         return false;

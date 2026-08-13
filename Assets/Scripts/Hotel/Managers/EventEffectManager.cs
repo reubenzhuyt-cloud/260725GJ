@@ -102,12 +102,6 @@ public class EventEffectManager
             if (buff.LastTickDay == state.Day)
                 continue;
 
-            if (buff.Target == EffectTarget.SameRoomOtherTenants)
-            {
-                Debug.Log($"[EventEffectManager] buff={buff.BuffId} day={state.Day}: skipped (SameRoom other deferred)");
-                continue;
-            }
-
             List<string> targets = ResolveBuffTargets(state, buff, floorRegistry);
             if (targets != null)
             {
@@ -191,11 +185,6 @@ public class EventEffectManager
             if (effect == null)
                 continue;
 
-            if (effect.target == EffectTarget.SameRoomOtherTenants)
-            {
-                Debug.Log($"[EventEffectManager] event={eventId} option={optionId} effect[{i}] type={effect.effectType} target={effect.target}: skipped (SameRoom other deferred)");
-                continue;
-            }
             if (effect.target == EffectTarget.OwnerTenant && string.IsNullOrEmpty(ownerTenantId))
             {
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId} effect[{i}] type={effect.effectType} target={effect.target}: no owner tenant, 0 changes");
