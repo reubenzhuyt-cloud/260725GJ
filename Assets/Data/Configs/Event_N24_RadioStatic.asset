@@ -48,3 +48,9 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 5
+      target: 1
+    - effectType: 1
+      floatValue: 10
+      target: 4
+      stringValue: 
+      intValue: 2

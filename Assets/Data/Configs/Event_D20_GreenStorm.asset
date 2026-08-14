@@ -41,6 +41,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 1
+      target: 1
   - choiceId: B
     choiceText: "加强守夜"
     choiceResult: "加强守夜，全楼侵蚀-1。"
@@ -49,3 +50,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -1
+      target: 1

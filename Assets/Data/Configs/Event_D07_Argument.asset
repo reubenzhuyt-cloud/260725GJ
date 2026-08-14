@@ -45,7 +45,10 @@ MonoBehaviour:
     choiceResult: "介入调解，消耗3食物。"
     effectText: "消耗3食物"
     requiredTags: []
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -3
+      stringValue: food
   - choiceId: B
     choiceText: "把两人分别安排到不同楼层"
     choiceResult: "把两人分别安排到不同楼层。"
@@ -60,3 +63,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 1
+      target: 1

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hotel.Runtime;
+using UnityEngine;
 
 public static class EventEffectExecutor
 {
@@ -21,7 +22,10 @@ public static class EventEffectExecutor
         {
             EventEffect effect = effects[i];
             if (effect == null)
+            {
+                Debug.LogWarning($"[EventEffectExecutor] effects[{i}] is null; skipped");
                 continue;
+            }
 
             if (effect.effectType == EffectType.ModifyTenantErosion)
                 AddErosionChanges(effect, state, ownerTenantId, i, changes, floorRegistry);
@@ -29,6 +33,8 @@ public static class EventEffectExecutor
                 AddResourceChange(effect, state, changes);
             else if (effect.effectType == EffectType.ApplyBuff)
                 AddBuffChange(effect, state, ownerTenantId, eventId, optionId, i, day, changes, floorRegistry);
+            else
+                Debug.LogWarning($"[EventEffectExecutor] effects[{i}] unsupported effectType={effect.effectType}; skipped");
         }
 
         return changes;
@@ -71,9 +77,15 @@ public static class EventEffectExecutor
     private static void AddResourceChange(EventEffect effect, GameRunState state, List<RunChange> changes)
     {
         if (string.IsNullOrEmpty(effect.stringValue))
+        {
+            Debug.LogWarning("[EventEffectExecutor] ModifyResource effect has empty resource id; skipped");
             return;
+        }
         if (!state.Resources.ContainsKey(effect.stringValue))
+        {
+            Debug.LogWarning($"[EventEffectExecutor] ModifyResource effect references unknown resource '{effect.stringValue}'; skipped");
             return;
+        }
         changes.Add(new AdjustResourceChange(effect.stringValue, SafeToInt(effect.floatValue)));
     }
 
@@ -92,6 +104,12 @@ public static class EventEffectExecutor
             ownerTenantId ?? "?",
             day);
 
+        if (!string.IsNullOrEmpty(effect.stringValue)
+            && (state.Resources == null || !state.Resources.ContainsKey(effect.stringValue)))
+        {
+            Debug.LogWarning($"[EventEffectExecutor] ApplyBuff effect references unknown resource '{effect.stringValue}'; buff created without resource tick.");
+        }
+
         changes.Add(new AddBuffChange(new BuffRunState
         {
             BuffId = buffId,
@@ -106,7 +124,7 @@ public static class EventEffectExecutor
             TickTiming = BuffTickTiming.Dawn,
             RemainingTicks = effect.durationTicks > 0 ? effect.durationTicks : -1,
             StartDay = day,
-            LastTickDay = 0,
+            LastTickDay = day,
             TargetTenantIds = targetList
         }));
     }
@@ -231,7 +249,7 @@ public static class EventEffectExecutor
         if (take > pool.Count)
             take = pool.Count;
 
-        var rng = new Random(StableHash(ownerTenantId, effectIndex));
+        var rng = new System.Random(StableHash(ownerTenantId, effectIndex));
         var result = new List<string>(take);
         for (int i = 0; i < take; i++)
         {
@@ -257,8 +275,13 @@ public static class EventEffectExecutor
         }
     }
 
-    private static int SafeToInt(float value)
+    public static int SafeToInt(float value)
     {
+        if (float.IsNaN(value) || float.IsInfinity(value))
+        {
+            Debug.LogWarning($"[EventEffectExecutor] SafeToInt: non-finite value {value}; using 0");
+            return 0;
+        }
         if (value >= 2147483647f) return int.MaxValue;
         if (value <= -2147483648f) return int.MinValue;
         return Convert.ToInt32(value);

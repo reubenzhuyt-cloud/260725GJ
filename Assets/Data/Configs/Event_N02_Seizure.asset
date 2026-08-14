@@ -49,6 +49,9 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -4
+    - effectType: 2
+      floatValue: -3
+      stringValue: currency
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，该房客侵蚀度+15，同房其他房客侵蚀度+3。"
@@ -57,3 +60,6 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 2
+    - effectType: 1
+      floatValue: 15

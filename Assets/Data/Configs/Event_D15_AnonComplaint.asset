@@ -41,6 +41,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -2
+      target: 1
   - choiceId: B
     choiceText: "调查是谁写的"
     choiceResult: "调查是谁写的。"

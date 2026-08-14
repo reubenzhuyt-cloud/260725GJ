@@ -39,7 +39,10 @@ MonoBehaviour:
     effectText: "消耗2食物"
     requiredTags:
     - 10
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -2
+      stringValue: food
   - choiceId: B
     choiceText: "给他们单独房间"
     choiceResult: "给他们单独房间，消耗1间空房。"

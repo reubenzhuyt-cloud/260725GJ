@@ -39,7 +39,10 @@ MonoBehaviour:
     effectText: "消耗2食物"
     requiredTags:
     - 3
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -2
+      stringValue: food
   - choiceId: B
     choiceText: "提醒房客不要外出"
     choiceResult: "提醒房客不要外出，全楼侵蚀-1。"
@@ -48,3 +51,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -1
+      target: 1

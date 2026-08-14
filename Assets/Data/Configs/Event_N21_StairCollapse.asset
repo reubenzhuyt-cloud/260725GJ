@@ -39,7 +39,13 @@ MonoBehaviour:
     effectText: "消耗8食物+5货币+1天修复"
     requiredTags:
     - 3
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -8
+      stringValue: food
+    - effectType: 2
+      floatValue: -5
+      stringValue: currency
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，二三楼层被阻断，上层房客侵蚀度+5/天直至修复。"

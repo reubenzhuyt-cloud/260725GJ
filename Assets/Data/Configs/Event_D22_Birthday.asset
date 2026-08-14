@@ -39,13 +39,20 @@ MonoBehaviour:
     effectText: "消耗5食物，全楼侵蚀-2"
     requiredTags: []
     choiceEffects:
+    - effectType: 2
+      floatValue: -5
+      stringValue: food
     - effectType: 1
       floatValue: -2
+      target: 1
   - choiceId: B
     choiceText: "私下送一份小礼物"
     choiceResult: "私下送一份小礼物，消耗2食物，该房客侵蚀-5。"
     effectText: "消耗2食物，该房客侵蚀-5"
     requiredTags: []
     choiceEffects:
+    - effectType: 2
+      floatValue: -2
+      stringValue: food
     - effectType: 1
       floatValue: -5

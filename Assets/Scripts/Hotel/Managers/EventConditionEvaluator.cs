@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Hotel.Runtime;
+using UnityEngine;
 
 /// <summary>
 /// Evaluates the state-dependent eligibility conditions authored in TriggerSpec
@@ -148,6 +149,7 @@ public static class EventConditionEvaluator
                 return state.IsStorm;
 
             default:
+                Debug.LogWarning($"[EventConditionEvaluator] Unhandled ConditionType '{c.condition}' ({(int)c.condition}); treating the condition as not matched.");
                 return false;
         }
     }
@@ -188,9 +190,16 @@ public static class EventConditionEvaluator
 
     private static bool FoodBelowDays(GameRunState state, int days)
     {
-        if (state.Tenants == null || state.Tenants.Count == 0) return false;
+        if (state.Tenants == null) return false;
+        int assignedCount = 0;
+        foreach (TenantRunState tenant in state.Tenants.Values)
+        {
+            if (tenant != null && !string.IsNullOrEmpty(tenant.RoomId))
+                assignedCount++;
+        }
+        if (assignedCount == 0) return false;
         if (!state.Resources.TryGetValue("food", out ResourceRunState food)) return false;
-        return food.Amount < days * state.Tenants.Count;
+        return food.Amount < days * assignedCount;
     }
 
     private static bool FoodOrCurrencyAbove(GameRunState state, float threshold)
@@ -229,15 +238,7 @@ public static class EventConditionEvaluator
 
     private static TenantAbility ResolveAbility(string tenantId, IReadOnlyList<TenantReviewCandidateSO> candidates)
     {
-        if (candidates == null) return TenantAbility.None;
-        for (int i = 0; i < candidates.Count; i++)
-        {
-            TenantReviewCandidateSO candidate = candidates[i];
-            if (candidate == null || candidate.candidateId != tenantId)
-                continue;
-            return candidate.ability;
-        }
-        return TenantAbility.None;
+        return TenantAbilityResolver.ResolveAbility(tenantId, candidates);
     }
 
     private static bool AnyVulnerableTenant(GameRunState state)

@@ -31,6 +31,14 @@ public class EventManager : MonoBehaviour
     private EventProcessedData _pendingPayload;
     private EventEffectManager _effectManager;
     private bool waitingForPhaseGate;
+    private int _activeDay;
+    private GamePhase _activePhase;
+    private int _plannedDay = -1;
+    private int _settleRetryCount;
+    private bool _settlementBlocked;
+    private int _triggerDay;
+    private GamePhase _triggerPhase;
+    private const int MaxSettleRetries = 5;
 
     private readonly Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents =
         new Dictionary<GamePhase, List<EventConfig>>();
@@ -48,6 +56,7 @@ public class EventManager : MonoBehaviour
         Instance = this;
         _effectManager = new EventEffectManager();
         runtimeWeightModifiers.Clear();
+        _plannedDay = -1;
     }
 
     private void OnEnable()
@@ -90,7 +99,39 @@ public class EventManager : MonoBehaviour
         waitingForPhaseGate = false;
         PhaseProcessingStarted?.Invoke();
         eventQueue.Clear();
-        _pendingPayload = null;
+        _settleRetryCount = 0;
+        _settlementBlocked = false;
+        if (_pendingPayload != null)
+        {
+            EventSettleResult pendingResult = EventSettleResult.Pending;
+            try
+            {
+                pendingResult = TrySettleProcessedEvent(_pendingPayload);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogError($"[EventManager] Phase change settlement attempt for '{_pendingPayload.eventId}' threw: {exception}; will keep retrying.");
+            }
+            if (pendingResult == EventSettleResult.Settled)
+            {
+                Debug.Log($"[EventManager] Phase change resolved pending settlement for '{_pendingPayload.eventId}'.");
+                _pendingPayload = null;
+                _currentConfig = null;
+                _currentProtagonistTenantId = null;
+            }
+            else if (pendingResult == EventSettleResult.Rejected)
+            {
+                EventProcessedData rejectedPayload = _pendingPayload;
+                _pendingPayload = null;
+                HandleRejectedSettlement(rejectedPayload);
+            }
+            else
+            {
+                Debug.LogWarning($"[EventManager] Phase change preserved pending settlement for '{_pendingPayload.eventId}'; will keep retrying.");
+            }
+        }
+        _activeDay = data.day;
+        _activePhase = data.phase;
 
         if (preGeneratedEvents.TryGetValue(data.phase, out var planned))
         {
@@ -167,6 +208,12 @@ public class EventManager : MonoBehaviour
     /// </summary>
     public void PreGenerateDayEvents(int day)
     {
+        if (_plannedDay == day)
+        {
+            Debug.Log($"[EventManager] Day {day} already planned; duplicate Day phase entry ignored.");
+            return;
+        }
+
         var bridge = SettlementBridge.Instance;
         if (bridge == null || bridge.RunState == null)
         {
@@ -174,6 +221,8 @@ public class EventManager : MonoBehaviour
             preGeneratedEvents.Clear();
             return;
         }
+
+        _plannedDay = day;
 
         var state = bridge.RunState;
         IReadOnlyList<EventHistoryRecord> history = state.EventHistory;
@@ -256,15 +305,17 @@ public class EventManager : MonoBehaviour
 
         for (int i = 0; i < count && remaining.Count > 0; i++)
         {
-            runtimeWeightModifiers.Clear();
+            var effective = new Dictionary<string, float>(remaining.Count);
             for (int j = 0; j < remaining.Count; j++)
             {
-                runtimeWeightModifiers[remaining[j].eventId] =
-                    EventConditionEvaluator.ComputeWeightModifier(remaining[j].trigger, state);
+                string id = remaining[j].eventId;
+                float external = runtimeWeightModifiers.TryGetValue(id, out float externalValue) ? externalValue : 1f;
+                float computed = EventConditionEvaluator.ComputeWeightModifier(remaining[j].trigger, state);
+                effective[id] = external * computed;
             }
 
             int pickSeed = EventSelectionService.DeriveSeed(baseSeed, i + 1);
-            EventConfig config = EventSelectionService.PickWeighted(remaining, runtimeWeightModifiers, pickSeed);
+            EventConfig config = EventSelectionService.PickWeighted(remaining, effective, pickSeed);
             if (config == null) break;
             picked.Add(config);
             remaining.Remove(config);
@@ -290,22 +341,57 @@ public class EventManager : MonoBehaviour
 
     private void ProcessNextEvent()
     {
-        if (eventQueue.Count == 0)
+        IsPhaseComplete = false;
+        while (eventQueue.Count > 0)
         {
-            NotifyQueueEmpty();
+            EventConfig next = eventQueue.Peek();
+            if (next == null)
+            {
+                eventQueue.Dequeue();
+                continue;
+            }
+            if (!IsEventStillEligible(next))
+            {
+                eventQueue.Dequeue();
+                Debug.Log($"[EventManager] Skipping event no longer eligible at dequeue: {next.eventId}");
+                continue;
+            }
+            if (_currentConfig != null)
+            {
+                Debug.LogError($"[EventManager] Cannot trigger '{next.eventId}': popup '{_currentConfig.eventId}' is still active. Deferred; event stays queued.");
+                return;
+            }
+            if (onPopupEvent == null)
+            {
+                eventQueue.Dequeue();
+                Debug.LogError("[EventManager] onPopupEvent channel is null; cannot display popup. Skipping event safely so the phase can complete.");
+                continue;
+            }
+            EventConfig config = eventQueue.Dequeue();
+            TriggerEvent(config);
             return;
         }
-
-        EventConfig config = eventQueue.Dequeue();
-        TriggerEvent(config);
+        NotifyQueueEmpty();
     }
 
     private void TriggerEvent(EventConfig config)
     {
-        if (onPopupEvent == null) return;
+        if (onPopupEvent == null)
+        {
+            Debug.LogError("[EventManager] onPopupEvent is null; popup cannot be shown.");
+            return;
+        }
+        if (_currentConfig != null)
+        {
+            Debug.LogError($"[EventManager] Cannot trigger '{config.eventId}': popup '{_currentConfig.eventId}' is still active. Deferred; event stays queued.");
+            RequeueEvent(config);
+            return;
+        }
         _currentConfig = config;
 
         var bridge = SettlementBridge.Instance;
+        _triggerDay = _activeDay > 0 ? _activeDay : (bridge != null && bridge.RunState != null ? bridge.RunState.Day : 0);
+        _triggerPhase = _activeDay > 0 ? _activePhase : ToGamePhase(bridge != null && bridge.RunState != null ? bridge.RunState.Phase.Current : HotelPhase.Day);
         _currentProtagonistTenantId = ResolveProtagonist(bridge != null ? bridge.RunState : null);
 
         // Record the event as planned (unresolved) before it is shown, so that
@@ -357,80 +443,254 @@ public class EventManager : MonoBehaviour
     private void OnEventProcessed(string eventId)
     {
         if (_pendingPayload != null)
+        {
+            Debug.LogWarning($"[EventManager] Ignoring processed event '{eventId}' while settlement for '{_pendingPayload.eventId}' is pending.");
             return;
+        }
 
         Debug.Log($"[EventManager] Event processed: {eventId}");
-        EventProcessedData payload = ResolveProcessedPayload(eventId);
-        if (TrySettleProcessedEvent(payload))
+
+        EventProcessedData payload;
+        try
         {
-            _pendingPayload = null;
-            _currentConfig = null;
-            _currentProtagonistTenantId = null;
-            ProcessNextEvent();
+            payload = ResolveProcessedPayload(eventId);
         }
-        else
+        catch (System.Exception exception)
         {
+            Debug.LogError($"[EventManager] Payload resolution for '{eventId}' threw: {exception}");
+            ClearActiveEvent();
+            AdvanceQueue();
+            return;
+        }
+
+        if (payload == null || string.IsNullOrEmpty(payload.eventId))
+        {
+            Debug.LogError($"[EventManager] Invalid processed payload for '{eventId}'; refusing to settle. Clearing active event and advancing.");
+            ClearActiveEvent();
+            AdvanceQueue();
+            return;
+        }
+
+        try
+        {
+            EventSettleResult settleResult = TrySettleProcessedEvent(payload);
+            if (settleResult == EventSettleResult.Settled)
+            {
+                ClearActiveEvent();
+                AdvanceQueue();
+                return;
+            }
+            if (settleResult == EventSettleResult.Rejected)
+            {
+                HandleRejectedSettlement(payload);
+                return;
+            }
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError($"[EventManager] Settlement of '{payload.eventId}' threw: {exception}; preserving payload for bounded retry.");
             _pendingPayload = payload;
+            _settleRetryCount = 1;
+            _settlementBlocked = false;
+            return;
         }
+
+        _pendingPayload = payload;
+        _settleRetryCount = 1;
+        _settlementBlocked = false;
     }
 
     private void Update()
     {
-        if (_pendingPayload == null)
+        if (_pendingPayload == null || _settlementBlocked)
             return;
 
-        if (TrySettleProcessedEvent(_pendingPayload))
+        if (_settleRetryCount >= MaxSettleRetries)
         {
+            _settlementBlocked = true;
+            Debug.LogError($"[EventManager] Settlement of '{_pendingPayload.eventId}' failed after {MaxSettleRetries} attempts; abandoning retry. History record remains unresolved and is flagged for explicit cleanup.");
             _pendingPayload = null;
-            _currentConfig = null;
-            _currentProtagonistTenantId = null;
-            ProcessNextEvent();
+            ClearActiveEvent();
+            AdvanceQueue();
+            return;
+        }
+
+        _settleRetryCount++;
+        try
+        {
+            EventSettleResult retryResult = TrySettleProcessedEvent(_pendingPayload);
+            if (retryResult == EventSettleResult.Settled)
+            {
+                _pendingPayload = null;
+                ClearActiveEvent();
+                AdvanceQueue();
+            }
+            else if (retryResult == EventSettleResult.Rejected)
+            {
+                EventProcessedData rejectedPayload = _pendingPayload;
+                _pendingPayload = null;
+                HandleRejectedSettlement(rejectedPayload);
+            }
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError($"[EventManager] Settlement attempt {_settleRetryCount} of {MaxSettleRetries} for '{_pendingPayload.eventId}' threw: {exception}; will retry.");
         }
     }
 
     private EventProcessedData ResolveProcessedPayload(string eventId)
     {
-        EventProcessedData data;
-        if (onEventProcessed != null
-            && onEventProcessed.LastProcessedData != null
-            && onEventProcessed.LastProcessedData.eventId == eventId)
+        if (_currentConfig == null || _currentConfig.eventId != eventId)
         {
-            EventProcessedData source = onEventProcessed.LastProcessedData;
-            data = new EventProcessedData
-            {
-                eventId = source.eventId,
-                optionId = source.optionId,
-                effects = source.effects,
-                ownerTenantId = source.ownerTenantId
-            };
+            Debug.LogError($"[EventManager] Processed event '{eventId}' does not match active popup '{(_currentConfig != null ? _currentConfig.eventId : "(none)")}'; ignored.");
+            return null;
         }
-        else
+        if (onEventProcessed == null
+            || onEventProcessed.LastProcessedData == null
+            || onEventProcessed.LastProcessedData.eventId != eventId)
         {
-            data = new EventProcessedData { eventId = eventId, optionId = string.Empty, effects = null };
+            Debug.LogError($"[EventManager] No processed payload available for '{eventId}'; refusing to settle without effects.");
+            return null;
         }
 
+        EventProcessedData source = onEventProcessed.LastProcessedData;
+        EventProcessedData data = new EventProcessedData
+        {
+            eventId = source.eventId,
+            optionId = source.optionId,
+            effects = source.effects,
+            ownerTenantId = source.ownerTenantId,
+            requiredTags = source.requiredTags
+        };
         if (string.IsNullOrEmpty(data.ownerTenantId))
             data.ownerTenantId = _currentProtagonistTenantId;
         return data;
     }
 
-    private bool TrySettleProcessedEvent(EventProcessedData payload)
+    private void ClearActiveEvent()
+    {
+        _currentConfig = null;
+        _currentProtagonistTenantId = null;
+    }
+
+    private void AdvanceQueue()
+    {
+        if (eventQueue.Count > 0)
+        {
+            ProcessNextEvent();
+        }
+        else if (!IsPhaseComplete)
+        {
+            NotifyQueueEmpty();
+        }
+    }
+
+    private void RequeueEvent(EventConfig config)
+    {
+        var reordered = new List<EventConfig>(eventQueue.Count + 1) { config };
+        reordered.AddRange(eventQueue);
+        eventQueue.Clear();
+        for (int i = 0; i < reordered.Count; i++)
+            eventQueue.Enqueue(reordered[i]);
+    }
+
+    private bool IsEventStillEligible(EventConfig config)
+    {
+        if (config == null || string.IsNullOrEmpty(config.eventId) || config.trigger == null)
+            return false;
+
+        var bridge = SettlementBridge.Instance;
+        GameRunState state = bridge != null ? bridge.RunState : null;
+        if (state == null)
+            return true;
+
+        if (_activeDay <= 0)
+            return true;
+
+        int day = _activeDay;
+        GamePhase phase = _activePhase;
+        List<EventConfig> matches = EventSelectionService.FilterCandidates(
+            new[] { config },
+            day,
+            phase,
+            state.EventHistory,
+            state,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null,
+            RoomFloorRegistry.Instance);
+        return matches != null && matches.Count > 0;
+    }
+
+    private static GamePhase ToGamePhase(HotelPhase phase)
+    {
+        switch (phase)
+        {
+            case HotelPhase.Dawn: return GamePhase.Dawn;
+            case HotelPhase.Dusk: return GamePhase.Dusk;
+            case HotelPhase.Night: return GamePhase.Night;
+            default: return GamePhase.Day;
+        }
+    }
+
+    private static HotelPhase ToHotelPhase(GamePhase phase)
+    {
+        switch (phase)
+        {
+            case GamePhase.Dawn: return HotelPhase.Dawn;
+            case GamePhase.Dusk: return HotelPhase.Dusk;
+            case GamePhase.Night: return HotelPhase.Night;
+            default: return HotelPhase.Day;
+        }
+    }
+
+    private EventSettleResult TrySettleProcessedEvent(EventProcessedData payload)
     {
         var bridge = SettlementBridge.Instance;
         if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
-            return false;
+            return EventSettleResult.Pending;
         if (_effectManager == null)
-            return false;
+            _effectManager = new EventEffectManager();
 
-        if (_effectManager.TrySettle(bridge.RunState, bridge.Reducer, payload, out PlayerLogWriteDto effectSummary, out bool committed) != EventSettleResult.Settled)
-            return false;
+        int logDay = _triggerDay > 0 ? _triggerDay : 0;
+        HotelPhase? logPhase = _triggerDay > 0 ? ToHotelPhase(_triggerPhase) : (HotelPhase?)null;
+        EventSettleResult result = _effectManager.TrySettle(
+            bridge.RunState,
+            bridge.Reducer,
+            payload,
+            out PlayerLogWriteDto effectSummary,
+            out bool committed,
+            logDay,
+            logPhase,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
+        if (result != EventSettleResult.Settled)
+            return result;
         if (!committed)
-            return true;
+            return EventSettleResult.Settled;
 
         RecordEventLog(bridge.RunState, payload);
         if (effectSummary.Summary != null)
             PlayerLogManager.Record(bridge.RunState, effectSummary);
-        return true;
+        return EventSettleResult.Settled;
+    }
+
+    private void HandleRejectedSettlement(EventProcessedData payload)
+    {
+        _pendingPayload = null;
+        _settleRetryCount = 0;
+        if (payload != null)
+            Debug.LogWarning($"[EventManager] Settlement of '{payload.eventId}' rejected: selected option is not valid in the current state (unaffordable or missing required ability). Reopening event for a new selection.");
+        else
+            Debug.LogWarning("[EventManager] Settlement rejected: selected option is not valid in the current state. Reopening event for a new selection.");
+
+        if (_currentConfig == null)
+        {
+            AdvanceQueue();
+            return;
+        }
+
+        EventConfig config = _currentConfig;
+        _currentConfig = null;
+        _currentProtagonistTenantId = null;
+        TriggerEvent(config);
     }
 
     private void RecordEventLog(GameRunState state, EventProcessedData payload)
@@ -444,10 +704,12 @@ public class EventManager : MonoBehaviour
             : PlayerLogCategory.SpecialStory;
         string optionText = ResolveOptionText(payload.optionId);
 
+        int day = _triggerDay > 0 ? _triggerDay : state.Day;
+        HotelPhase phase = _triggerDay > 0 ? ToHotelPhase(_triggerPhase) : state.Phase.Current;
         PlayerLogManager.Record(state, new PlayerLogWriteDto(
             category,
-            state.Day,
-            state.Phase.Current,
+            day,
+            phase,
             _currentConfig.eventTitle,
             $"选择『{optionText}』",
             _currentConfig.eventId));
@@ -594,8 +856,8 @@ public class EventManager : MonoBehaviour
         {
             EventId = config.eventId,
             DefinitionId = config.eventId,
-            Day = state.Day,
-            Phase = state.Phase.Current,
+            Day = _activeDay > 0 ? _activeDay : state.Day,
+            Phase = _activeDay > 0 ? ToHotelPhase(_activePhase) : state.Phase.Current,
             Occurrence = 1,
             RequiresDecision = config.eventType == GameEventType.Choice,
             Resolved = false

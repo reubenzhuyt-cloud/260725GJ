@@ -57,3 +57,6 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 2
+    - effectType: 1
+      floatValue: 5

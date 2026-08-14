@@ -1,3 +1,4 @@
+using Hotel.Runtime;
 using UnityEngine;
 
 public class EventProcessedData
@@ -6,6 +7,7 @@ public class EventProcessedData
     public string optionId;
     public EventEffect[] effects;
     public string ownerTenantId;
+    public TenantAbility[] requiredTags;
 }
 
 [CreateAssetMenu(fileName = "EventProcessedEvent", menuName = "Events/EventProcessedEvent")]

@@ -48,6 +48,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -1
+      target: 1
   - choiceId: B
     choiceText: "制止"
     choiceResult: "制止，全楼侵蚀+3。"
@@ -56,3 +57,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 1

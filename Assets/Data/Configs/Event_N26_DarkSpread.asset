@@ -49,6 +49,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，随机2名房客侵蚀+15。"
@@ -57,3 +58,5 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 15
+      target: 5
+      intValue: 2

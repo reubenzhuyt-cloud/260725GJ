@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using Hotel.Runtime;
 using UnityEngine;
 
-public enum EventSettleResult { Settled, Pending }
+public enum EventSettleResult { Settled, Pending, Rejected }
 
 public class EventEffectManager
 {
     private string _lastFailureKey;
 
-    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload, out PlayerLogWriteDto effectSummary, out bool committed)
+    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload, out PlayerLogWriteDto effectSummary, out bool committed, int logDay = 0, HotelPhase? logPhase = null, IReadOnlyList<TenantReviewCandidateSO> candidates = null)
     {
         effectSummary = default;
         committed = false;
         if (payload == null || string.IsNullOrEmpty(payload.eventId))
-            return EventSettleResult.Settled;
+            return EventSettleResult.Pending;
         if (state == null || reducer == null)
             return EventSettleResult.Pending;
 
@@ -22,6 +22,22 @@ public class EventEffectManager
 
         string eventId = payload.eventId;
         string optionId = payload.optionId ?? string.Empty;
+
+        if (!EventAffordability.CanAfford(payload.effects, state))
+        {
+            Debug.LogWarning($"[EventEffectManager] event={eventId} option={optionId}: cannot afford resource cost of selected option; rejecting settlement.");
+            return EventSettleResult.Rejected;
+        }
+
+        if (payload.requiredTags != null && payload.requiredTags.Length > 0
+            && !TenantAbilityResolver.HasAllRequiredTags(payload.requiredTags, state, candidates))
+        {
+            string reason = candidates == null
+                ? "tenant candidate config unavailable"
+                : "missing required tenant ability";
+            Debug.LogWarning($"[EventEffectManager] event={eventId} option={optionId}: {reason}; rejecting settlement.");
+            return EventSettleResult.Rejected;
+        }
 
         var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "EventEffectManager", "ResolveEvent");
         set.Add(new ResolveEventHistoryChange(eventId, optionId));
@@ -45,10 +61,12 @@ public class EventEffectManager
                 set.Add(changes[i]);
             if (changes.Count > 0)
             {
+                int summaryDay = logDay > 0 ? logDay : state.Day;
+                HotelPhase summaryPhase = logPhase.HasValue ? logPhase.Value : state.Phase.Current;
                 pendingEffectSummary = new PlayerLogWriteDto(
                     PlayerLogCategory.EffectSettlement,
-                    state.Day,
-                    state.Phase.Current,
+                    summaryDay,
+                    summaryPhase,
                     "效果结算",
                     BuildEffectSummaryText(changes),
                     eventId);
@@ -60,15 +78,6 @@ public class EventEffectManager
         {
             committed = true;
             effectSummary = pendingEffectSummary;
-            return EventSettleResult.Settled;
-        }
-
-        var resolveOnly = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "EventEffectManager", "ResolveEventHistoryOnly");
-        resolveOnly.Add(new ResolveEventHistoryChange(eventId, optionId));
-        CommitResult degraded = reducer.TryCommit(state, resolveOnly);
-        if (degraded.Succeeded)
-        {
-            committed = true;
             return EventSettleResult.Settled;
         }
 
@@ -97,36 +106,63 @@ public class EventEffectManager
             BuffRunState buff = pair.Value;
             if (buff == null)
                 continue;
+            if (string.IsNullOrEmpty(buff.BuffId))
+                continue;
             if (buff.TickTiming != BuffTickTiming.Dawn)
                 continue;
             if (buff.LastTickDay == state.Day)
                 continue;
 
             List<string> targets = ResolveBuffTargets(state, buff, floorRegistry);
+            int validTargetCount = 0;
             if (targets != null)
             {
                 for (int i = 0; i < targets.Count; i++)
-                    changes.Add(new AdjustTenantErosionChange(targets[i], buff.ErosionPerTick));
+                {
+                    string tenantId = targets[i];
+                    if (string.IsNullOrEmpty(tenantId) || !state.Tenants.ContainsKey(tenantId))
+                        continue;
+                    changes.Add(new AdjustTenantErosionChange(tenantId, buff.ErosionPerTick));
+                    validTargetCount++;
+                }
             }
-            if (!string.IsNullOrEmpty(buff.ResourceId) && state.Resources.ContainsKey(buff.ResourceId))
+
+            bool hasTenantEffect = buff.ErosionPerTick != 0f
+                || (buff.TargetTenantIds != null && buff.TargetTenantIds.Count > 0);
+            bool hasResource = !string.IsNullOrEmpty(buff.ResourceId)
+                && state.Resources != null && state.Resources.ContainsKey(buff.ResourceId);
+            bool applyResource = hasResource && (!hasTenantEffect || validTargetCount > 0);
+            if (applyResource)
+            {
                 changes.Add(new AdjustResourceChange(buff.ResourceId, buff.ResourceDeltaPerTick));
+            }
+            else if (hasResource && hasTenantEffect && validTargetCount == 0)
+            {
+                Debug.LogWarning($"[EventEffectManager] buff={buff.BuffId}: no valid tenant targets; skipping resource tick");
+            }
 
-            int newRemaining = buff.RemainingTicks;
-            if (buff.RemainingTicks > 0)
-                newRemaining = buff.RemainingTicks - 1;
-            changes.Add(new UpdateBuffTicksChange(buff.BuffId, newRemaining, state.Day));
-            if (buff.RemainingTicks > 0 && newRemaining == 0)
+            bool expiresNow = buff.RemainingTicks >= 0 && buff.RemainingTicks <= 1;
+            int newRemaining = buff.RemainingTicks > 0 ? buff.RemainingTicks - 1 : buff.RemainingTicks;
+            if (expiresNow)
+            {
                 expired.Add(buff.BuffId);
+            }
+            else
+            {
+                changes.Add(new UpdateBuffTicksChange(buff.BuffId, newRemaining, state.Day));
+            }
 
-            bool willExpire = buff.RemainingTicks > 0 && newRemaining == 0;
+            string status = expiresNow
+                ? $"{buff.BuffId}：已到期移除"
+                : buff.RemainingTicks < 0
+                    ? $"{buff.BuffId}：效果已生效 / 持续生效"
+                    : $"{buff.BuffId}：效果已生效 / 剩余 {newRemaining} 天";
             pendingBuffs.Add(new PlayerLogWriteDto(
                 PlayerLogCategory.BuffTick,
                 state.Day,
                 state.Phase.Current,
                 "Buff 结算",
-                willExpire
-                    ? $"{buff.BuffId}：已到期移除"
-                    : $"{buff.BuffId}：效果已生效 / 剩余 {newRemaining} 天",
+                status,
                 buff.BuffId));
 
             string targetsText = targets != null ? string.Join(",", targets) : "none";
@@ -150,12 +186,16 @@ public class EventEffectManager
         {
             for (int i = 0; i < pendingBuffs.Count; i++)
                 PlayerLogManager.Record(state, pendingBuffs[i]);
+            return true;
         }
-        return result.Succeeded;
+        Debug.LogError($"[EventEffectManager] TickBuffs day={state.Day}: commit failed with {state.Buffs.Count} buffs; buff ticks deferred and will retry on next dawn");
+        return false;
     }
 
     private static List<string> ResolveBuffTargets(GameRunState state, BuffRunState buff, RoomFloorRegistry floorRegistry)
     {
+        if (state.Tenants == null)
+            return new List<string>();
         List<string> frozen = buff.TargetTenantIds;
         if (frozen != null && frozen.Count > 0)
         {
@@ -171,8 +211,7 @@ public class EventEffectManager
                     continue;
                 result.Add(tenantId);
             }
-            if (result.Count > 0)
-                return result;
+            return result;
         }
         return EventEffectExecutor.ResolveTargets(buff.Target, state, buff.OwnerTenantId, buff.TargetParam, buff.TargetSeedIndex, floorRegistry);
     }

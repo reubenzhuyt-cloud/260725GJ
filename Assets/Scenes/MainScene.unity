@@ -8055,6 +8055,7 @@ MonoBehaviour:
   resourceDefinitions:
   - {fileID: 11400000, guid: 2a6418475512aa6469b053d1f3c4afdd, type: 2}
   - {fileID: 11400000, guid: 9f9883fa0c86aee429b2a92cb358d56f, type: 2}
+  - {fileID: 11400000, guid: e010d2b7cae4ea94f98b437013bc31a3, type: 2}
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
   onFoodShortage: {fileID: 11400000, guid: 5ae9f7bc5f2422c4eaf99f5867e72d55, type: 2}
   onResourceAdjusted: {fileID: 11400000, guid: b4be3f8a941747d41b7994af0ab32c76, type: 2}
@@ -22894,7 +22895,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 734040415}
   m_HandleRect: {fileID: 734040414}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

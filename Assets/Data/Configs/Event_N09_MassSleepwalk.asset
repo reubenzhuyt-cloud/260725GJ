@@ -49,6 +49,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，每人侵蚀+8，全楼侵蚀+2。"
@@ -57,3 +58,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1

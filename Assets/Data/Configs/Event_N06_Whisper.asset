@@ -62,3 +62,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1

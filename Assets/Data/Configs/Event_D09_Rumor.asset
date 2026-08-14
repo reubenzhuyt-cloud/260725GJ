@@ -48,13 +48,17 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -1
+      target: 1
   - choiceId: B
     choiceText: "【教师】压制谣言"
     choiceResult: "教师压制谣言，消耗2食物。"
     effectText: "消耗2食物"
     requiredTags:
     - 10
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -2
+      stringValue: food
   - choiceId: C
     choiceText: "无视"
     choiceResult: "无视，全楼侵蚀+2。"
@@ -63,3 +67,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1

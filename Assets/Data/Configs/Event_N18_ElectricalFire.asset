@@ -39,7 +39,10 @@ MonoBehaviour:
     effectText: "消耗1货币"
     requiredTags:
     - 3
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -1
+      stringValue: currency
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，设施耐久-20%，全楼侵蚀+3。"
@@ -48,3 +51,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 1

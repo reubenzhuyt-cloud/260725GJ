@@ -49,6 +49,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 3
   - choiceId: A2
     choiceText: "【守夜人】引导疏散该层"
     choiceResult: "守夜人引导疏散该层，该层侵蚀+3。"
@@ -58,6 +59,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 3
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，该层所有房客侵蚀+8，红色房客侵蚀+12。"
@@ -66,3 +68,9 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 8
+      target: 3
+    - effectType: 1
+      floatValue: 12
+      target: 4
+      stringValue: 
+      intValue: 3

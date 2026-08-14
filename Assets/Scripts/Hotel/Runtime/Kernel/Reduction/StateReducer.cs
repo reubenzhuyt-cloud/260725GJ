@@ -116,6 +116,8 @@ namespace Hotel.Runtime
                     {
                         if (!s.Tenants.ContainsKey(erosion.TenantId))
                             return false;
+                        if (float.IsNaN(erosion.Delta) || float.IsInfinity(erosion.Delta))
+                            return false;
                         break;
                     }
                     case AssignRoomChange room:
@@ -144,7 +146,7 @@ namespace Hotel.Runtime
                 {
                     if (add.Value == null || string.IsNullOrEmpty(add.Value.BuffId))
                         return false;
-                    if (s.Buffs.ContainsKey(add.Value.BuffId))
+                    if (s.Buffs == null || s.Buffs.ContainsKey(add.Value.BuffId))
                         return false;
                     if (!plannedBuffIds.Add(add.Value.BuffId))
                         return false;
@@ -152,15 +154,23 @@ namespace Hotel.Runtime
                 }
                 case RemoveBuffChange remove:
                 {
-                    if (!s.Buffs.ContainsKey(remove.BuffId))
+                    if (string.IsNullOrEmpty(remove.BuffId))
+                        return false;
+                    if (s.Buffs == null || !s.Buffs.ContainsKey(remove.BuffId))
                         return false;
                     break;
                 }
                 case UpdateBuffTicksChange update:
                 {
-                    if (!s.Buffs.ContainsKey(update.BuffId))
+                    if (string.IsNullOrEmpty(update.BuffId))
+                        return false;
+                    if (s.Buffs == null || !s.Buffs.ContainsKey(update.BuffId))
                         return false;
                     if (update.RemainingTicks < -1)
+                        return false;
+                    if (update.LastTickDay < 0)
+                        return false;
+                    if (update.LastTickDay > s.Day)
                         return false;
                     break;
                 }
@@ -252,10 +262,14 @@ namespace Hotel.Runtime
                     break;
                 case AdjustTenantErosionChange x:
                 {
+                    if (float.IsNaN(x.Delta) || float.IsInfinity(x.Delta))
+                        break;
                     var tenant = s.Tenants[x.TenantId];
                     var clamped = tenant.TrueErosion + x.Delta;
                     if (clamped < 0f) clamped = 0f;
                     if (clamped > 100f) clamped = 100f;
+                    if (float.IsNaN(clamped) || float.IsInfinity(clamped))
+                        break;
                     tenant.TrueErosion = clamped;
                     break;
                 }

@@ -224,6 +224,26 @@ public class EventConfig : ScriptableObject
                 {
                     Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] TenantWithAbility references unknown ability '{c.stringValue}'; condition can never pass.", this);
                 }
+
+                if (c.condition == ConditionType.FoodBelowDays && c.intValue <= 0)
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] FoodBelowDays requires intValue >= 1 (found {c.intValue}); with zero or negative days the condition can never pass.", this);
+                }
+
+                if (c.condition == ConditionType.FoodOrCurrencyAbove && c.floatValue <= 0f)
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] FoodOrCurrencyAbove requires floatValue > 0 (found {c.floatValue}); with a zero or negative threshold the condition is trivially true.", this);
+                }
+
+                if ((c.condition == ConditionType.TenantErosionAbove || c.condition == ConditionType.TenantErosionBelow) && c.floatValue <= 0f)
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] {c.condition} requires a positive erosion threshold (found {c.floatValue}); zero or negative is outside the valid [0,100] erosion range.", this);
+                }
+
+                if ((c.condition == ConditionType.RedCountAtLeast || c.condition == ConditionType.YellowCountAtLeast) && c.intValue <= 0)
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] {c.condition} requires intValue >= 1 (found {c.intValue}); with a zero or negative count the condition is trivially true.", this);
+                }
             }
         }
 

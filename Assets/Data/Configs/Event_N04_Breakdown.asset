@@ -49,6 +49,9 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -6
+    - effectType: 2
+      floatValue: -3
+      stringValue: currency
   - choiceId: A2
     choiceText: "【教师】成功安抚"
     choiceResult: "教师成功安抚，侵蚀度-6，消耗3货币。"
@@ -58,6 +61,9 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -6
+    - effectType: 2
+      floatValue: -3
+      stringValue: currency
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，该房客侵蚀度+20，同层房客侵蚀度+5。"
@@ -66,3 +72,6 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 5
+      target: 3
+    - effectType: 1
+      floatValue: 20

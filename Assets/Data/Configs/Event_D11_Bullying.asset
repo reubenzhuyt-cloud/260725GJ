@@ -41,12 +41,16 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -2
+      target: 1
   - choiceId: B
     choiceText: "私下安慰受害者"
     choiceResult: "私下安慰受害者，消耗2货币，该房客侵蚀-3。"
     effectText: "消耗2货币，该房客侵蚀-3"
     requiredTags: []
     choiceEffects:
+    - effectType: 2
+      floatValue: -2
+      stringValue: currency
     - effectType: 1
       floatValue: -3
   - choiceId: C
@@ -57,3 +61,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 1

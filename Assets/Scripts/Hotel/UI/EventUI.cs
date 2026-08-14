@@ -74,6 +74,11 @@ public class EventUI : MonoBehaviour
 
     private void OnPopupReceived(PopupData data)
     {
+        if (!string.IsNullOrEmpty(currentEventId))
+        {
+            Debug.LogError($"[EventUI] Rejecting popup '{data.eventId}' because popup '{currentEventId}' is still active; prevented silent overwrite.");
+            return;
+        }
         currentEventId = data.eventId;
 
         if (eventOverlay != null)
@@ -125,13 +130,22 @@ public class EventUI : MonoBehaviour
             }
         }
 
-        if (data.choiceTexts == null || choiceButtonPrefab == null || choiceButtonContainer == null)
+        if (data.choiceTexts == null || data.choiceTexts.Length == 0
+            || choiceButtonPrefab == null || choiceButtonContainer == null)
         {
-            Debug.LogWarning("[EventUI] Missing references for choice buttons!");
+            Debug.LogWarning("[EventUI] No usable choices; falling back to confirm-style dismissal.");
+            if (confirmButton != null) confirmButton.SetActive(true);
+            if (choiceButtonContainer != null) choiceButtonContainer.SetActive(false);
+            if (tagPanel != null) tagPanel.SetActive(false);
+            currentConfirmEffects = null;
             return;
         }
 
-        HashSet<TenantAbility> ownedAbilities = GetOwnedAbilities();
+        SettlementBridge bridge = SettlementBridge.Instance;
+        GameRunState runState = bridge != null ? bridge.RunState : null;
+        HashSet<TenantAbility> ownedAbilities = TenantAbilityResolver.GetOwnedAbilities(
+            runState,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
 
         for (int i = 0; i < data.choiceTexts.Length; i++)
         {
@@ -159,7 +173,11 @@ public class EventUI : MonoBehaviour
             TenantAbility[] required = (data.choiceRequiredTags != null && i < data.choiceRequiredTags.Length)
                 ? data.choiceRequiredTags[i]
                 : null;
-            btn.interactable = HasAllRequiredTags(required, ownedAbilities);
+            EventEffect[] effects = (data.choiceEffects != null && i < data.choiceEffects.Length)
+                ? data.choiceEffects[i]
+                : null;
+            bool affordable = EventAffordability.CanAfford(effects, runState);
+            btn.interactable = TenantAbilityResolver.HasAllRequiredTags(required, ownedAbilities) && affordable;
 
             int choiceIndex = i;
             PopupData capturedData = data;
@@ -210,52 +228,6 @@ public class EventUI : MonoBehaviour
         tagPanel.SetActive(generated > 0);
     }
 
-    private static HashSet<TenantAbility> GetOwnedAbilities()
-    {
-        var owned = new HashSet<TenantAbility>();
-
-        SettlementBridge bridge = SettlementBridge.Instance;
-        if (bridge == null || bridge.RunState == null)
-            return owned;
-
-        TenantReviewCoordinator coordinator = TenantReviewCoordinator.Instance;
-        List<TenantReviewCandidateSO> candidates = coordinator != null ? coordinator.candidates : null;
-
-        foreach (KeyValuePair<string, TenantRunState> pair in bridge.RunState.Tenants)
-        {
-            TenantAbility ability = TenantAbility.None;
-            if (candidates != null)
-            {
-                for (int i = 0; i < candidates.Count; i++)
-                {
-                    TenantReviewCandidateSO candidate = candidates[i];
-                    if (candidate == null || candidate.candidateId != pair.Key)
-                        continue;
-                    ability = candidate.ability;
-                    break;
-                }
-            }
-
-            if (ability != TenantAbility.None)
-                owned.Add(ability);
-        }
-
-        return owned;
-    }
-
-    private static bool HasAllRequiredTags(TenantAbility[] required, HashSet<TenantAbility> owned)
-    {
-        if (required == null || required.Length == 0) return true;
-
-        foreach (TenantAbility tag in required)
-        {
-            if (!owned.Contains(tag))
-                return false;
-        }
-
-        return true;
-    }
-
     private static TextMeshProUGUI FindTMP(GameObject root, string path)
     {
         if (root == null || string.IsNullOrEmpty(path)) return null;
@@ -276,23 +248,54 @@ public class EventUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
+        if (string.IsNullOrEmpty(currentEventId))
+        {
+            Debug.LogWarning("[EventUI] Confirm ignored: no active popup.");
+            return;
+        }
+
+        string eventId = currentEventId;
+        EventEffect[] effects = currentConfirmEffects;
+        ResetPopupState();
         Close();
-        if (onEventProcessed != null && currentEventId != null)
+        if (onEventProcessed != null)
             onEventProcessed.RaiseProcessed(new EventProcessedData
             {
-                eventId = currentEventId,
+                eventId = eventId,
                 optionId = string.Empty,
-                effects = currentConfirmEffects
+                effects = effects
             });
     }
 
     private void OnChoiceSelected(int index, PopupData data)
     {
-        Debug.Log($"[EventUI] Choice: {data.choiceTexts[index]} → {data.choiceResults[index]}");
-
-        Close();
-        if (onEventProcessed == null || currentEventId == null)
+        if (string.IsNullOrEmpty(currentEventId))
+        {
+            Debug.LogWarning("[EventUI] Choice ignored: no active popup.");
             return;
+        }
+
+        if (data.choiceTexts == null || index < 0 || index >= data.choiceTexts.Length)
+        {
+            Debug.LogWarning($"[EventUI] Choice index {index} is invalid; falling back to confirm-style dismissal.");
+            string fallbackEventId = currentEventId;
+            ResetPopupState();
+            Close();
+            if (onEventProcessed != null)
+                onEventProcessed.RaiseProcessed(new EventProcessedData
+                {
+                    eventId = fallbackEventId,
+                    optionId = string.Empty,
+                    effects = null
+                });
+            return;
+        }
+
+        string choiceText = data.choiceTexts[index] ?? string.Empty;
+        string choiceResult = (data.choiceResults != null && index < data.choiceResults.Length)
+            ? (data.choiceResults[index] ?? string.Empty)
+            : string.Empty;
+        Debug.Log($"[EventUI] Choice: {choiceText} → {choiceResult}");
 
         string optionId = (data.choiceIds != null && index >= 0 && index < data.choiceIds.Length)
             ? data.choiceIds[index]
@@ -300,13 +303,27 @@ public class EventUI : MonoBehaviour
         EventEffect[] effects = (data.choiceEffects != null && index >= 0 && index < data.choiceEffects.Length)
             ? data.choiceEffects[index]
             : null;
+        TenantAbility[] requiredTags = (data.choiceRequiredTags != null && index >= 0 && index < data.choiceRequiredTags.Length)
+            ? data.choiceRequiredTags[index]
+            : null;
 
-        onEventProcessed.RaiseProcessed(new EventProcessedData
-        {
-            eventId = currentEventId,
-            optionId = optionId,
-            effects = effects
-        });
+        string eventId = currentEventId;
+        ResetPopupState();
+        Close();
+        if (onEventProcessed != null)
+            onEventProcessed.RaiseProcessed(new EventProcessedData
+            {
+                eventId = eventId,
+                optionId = optionId,
+                effects = effects,
+                requiredTags = requiredTags
+            });
+    }
+
+    private void ResetPopupState()
+    {
+        currentEventId = null;
+        currentConfirmEffects = null;
     }
 
     private void Close()

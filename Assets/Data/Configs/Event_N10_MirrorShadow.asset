@@ -30,28 +30,31 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_pollution
-  eventTitle: "镜中影"
-  eventDescription: "走廊镜子里倒映出一张脸——但它不属于在场的任何人。"
+  eventTitle: "\u955C\u4E2D\u5F71"
+  eventDescription: "\u8D70\u5ECA\u955C\u5B50\u91CC\u5012\u6620\u51FA\u4E00\u5F20\u8138\u2014\u2014\u4F46\u5B83\u4E0D\u5C5E\u4E8E\u5728\u573A\u7684\u4EFB\u4F55\u4EBA\u3002"
   eventImage: {fileID: 0}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【前员工】擦除镜子"
-    choiceResult: "前员工擦除镜子，无影响。"
-    effectText: "无影响"
-    requiredTags:
-    - 5
+    choiceText: "\u3010\u524D\u5458\u5DE5\u3011\u64E6\u9664\u955C\u5B50"
+    choiceResult: "\u524D\u5458\u5DE5\u64E6\u9664\u955C\u5B50\uFF0C\u65E0\u5F71\u54CD\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 05000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，全楼房客侵蚀+3。"
-    effectText: "全楼房客侵蚀+3"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u5168\u697C\u623F\u5BA2\u4FB5\u8680+3\u3002"
+    effectText: "\u5168\u697C\u623F\u5BA2\u4FB5\u8680+3"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0

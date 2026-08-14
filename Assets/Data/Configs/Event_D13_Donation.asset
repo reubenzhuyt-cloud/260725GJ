@@ -41,6 +41,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: -1
+      target: 1
   - choiceId: B
     choiceText: "表扬但让他自己留着"
     choiceResult: "表扬但让他自己留着。"

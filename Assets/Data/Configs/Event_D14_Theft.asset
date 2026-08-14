@@ -48,6 +48,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1
   - choiceId: B
     choiceText: "【守夜人】设陷阱"
     choiceResult: "守夜人设陷阱。"
@@ -60,4 +61,7 @@ MonoBehaviour:
     choiceResult: "无视，损失5食物。"
     effectText: "损失5食物"
     requiredTags: []
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -5
+      stringValue: food

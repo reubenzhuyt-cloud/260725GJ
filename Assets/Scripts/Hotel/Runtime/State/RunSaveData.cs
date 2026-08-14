@@ -87,11 +87,14 @@ public bool HotelHasMirror = true;
                 Summary = CloneSummary(state.Summary)
             };
 
-            save.Decisions.AddRange(state.Decisions);
-            save.EventHistory.AddRange(state.EventHistory);
+            foreach (var decision in state.Decisions)
+                save.Decisions.Add(CloneDecision(decision));
+            foreach (var historyRecord in state.EventHistory)
+                save.EventHistory.Add(CloneEventHistoryRecord(historyRecord));
             save.AuditLog.AddRange(state.AuditLog);
             save.ResolvedReviewCandidateIds.AddRange(state.ResolvedReviewCandidateIds);
-            save.ReviewHistory.AddRange(state.ReviewHistory);
+            foreach (var reviewRecord in state.ReviewHistory)
+                save.ReviewHistory.Add(CloneReviewDecision(reviewRecord));
             save.HotelHasMirror = state.HotelHasMirror;
             save.IsStorm = state.IsStorm;
 
@@ -136,12 +139,12 @@ public bool HotelHasMirror = true;
             state.Phase.Current = save.Phase;
             state.Phase.Lifecycle = save.PhaseLifecycle;
             state.Phase.Occurrence = Math.Max(1, save.PhaseOccurrence);
-            state.Decisions = save.Decisions ?? new List<DecisionRunState>();
-            state.EventHistory = save.EventHistory ?? new List<EventHistoryRecord>();
+            state.Decisions = RestoreDecisions(save.Decisions);
+            state.EventHistory = RestoreEventHistory(save.EventHistory);
             state.AuditLog = save.AuditLog ?? new List<string>();
             state.Summary = save.Summary ?? new RunSummaryState();
             state.ResolvedReviewCandidateIds = save.ResolvedReviewCandidateIds ?? new List<string>();
-            state.ReviewHistory = save.ReviewHistory ?? new List<ReviewDecisionRecord>();
+            state.ReviewHistory = RestoreReviewHistory(save.ReviewHistory);
             state.HotelHasMirror = save.HotelHasMirror;
             state.IsStorm = save.IsStorm;
 
@@ -207,11 +210,138 @@ public bool HotelHasMirror = true;
                 foreach (var buff in save.Buffs)
                 {
                     if (buff != null && !string.IsNullOrEmpty(buff.BuffId))
-                        state.Buffs[buff.BuffId] = CloneBuff(buff);
+                    {
+                        BuffRunState restoredBuff = CloneBuff(buff);
+                        if (restoredBuff.LastTickDay < 0 || restoredBuff.LastTickDay > state.Day)
+                            restoredBuff.LastTickDay = state.Day;
+                        state.Buffs[restoredBuff.BuffId] = restoredBuff;
+                    }
                 }
             }
 
             return state;
+        }
+
+        private static List<DecisionRunState> RestoreDecisions(List<DecisionRunState> source)
+        {
+            var result = new List<DecisionRunState>();
+            if (source == null) return result;
+            var indexByDecisionId = new Dictionary<string, int>();
+            for (int i = 0; i < source.Count; i++)
+            {
+                DecisionRunState candidate = source[i];
+                if (candidate == null || string.IsNullOrEmpty(candidate.DecisionId))
+                    continue;
+                if (!indexByDecisionId.TryGetValue(candidate.DecisionId, out int existingIndex))
+                {
+                    indexByDecisionId[candidate.DecisionId] = result.Count;
+                    result.Add(CloneDecision(candidate));
+                    continue;
+                }
+                DecisionRunState existing = result[existingIndex];
+                if (IsMoreMeaningfulDecision(candidate, existing))
+                    result[existingIndex] = CloneDecision(candidate);
+            }
+            return result;
+        }
+
+        private static List<EventHistoryRecord> RestoreEventHistory(List<EventHistoryRecord> source)
+        {
+            var result = new List<EventHistoryRecord>();
+            if (source == null) return result;
+            var indexByEventId = new Dictionary<string, int>();
+            for (int i = 0; i < source.Count; i++)
+            {
+                EventHistoryRecord candidate = source[i];
+                if (candidate == null || string.IsNullOrEmpty(candidate.EventId))
+                    continue;
+                if (!indexByEventId.TryGetValue(candidate.EventId, out int existingIndex))
+                {
+                    indexByEventId[candidate.EventId] = result.Count;
+                    result.Add(CloneEventHistoryRecord(candidate));
+                    continue;
+                }
+                EventHistoryRecord existing = result[existingIndex];
+                if (IsMoreMeaningfulEventHistory(candidate, existing))
+                    result[existingIndex] = CloneEventHistoryRecord(candidate);
+            }
+            return result;
+        }
+
+        private static List<ReviewDecisionRecord> RestoreReviewHistory(List<ReviewDecisionRecord> source)
+        {
+            var result = new List<ReviewDecisionRecord>();
+            if (source == null) return result;
+            for (int i = 0; i < source.Count; i++)
+            {
+                ReviewDecisionRecord record = source[i];
+                if (record == null)
+                    continue;
+                result.Add(CloneReviewDecision(record));
+            }
+            return result;
+        }
+
+        private static bool IsMoreMeaningfulDecision(DecisionRunState candidate, DecisionRunState existing)
+        {
+            if (candidate.IsCompleted != existing.IsCompleted)
+                return candidate.IsCompleted;
+            return candidate.Day > existing.Day;
+        }
+
+        private static bool IsMoreMeaningfulEventHistory(EventHistoryRecord candidate, EventHistoryRecord existing)
+        {
+            if (candidate.Resolved != existing.Resolved)
+                return candidate.Resolved;
+            if (candidate.Day != existing.Day)
+                return candidate.Day > existing.Day;
+            return candidate.Occurrence > existing.Occurrence;
+        }
+
+        private static DecisionRunState CloneDecision(DecisionRunState value)
+        {
+            if (value == null)
+                return null;
+            return new DecisionRunState
+            {
+                DecisionId = value.DecisionId,
+                Phase = value.Phase,
+                Day = value.Day,
+                IsBlocking = value.IsBlocking,
+                SourceId = value.SourceId,
+                IsCompleted = value.IsCompleted
+            };
+        }
+
+        private static EventHistoryRecord CloneEventHistoryRecord(EventHistoryRecord value)
+        {
+            if (value == null)
+                return null;
+            return new EventHistoryRecord
+            {
+                EventId = value.EventId,
+                DefinitionId = value.DefinitionId,
+                Day = value.Day,
+                Phase = value.Phase,
+                Occurrence = value.Occurrence,
+                RequiresDecision = value.RequiresDecision,
+                Resolved = value.Resolved,
+                OptionId = value.OptionId
+            };
+        }
+
+        private static ReviewDecisionRecord CloneReviewDecision(ReviewDecisionRecord value)
+        {
+            if (value == null)
+                return null;
+            return new ReviewDecisionRecord
+            {
+                CandidateId = value.CandidateId,
+                Decision = value.Decision,
+                Day = value.Day,
+                Phase = value.Phase,
+                InitialErosion = value.InitialErosion
+            };
         }
 
         private static TenantRunState CloneTenant(TenantRunState value)

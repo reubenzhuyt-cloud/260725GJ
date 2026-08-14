@@ -25,26 +25,32 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_pollution
-  eventTitle: "墙壁里的声音"
-  eventDescription: "有人在敲击墙壁，一下，两下——但隔壁房间是空的。"
+  eventTitle: "\u5899\u58C1\u91CC\u7684\u58F0\u97F3"
+  eventDescription: "\u6709\u4EBA\u5728\u6572\u51FB\u5899\u58C1\uFF0C\u4E00\u4E0B\uFF0C\u4E24\u4E0B\u2014\u2014\u4F46\u9694\u58C1\u623F\u95F4\u662F\u7A7A\u7684\u3002"
   eventImage: {fileID: 0}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】拆墙检查"
-    choiceResult: "工程师拆墙检查——什么都没有。"
-    effectText: "什么都没有"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u62C6\u5899\u68C0\u67E5"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u62C6\u5899\u68C0\u67E5\u2014\u2014\u4EC0\u4E48\u90FD\u6CA1\u6709\u3002"
+    effectText: "\u4EC0\u4E48\u90FD\u6CA1\u6709"
+    requiredTags: 03000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，全楼房客侵蚀+4，该房间无法住人2天。"
-    effectText: "全楼房客侵蚀+4，该房间无法住人2天"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u5168\u697C\u623F\u5BA2\u4FB5\u8680+4\uFF0C\u8BE5\u623F\u95F4\u65E0\u6CD5\u4F4F\u4EBA2\u5929\u3002"
+    effectText: "\u5168\u697C\u623F\u5BA2\u4FB5\u8680+4\uFF0C\u8BE5\u623F\u95F4\u65E0\u6CD5\u4F4F\u4EBA2\u5929"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 4
+      target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0

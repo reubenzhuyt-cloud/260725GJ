@@ -48,6 +48,7 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 1
+      target: 1
   - choiceId: B
     choiceText: "惩罚闹事者"
     choiceResult: "惩罚闹事者，侵蚀+2。"

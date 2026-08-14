@@ -47,6 +47,9 @@ MonoBehaviour:
     requiredTags:
     - 1
     choiceEffects:
+    - effectType: 2
+      floatValue: -5
+      stringValue: currency
     - effectType: 1
       floatValue: -10
   - choiceId: B
@@ -57,3 +60,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 15
+      target: 1

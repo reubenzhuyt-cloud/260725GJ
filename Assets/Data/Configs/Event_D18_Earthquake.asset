@@ -41,10 +41,14 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 1
   - choiceId: B
     choiceText: "【工程师】检查建筑结构"
     choiceResult: "工程师检查建筑结构，消耗3货币。"
     effectText: "消耗3货币"
     requiredTags:
     - 3
-    choiceEffects: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -3
+      stringValue: currency

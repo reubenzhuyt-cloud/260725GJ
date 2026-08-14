@@ -50,6 +50,13 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 1
+      target: 1
+    - effectType: 2
+      floatValue: -5
+      stringValue: food
+    - effectType: 2
+      floatValue: -5
+      stringValue: currency
   - choiceId: B
     choiceText: "无人处理"
     choiceResult: "无人处理，全楼房客侵蚀度+5，持续2天。"
@@ -58,3 +65,4 @@ MonoBehaviour:
     choiceEffects:
     - effectType: 1
       floatValue: 5
+      target: 1
