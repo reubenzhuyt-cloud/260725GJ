@@ -25,6 +25,9 @@ public class EventManager : MonoBehaviour
     [Header("Listener")]
     public PhaseEnteredEvent onPhaseEntered;
 
+    [Header("UI")]
+    [SerializeField] private UIManager uiManager;
+
     private readonly Queue<EventConfig> eventQueue = new Queue<EventConfig>();
     private EventConfig _currentConfig;
     private string _currentProtagonistTenantId;
@@ -658,6 +661,7 @@ public class EventManager : MonoBehaviour
             payload,
             out PlayerLogWriteDto effectSummary,
             out bool committed,
+            out string effectNoticeText,
             logDay,
             logPhase,
             TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
@@ -665,6 +669,9 @@ public class EventManager : MonoBehaviour
             return result;
         if (!committed)
             return EventSettleResult.Settled;
+
+        if (uiManager != null)
+            uiManager.ShowNotice(string.IsNullOrEmpty(effectNoticeText) ? "无事发生" : effectNoticeText);
 
         RecordEventLog(bridge.RunState, payload);
         if (effectSummary.Summary != null)

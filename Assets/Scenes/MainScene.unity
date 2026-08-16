@@ -8545,6 +8545,7 @@ MonoBehaviour:
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
   onFoodShortage: {fileID: 11400000, guid: 5ae9f7bc5f2422c4eaf99f5867e72d55, type: 2}
   onResourceAdjusted: {fileID: 11400000, guid: b4be3f8a941747d41b7994af0ab32c76, type: 2}
+  uiManager: {fileID: 2017123649}
 --- !u!4 &481458031
 Transform:
   m_ObjectHideFlags: 0
@@ -23531,6 +23532,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d1a8c0aedcf476ba889a371e2e8bd42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  uiManager: {fileID: 2017123649}
 --- !u!4 &1480415182
 Transform:
   m_ObjectHideFlags: 0
@@ -31653,6 +31655,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
   reviewPanel: {fileID: 423411129}
+  uiManager: {fileID: 2017123649}
   candidates:
   - {fileID: 11400000, guid: 79340704c7959de418edfb740565e6a5, type: 2}
   - {fileID: 11400000, guid: fda2fccc20e5b134cbb8ca5fc00568f5, type: 2}
@@ -31893,6 +31896,7 @@ MonoBehaviour:
   onEventProcessed: {fileID: 11400000, guid: fe80b2037fc10774094e75086b4023dd, type: 2}
   onEventQueueEmpty: {fileID: 11400000, guid: 085f99c999df1b44c9076c7e55068b1a, type: 2}
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
+  uiManager: {fileID: 2017123649}
 --- !u!114 &1918893933
 MonoBehaviour:
   m_ObjectHideFlags: 0

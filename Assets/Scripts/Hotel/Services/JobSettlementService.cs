@@ -31,8 +31,10 @@ public static class JobSettlementService
         HotelPhase phase,
         IReadOnlyList<TenantReviewCandidateSO> candidates,
         RoomFloorRegistry floorRegistry,
-        ResourceAdjustedEvent resourceAdjusted)
+        ResourceAdjustedEvent resourceAdjusted,
+        out Dictionary<string, int> settledResourceDeltas)
     {
+        settledResourceDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
         if (state == null || reducer == null)
             return false;
         if (phase != HotelPhase.Day && phase != HotelPhase.Night)
@@ -106,6 +108,8 @@ public static class JobSettlementService
             Debug.LogError($"[JobSettlementService] Settlement failed for day={day}, phase={phase}; it will retry on the next matching notification.");
             return false;
         }
+
+        settledResourceDeltas = resourceDeltas;
 
         foreach (KeyValuePair<string, int> resource in resourceDeltas)
         {

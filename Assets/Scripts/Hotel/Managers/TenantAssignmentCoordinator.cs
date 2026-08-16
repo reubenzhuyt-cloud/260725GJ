@@ -13,6 +13,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     private static readonly HashSet<string> _warnedMissingRoomProperties = new HashSet<string>();
 
+    [SerializeField] private UIManager uiManager;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
@@ -258,6 +260,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
                 displayName = view.DisplayName;
 
+            uiManager?.ShowNotice($"{displayName} 入住 {roomId}");
+
             PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
                 PlayerLogCategory.RoomAssignment,
                 _runState.Day,
@@ -319,6 +323,8 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             string displayName = tenantId;
             if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
                 displayName = view.DisplayName;
+
+            uiManager?.ShowNotice($"{displayName} 从 {currentRoomId} 搬至 {targetRoomId}");
 
             PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
                 PlayerLogCategory.RoomAssignment,

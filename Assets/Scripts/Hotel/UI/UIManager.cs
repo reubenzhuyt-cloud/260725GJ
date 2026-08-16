@@ -4,14 +4,16 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
+    private const float NoticeStartInterval = 0.75f;
+
     [SerializeField] private MonoBehaviour[] managedPanels;
     [SerializeField] private GameObject pauseOverlay;
     [SerializeField] private GameSettingController gameSettingController;
     [SerializeField] private NoticePanel noticePanelTemplate;
 
     private readonly Queue<string> _noticeQueue = new Queue<string>();
+    private readonly List<NoticePanel> _activeNotices = new List<NoticePanel>();
     private bool _noticeConsuming;
-    private NoticePanel _activeNotice;
 
     public bool IsPauseOverlayVisible => pauseOverlay != null && pauseOverlay.activeSelf;
 
@@ -71,6 +73,9 @@ public class UIManager : MonoBehaviour
 
     public void ShowNotice(string content)
     {
+        if (!isActiveAndEnabled)
+            return;
+
         if (string.IsNullOrWhiteSpace(content))
             return;
 
@@ -97,22 +102,32 @@ public class UIManager : MonoBehaviour
         {
             string content = _noticeQueue.Dequeue();
 
-            _activeNotice = Instantiate(noticePanelTemplate, noticePanelTemplate.transform.parent);
-            if (_activeNotice == null)
-                continue;
-
-            _activeNotice.gameObject.SetActive(true);
-
-            yield return _activeNotice.Play(content);
-
-            if (_activeNotice != null)
+            NoticePanel notice = Instantiate(noticePanelTemplate, noticePanelTemplate.transform.parent);
+            if (notice != null)
             {
-                Destroy(_activeNotice.gameObject);
-                _activeNotice = null;
+                _activeNotices.Add(notice);
+                notice.gameObject.SetActive(true);
+                notice.StartCoroutine(notice.Play(content, OnNoticeComplete));
+            }
+
+            if (_noticeQueue.Count == 0)
+                break;
+
+            float elapsed = 0f;
+            while (elapsed < NoticeStartInterval)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
             }
         }
 
         _noticeConsuming = false;
+    }
+
+    private void OnNoticeComplete(NoticePanel notice)
+    {
+        if (_activeNotices.Remove(notice))
+            Destroy(notice.gameObject);
     }
 
     private void OnDisable()
@@ -121,10 +136,12 @@ public class UIManager : MonoBehaviour
         _noticeConsuming = false;
         _noticeQueue.Clear();
 
-        if (_activeNotice != null)
+        for (int i = _activeNotices.Count - 1; i >= 0; i--)
         {
-            Destroy(_activeNotice.gameObject);
-            _activeNotice = null;
+            NoticePanel notice = _activeNotices[i];
+            if (notice != null)
+                Destroy(notice.gameObject);
         }
+        _activeNotices.Clear();
     }
 }

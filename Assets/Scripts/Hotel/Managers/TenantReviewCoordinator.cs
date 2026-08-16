@@ -14,6 +14,7 @@ public class TenantReviewCoordinator : MonoBehaviour
 
     [Header("UI")]
     public TenantReviewPanel reviewPanel;
+    [SerializeField] private UIManager uiManager;
 
     [Header("Candidates")]
     public List<TenantReviewCandidateSO> candidates = new List<TenantReviewCandidateSO>();
@@ -329,6 +330,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
         if (result.Succeeded)
         {
+            uiManager?.ShowNotice($"已招募 {candidate.displayName}");
             if (TenantAssignmentCoordinator.Instance != null)
                 TenantAssignmentCoordinator.Instance.RegisterTenant(candidate.candidateId, candidate.displayName, candidate.avatarColor, candidate.avatarKey);
 
@@ -384,6 +386,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
         if (result.Succeeded)
         {
+            uiManager?.ShowNotice($"已拒绝 {candidate.displayName}");
             PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
                 PlayerLogCategory.TenantReject,
                 _activeDay,

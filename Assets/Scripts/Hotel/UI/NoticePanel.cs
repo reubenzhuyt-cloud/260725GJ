@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -14,7 +15,7 @@ public class NoticePanel : MonoBehaviour
 
     private Vector2 startPosition;
 
-    public IEnumerator Play(string content)
+    public IEnumerator Play(string content, Action<NoticePanel> onComplete)
     {
         if (contentText != null)
             contentText.text = content;
@@ -49,5 +50,7 @@ public class NoticePanel : MonoBehaviour
 
         if (canvasGroup != null)
             canvasGroup.alpha = 0f;
+
+        onComplete?.Invoke(this);
     }
 }

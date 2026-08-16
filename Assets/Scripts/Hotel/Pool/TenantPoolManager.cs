@@ -141,6 +141,11 @@ public static class TenantPoolManager
             return false;
         }
 
+        Shuffle(rng, maleAvatars);
+        Shuffle(rng, femaleAvatars);
+        int maleAvatarIndex = 0;
+        int femaleAvatarIndex = 0;
+
         _normalProfiles = new List<TenantCandidateProfile>(normalCount);
         for (int i = 0; i < normalCount; i++)
         {
@@ -150,8 +155,25 @@ public static class TenantPoolManager
             var copy = PickCopy(rng, jobKey, tier);
             var name = TakeName(rng, names);
             if (name == null) break;
-            var avatars = name.gender == "f" ? femaleAvatars : maleAvatars;
-            var avatarKey = avatars[rng.Next(avatars.Count)];
+            string avatarKey;
+            if (name.gender == "f")
+            {
+                if (femaleAvatarIndex >= femaleAvatars.Count)
+                {
+                    Shuffle(rng, femaleAvatars);
+                    femaleAvatarIndex = 0;
+                }
+                avatarKey = femaleAvatars[femaleAvatarIndex++];
+            }
+            else
+            {
+                if (maleAvatarIndex >= maleAvatars.Count)
+                {
+                    Shuffle(rng, maleAvatars);
+                    maleAvatarIndex = 0;
+                }
+                avatarKey = maleAvatars[maleAvatarIndex++];
+            }
 
             _normalProfiles.Add(new TenantCandidateProfile
             {
@@ -234,6 +256,17 @@ public static class TenantPoolManager
             else if (gender == "m" && !female) result.Add(key);
         }
         return result;
+    }
+
+    private static void Shuffle(System.Random rng, List<string> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            string temp = list[i];
+            list[i] = list[j];
+            list[j] = temp;
+        }
     }
 
     private static Color NeutralColor(System.Random rng)

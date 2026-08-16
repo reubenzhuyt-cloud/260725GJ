@@ -20,6 +20,9 @@ public class SettlementBridge : MonoBehaviour
     public FoodShortageEvent onFoodShortage;
     public ResourceAdjustedEvent onResourceAdjusted;
 
+    [Header("UI")]
+    [SerializeField] private UIManager uiManager;
+
     public GameRunState RunState => _runState;
     public StateReducer Reducer => _reducer;
 
@@ -27,6 +30,8 @@ public class SettlementBridge : MonoBehaviour
     private StateReducer _reducer;
     private int _lastSettlementDay;
     private GamePhase _lastPhase;
+    private Dictionary<string, int> _pendingSettlementDeltas;
+    private Dictionary<string, string> _resourceDisplayNames;
 
     private void Awake()
     {
@@ -52,6 +57,14 @@ public class SettlementBridge : MonoBehaviour
                 DefinitionId = def.name,
                 Amount = def.initialAmount
             };
+        }
+
+        _resourceDisplayNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var def in resourceDefinitions)
+        {
+            if (def == null || string.IsNullOrEmpty(def.resourceId) || string.IsNullOrEmpty(def.displayName))
+                continue;
+            _resourceDisplayNames[def.resourceId] = def.displayName;
         }
 
         StartCoroutine(DispatchRunStateRestored());
@@ -110,6 +123,8 @@ public class SettlementBridge : MonoBehaviour
             return;
         }
 
+        GamePhase previousPhase = _lastPhase;
+
         PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
             PlayerLogCategory.PhaseTransition,
             data.day,
@@ -118,11 +133,12 @@ public class SettlementBridge : MonoBehaviour
             $"第 {data.day} 天 · {PhaseName(data.phase)} 开始",
             null));
 
-        bool crossedNewDayBoundary = _lastPhase == GamePhase.Night && data.day > _lastSettlementDay;
+        bool crossedNewDayBoundary = previousPhase == GamePhase.Night && data.day > _lastSettlementDay;
         bool completedNewDaySettlement = false;
+        Dictionary<string, int> foodDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
         if (crossedNewDayBoundary)
         {
-            if (ExecuteFoodSettlement(data.day, ToHotelPhase(data.phase)))
+            if (ExecuteFoodSettlement(data.day, ToHotelPhase(data.phase), out foodDeltas))
             {
                 _lastSettlementDay = data.day;
                 completedNewDaySettlement = true;
@@ -134,16 +150,20 @@ public class SettlementBridge : MonoBehaviour
         _runState.Phase.Lifecycle = PhaseLifecycleState.Entered;
         _lastPhase = data.phase;
 
-        if (data.phase == GamePhase.Dawn)
-            EventEffectManager.TickBuffs(_runState, _reducer, RoomFloorRegistry.Instance);
+        Dictionary<string, int> buffDeltas = null;
+        if (crossedNewDayBoundary)
+            EventEffectManager.TickBuffs(_runState, _reducer, RoomFloorRegistry.Instance, out buffDeltas);
 
         bool shouldAutosave = data.phase == GamePhase.Dawn || completedNewDaySettlement;
         if (shouldAutosave && !SaveGameService.TrySave(GameLaunchContext.ActiveSlot, _runState, out var error))
             Debug.LogError($"[SettlementBridge] Dawn autosave failed: {error}");
+
+        PublishHalfDayNotice(previousPhase, foodDeltas, buffDeltas);
     }
 
-    private bool ExecuteFoodSettlement(int day, HotelPhase phase)
+    private bool ExecuteFoodSettlement(int day, HotelPhase phase, out Dictionary<string, int> settledDeltas)
     {
+        settledDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
         int countTenants = 0;
         foreach (var kvp in _runState.Tenants)
         {
@@ -175,6 +195,9 @@ public class SettlementBridge : MonoBehaviour
 
         if (result.Succeeded)
         {
+            if (consumed != 0)
+                settledDeltas["food"] = -consumed;
+
             PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
                 PlayerLogCategory.ResourceFood,
                 day,
@@ -226,14 +249,50 @@ public class SettlementBridge : MonoBehaviour
         IReadOnlyList<TenantReviewCandidateSO> candidates = TenantReviewCoordinator.Instance != null
             ? TenantReviewCoordinator.Instance.candidates
             : null;
-        return JobSettlementService.TrySettle(
+        bool success = JobSettlementService.TrySettle(
             _runState,
             _reducer,
             day,
             ToHotelPhase(phase),
             candidates,
             RoomFloorRegistry.Instance,
-            onResourceAdjusted);
+            onResourceAdjusted,
+            out Dictionary<string, int> settledDeltas);
+        _pendingSettlementDeltas = success && settledDeltas != null && settledDeltas.Count > 0
+            ? new Dictionary<string, int>(settledDeltas, StringComparer.Ordinal)
+            : null;
+        return success;
+    }
+
+    private void PublishHalfDayNotice(
+        GamePhase previousPhase,
+        Dictionary<string, int> foodDeltas,
+        Dictionary<string, int> buffDeltas)
+    {
+        if (_pendingSettlementDeltas == null)
+            return;
+
+        bool nightSettlement = previousPhase == GamePhase.Night;
+        Dictionary<string, int> merged = NoticeTextFormatter.MergeDeltas(
+            _pendingSettlementDeltas,
+            nightSettlement ? foodDeltas : null,
+            nightSettlement ? buffDeltas : null);
+
+        _pendingSettlementDeltas = null;
+
+        string text = NoticeTextFormatter.FormatHalfDaySettlement(merged, ResolveResourceName);
+        if (uiManager == null || string.IsNullOrEmpty(text))
+            return;
+        uiManager.ShowNotice(text);
+    }
+
+    private string ResolveResourceName(string resourceId)
+    {
+        if (string.IsNullOrEmpty(resourceId))
+            return null;
+        if (_resourceDisplayNames != null && _resourceDisplayNames.TryGetValue(resourceId, out string name))
+            return name;
+        return null;
     }
 
     private static HotelPhase ToHotelPhase(GamePhase phase)

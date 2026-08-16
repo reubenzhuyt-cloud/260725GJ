@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hotel.Runtime;
 using UnityEngine;
@@ -8,10 +9,11 @@ public class EventEffectManager
 {
     private string _lastFailureKey;
 
-    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload, out PlayerLogWriteDto effectSummary, out bool committed, int logDay = 0, HotelPhase? logPhase = null, IReadOnlyList<TenantReviewCandidateSO> candidates = null)
+    public EventSettleResult TrySettle(GameRunState state, StateReducer reducer, EventProcessedData payload, out PlayerLogWriteDto effectSummary, out bool committed, out string effectNoticeText, int logDay = 0, HotelPhase? logPhase = null, IReadOnlyList<TenantReviewCandidateSO> candidates = null)
     {
         effectSummary = default;
         committed = false;
+        effectNoticeText = null;
         if (payload == null || string.IsNullOrEmpty(payload.eventId))
             return EventSettleResult.Pending;
         if (state == null || reducer == null)
@@ -45,19 +47,22 @@ public class EventEffectManager
         EventEffect[] effects = payload.effects;
         int effectCount = effects != null ? effects.Length : 0;
         PlayerLogWriteDto pendingEffectSummary = default;
+        List<RunChange> changes = null;
+        string ownerTenantId = null;
+        float negativeEffectMultiplier = 1f;
         if (effectCount == 0)
         {
             Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: no effects to apply");
         }
         else
         {
-            string ownerTenantId = payload.ownerTenantId;
+            ownerTenantId = payload.ownerTenantId;
             if (!string.IsNullOrEmpty(ownerTenantId) && !state.Tenants.ContainsKey(ownerTenantId))
                 ownerTenantId = null;
-            float negativeEffectMultiplier = state.Phase.Current == HotelPhase.Night
+            negativeEffectMultiplier = state.Phase.Current == HotelPhase.Night
                 ? JobSettlementService.GetNightEventLossMultiplier(state, candidates)
                 : 1f;
-            List<RunChange> changes = EventEffectExecutor.BuildChanges(
+            changes = EventEffectExecutor.BuildChanges(
                 effects,
                 state,
                 ownerTenantId,
@@ -88,6 +93,8 @@ public class EventEffectManager
         {
             committed = true;
             effectSummary = pendingEffectSummary;
+            effectNoticeText = NoticeTextFormatter.BuildEventNotice(
+                effects, changes, state, ownerTenantId, negativeEffectMultiplier);
             return EventSettleResult.Settled;
         }
 
@@ -100,8 +107,9 @@ public class EventEffectManager
         return EventSettleResult.Pending;
     }
 
-    public static bool TickBuffs(GameRunState state, StateReducer reducer, RoomFloorRegistry floorRegistry)
+    public static bool TickBuffs(GameRunState state, StateReducer reducer, RoomFloorRegistry floorRegistry, out Dictionary<string, int> settledResourceDeltas)
     {
+        settledResourceDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
         if (state == null || reducer == null)
             return false;
         if (state.Buffs == null || state.Buffs.Count == 0)
@@ -194,6 +202,15 @@ public class EventEffectManager
         CommitResult result = reducer.TryCommit(state, set);
         if (result.Succeeded)
         {
+            for (int i = 0; i < changes.Count; i++)
+            {
+                if (changes[i] is AdjustResourceChange resource)
+                {
+                    settledResourceDeltas[resource.ResourceId] = settledResourceDeltas.TryGetValue(resource.ResourceId, out int current)
+                        ? current + resource.Delta
+                        : resource.Delta;
+                }
+            }
             for (int i = 0; i < pendingBuffs.Count; i++)
                 PlayerLogManager.Record(state, pendingBuffs[i]);
             return true;
