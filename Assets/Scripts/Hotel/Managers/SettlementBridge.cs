@@ -219,6 +219,23 @@ public class SettlementBridge : MonoBehaviour
         return ResourceService.GetAmount(_runState, resourceId);
     }
 
+    public bool TrySettleJobs(int day, GamePhase phase)
+    {
+        if (phase != GamePhase.Day && phase != GamePhase.Night)
+            return true;
+        IReadOnlyList<TenantReviewCandidateSO> candidates = TenantReviewCoordinator.Instance != null
+            ? TenantReviewCoordinator.Instance.candidates
+            : null;
+        return JobSettlementService.TrySettle(
+            _runState,
+            _reducer,
+            day,
+            ToHotelPhase(phase),
+            candidates,
+            RoomFloorRegistry.Instance,
+            onResourceAdjusted);
+    }
+
     private static HotelPhase ToHotelPhase(GamePhase phase)
     {
         switch (phase)

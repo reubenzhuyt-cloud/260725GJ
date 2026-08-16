@@ -46,7 +46,8 @@ namespace Hotel.Runtime
         TenantReject,
         RoomAssignment,
         ResourceFood,
-        PhaseTransition
+        PhaseTransition,
+        WorkAssignment
     }
 
     public enum TenantLogCategory
@@ -54,7 +55,8 @@ namespace Hotel.Runtime
         Recruit,
         RoomAssignment,
         RoomMove,
-        Behavior
+        Behavior,
+        WorkAssignment
     }
 
     public enum ReviewDecision
@@ -83,6 +85,86 @@ namespace Hotel.Runtime
         DayActive,
         NightActive,
         AllDay
+    }
+
+    public sealed class JobDefinition
+    {
+        public JobDefinition(string id, string displayName, params TenantAbility[] suitableAbilities)
+        {
+            Id = id;
+            DisplayName = displayName;
+            SuitableAbilities = suitableAbilities ?? Array.Empty<TenantAbility>();
+        }
+
+        public string Id { get; }
+        public string DisplayName { get; }
+        public IReadOnlyList<TenantAbility> SuitableAbilities { get; }
+
+        public bool IsSuitableFor(TenantAbility ability)
+        {
+            for (int i = 0; i < SuitableAbilities.Count; i++)
+            {
+                if (SuitableAbilities[i] == ability)
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    public static class JobCatalog
+    {
+        public const string Cooking = "cooking";
+        public const string Medical = "medical";
+        public const string Repair = "repair";
+        public const string NightWatch = "night_watch";
+        public const string Patrol = "patrol";
+        public const string Trading = "trading";
+        public const string Farming = "farming";
+        public const string Exploration = "exploration";
+        public const string Organization = "organization";
+        public const string Chores = "chores";
+
+        private static readonly JobDefinition[] Definitions =
+        {
+            new(Cooking, "烹饪", TenantAbility.Cook),
+            new(Medical, "医疗", TenantAbility.Doctor),
+            new(Repair, "维修", TenantAbility.Engineer, TenantAbility.Carpenter),
+            new(NightWatch, "守夜", TenantAbility.NightWatch, TenantAbility.FormerEmployee),
+            new(Patrol, "巡逻", TenantAbility.FormerEmployee),
+            new(Trading, "交易", TenantAbility.Merchant),
+            new(Farming, "种植", TenantAbility.Farmer),
+            new(Exploration, "探索", TenantAbility.Driver),
+            new(Organization, "组织活动", TenantAbility.Teacher),
+            new(Chores, "杂务")
+        };
+
+        public static IReadOnlyList<JobDefinition> All => Definitions;
+
+        public static bool IsValid(string jobId)
+        {
+            return string.IsNullOrEmpty(jobId) || TryGet(jobId, out _);
+        }
+
+        public static bool TryGet(string jobId, out JobDefinition definition)
+        {
+            for (int i = 0; i < Definitions.Length; i++)
+            {
+                if (string.Equals(Definitions[i].Id, jobId, StringComparison.Ordinal))
+                {
+                    definition = Definitions[i];
+                    return true;
+                }
+            }
+            definition = null;
+            return false;
+        }
+
+        public static string GetDisplayName(string jobId)
+        {
+            return TryGet(jobId, out JobDefinition definition)
+                ? definition.DisplayName
+                : "未安排";
+        }
     }
 
     public enum PhaseLifecycleState
@@ -184,7 +266,7 @@ namespace Hotel.Runtime
     {
         public string RoomId;
         public string DefinitionId;
-        public List<string> OccupantIds = new List<string>();
+        public List<string> OccupantIds = new();
     }
 
     [Serializable]
@@ -226,7 +308,7 @@ namespace Hotel.Runtime
         public int RemainingTicks;
         public int StartDay;
         public int LastTickDay;
-        public List<string> TargetTenantIds = new List<string>();
+        public List<string> TargetTenantIds = new();
 
         public BuffRunState Clone()
         {
@@ -268,21 +350,21 @@ namespace Hotel.Runtime
         public long StateVersion;
         public int Day;
         public int Seed;
-        public PhaseRunState Phase = new PhaseRunState();
-        public List<DecisionRunState> Decisions = new List<DecisionRunState>();
-        public List<EventHistoryRecord> EventHistory = new List<EventHistoryRecord>();
-        public List<string> AuditLog = new List<string>();
-        public Dictionary<string, TenantRunState> Tenants = new Dictionary<string, TenantRunState>();
-        public Dictionary<string, RoomRunState> Rooms = new Dictionary<string, RoomRunState>();
-        public Dictionary<string, ResourceRunState> Resources = new Dictionary<string, ResourceRunState>();
-        public Dictionary<string, BuffRunState> Buffs = new Dictionary<string, BuffRunState>();
-        public RunSummaryState Summary = new RunSummaryState();
-        public List<string> ResolvedReviewCandidateIds = new List<string>();
-        public List<ReviewDecisionRecord> ReviewHistory = new List<ReviewDecisionRecord>();
-        public List<PlayerLogEntry> PlayerLogs = new List<PlayerLogEntry>();
+        public PhaseRunState Phase = new();
+        public List<DecisionRunState> Decisions = new();
+        public List<EventHistoryRecord> EventHistory = new();
+        public List<string> AuditLog = new();
+        public Dictionary<string, TenantRunState> Tenants = new();
+        public Dictionary<string, RoomRunState> Rooms = new();
+        public Dictionary<string, ResourceRunState> Resources = new();
+        public Dictionary<string, BuffRunState> Buffs = new();
+        public RunSummaryState Summary = new();
+        public List<string> ResolvedReviewCandidateIds = new();
+        public List<ReviewDecisionRecord> ReviewHistory = new();
+        public List<PlayerLogEntry> PlayerLogs = new();
 public bool HotelHasMirror = true;
         public bool IsStorm;
-        public Dictionary<string, List<TenantLogEntry>> TenantLogs = new Dictionary<string, List<TenantLogEntry>>();
+        public Dictionary<string, List<TenantLogEntry>> TenantLogs = new();
 
         public static GameRunState New(RunId id, int seed = 1)
         {

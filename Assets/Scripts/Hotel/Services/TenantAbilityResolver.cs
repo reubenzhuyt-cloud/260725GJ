@@ -33,6 +33,20 @@ public static class TenantAbilityResolver
         return TenantAbility.None;
     }
 
+    public static TenantActivityType ResolveActivityType(string tenantId, IReadOnlyList<TenantReviewCandidateSO> candidates)
+    {
+        if (candidates == null)
+            return TenantActivityType.DayActive;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            TenantReviewCandidateSO candidate = candidates[i];
+            if (candidate == null || candidate.candidateId != tenantId)
+                continue;
+            return candidate.activityType;
+        }
+        return TenantActivityType.DayActive;
+    }
+
     public static bool HasAllRequiredTags(TenantAbility[] required, HashSet<TenantAbility> owned)
     {
         if (required == null || required.Length == 0)

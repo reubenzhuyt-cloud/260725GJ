@@ -50,6 +50,13 @@ public class GamePhaseManager : MonoBehaviour
             return;
         }
 
+        if (SettlementBridge.Instance != null
+            && !SettlementBridge.Instance.TrySettleJobs(currentDay, currentPhase))
+        {
+            Debug.LogError("[GamePhaseManager] Advance blocked because job settlement failed.");
+            return;
+        }
+
         GamePhase nextPhase = GetNextPhase();
         int targetDay = currentDay + (nextPhase == GamePhase.Dawn ? 1 : 0);
 

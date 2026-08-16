@@ -19340,7 +19340,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -8.900002, y: -0.00005340576}
+  m_AnchoredPosition: {x: -8.900002, y: -0.000038146973}
   m_SizeDelta: {x: 0, y: 31.758}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1311344544
@@ -22896,7 +22896,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 734040414}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9990981
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -24157,6 +24157,7 @@ MonoBehaviour:
   shortDescriptionLabel: {fileID: 0}
   detailedDescriptionLabel: {fileID: 0}
   tenantLogPanel: {fileID: 0}
+  workDropdown: {fileID: 0}
   flagDropdown: {fileID: 0}
   flagLabel: {fileID: 1028163243}
   flagBackground: {fileID: 127238468}
@@ -25682,6 +25683,7 @@ MonoBehaviour:
   shortDescriptionLabel: {fileID: 0}
   detailedDescriptionLabel: {fileID: 0}
   tenantLogPanel: {fileID: 1065991904}
+  workDropdown: {fileID: 1032147033}
   flagDropdown: {fileID: 313266333}
   flagLabel: {fileID: 1835749730}
   flagBackground: {fileID: 2032731210}

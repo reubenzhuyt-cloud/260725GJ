@@ -54,8 +54,18 @@ public class EventEffectManager
             string ownerTenantId = payload.ownerTenantId;
             if (!string.IsNullOrEmpty(ownerTenantId) && !state.Tenants.ContainsKey(ownerTenantId))
                 ownerTenantId = null;
+            float negativeEffectMultiplier = state.Phase.Current == HotelPhase.Night
+                ? JobSettlementService.GetNightEventLossMultiplier(state, candidates)
+                : 1f;
             List<RunChange> changes = EventEffectExecutor.BuildChanges(
-                effects, state, ownerTenantId, eventId, optionId, state.Day, RoomFloorRegistry.Instance);
+                effects,
+                state,
+                ownerTenantId,
+                eventId,
+                optionId,
+                state.Day,
+                RoomFloorRegistry.Instance,
+                negativeEffectMultiplier);
             LogEffects(state, eventId, optionId, effects, changes, ownerTenantId);
             for (int i = 0; i < changes.Count; i++)
                 set.Add(changes[i]);

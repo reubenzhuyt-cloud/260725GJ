@@ -25,6 +25,9 @@ public class TenantInfoPanel : MonoBehaviour,
     public TextMeshProUGUI detailedDescriptionLabel;
     public TenantLogPanelController tenantLogPanel;
 
+    [Header("Work Assignment")]
+    public TMP_Dropdown workDropdown;
+
     [Header("Player Flag")]
     public TMP_Dropdown flagDropdown;
     public TextMeshProUGUI flagLabel;
@@ -41,27 +44,37 @@ public class TenantInfoPanel : MonoBehaviour,
     private Canvas _canvas;
     private RectTransform _selfRect;
     private CanvasGroup _canvasGroup;
-    private TMP_Dropdown _dropdown;
     private string _currentTenantId;
     private bool _suppressFlagWrite;
+    private bool _suppressWorkWrite;
     private Color _defaultFlagBackgroundColor;
     private Sprite _defaultAvatarSprite;
 
     private void Awake()
     {
-        _dropdown = flagDropdown;
+        if (workDropdown == null)
+        {
+            Transform workDropdownTransform = transform.Find("LeftPanel/Dropdown");
+            if (workDropdownTransform != null)
+                workDropdown = workDropdownTransform.GetComponent<TMP_Dropdown>();
+        }
+        ConfigureWorkDropdown();
         if (flagBackground != null)
             _defaultFlagBackgroundColor = flagBackground.color;
         if (tenantImage != null)
             _defaultAvatarSprite = tenantImage.sprite;
         if (flagDropdown != null)
             flagDropdown.onValueChanged.AddListener(OnFlagChanged);
+        if (workDropdown != null)
+            workDropdown.onValueChanged.AddListener(OnWorkChanged);
     }
 
     private void OnDestroy()
     {
         if (flagDropdown != null)
             flagDropdown.onValueChanged.RemoveListener(OnFlagChanged);
+        if (workDropdown != null)
+            workDropdown.onValueChanged.RemoveListener(OnWorkChanged);
     }
 
     private void Update()
@@ -112,6 +125,7 @@ public class TenantInfoPanel : MonoBehaviour,
         ApplyInteractionMode();
         gameObject.SetActive(true);
         ApplyFlagToPanel(tenantId);
+        ApplyWorkToPanel(tenantId);
         PositionAt(screenPoint, preferLeft);
     }
 
@@ -131,6 +145,7 @@ public class TenantInfoPanel : MonoBehaviour,
         ApplyInteractionMode();
         gameObject.SetActive(true);
         ApplyFlagToPanel(tenantId);
+        ApplyWorkToPanel(tenantId);
         PositionAt(screenPoint, false);
     }
 
@@ -152,8 +167,8 @@ public class TenantInfoPanel : MonoBehaviour,
             return false;
         if (hitObject.transform.IsChildOf(transform))
             return true;
-        Transform listRoot = GetActiveDropdownListRoot();
-        if (listRoot != null && hitObject.transform.IsChildOf(listRoot))
+        if (IsHitInExpandedDropdown(hitObject, flagDropdown)
+            || IsHitInExpandedDropdown(hitObject, workDropdown))
             return true;
         return false;
     }
@@ -235,6 +250,70 @@ public class TenantInfoPanel : MonoBehaviour,
         ApplyFlagColor(value);
     }
 
+    private void ConfigureWorkDropdown()
+    {
+        if (workDropdown == null)
+            return;
+
+        var options = new List<TMP_Dropdown.OptionData>
+        {
+            new("未安排")
+        };
+        IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
+        for (int i = 0; i < jobs.Count; i++)
+            options.Add(new TMP_Dropdown.OptionData(jobs[i].DisplayName));
+        workDropdown.options = options;
+        workDropdown.RefreshShownValue();
+    }
+
+    private void ApplyWorkToPanel(string tenantId)
+    {
+        if (workDropdown == null)
+            return;
+
+        int selectedIndex = 0;
+        SettlementBridge bridge = SettlementBridge.Instance;
+        if (bridge != null && bridge.RunState != null
+            && bridge.RunState.Tenants.TryGetValue(tenantId, out TenantRunState tenant))
+        {
+            IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
+            for (int i = 0; i < jobs.Count; i++)
+            {
+                if (jobs[i].Id == tenant.JobId)
+                {
+                    selectedIndex = i + 1;
+                    break;
+                }
+            }
+        }
+
+        _suppressWorkWrite = true;
+        workDropdown.SetValueWithoutNotify(selectedIndex);
+        workDropdown.RefreshShownValue();
+        _suppressWorkWrite = false;
+    }
+
+    private void OnWorkChanged(int value)
+    {
+        if (_suppressWorkWrite || string.IsNullOrEmpty(_currentTenantId))
+            return;
+
+        IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
+        string jobId = value > 0 && value <= jobs.Count
+            ? jobs[value - 1].Id
+            : string.Empty;
+
+        TenantAssignmentCoordinator coordinator = TenantAssignmentCoordinator.Instance;
+        if (coordinator != null && coordinator.TryAssignJob(_currentTenantId, jobId))
+        {
+            if (tenantLogPanel != null && Mode == PanelMode.Pinned)
+                tenantLogPanel.RefreshForTenant(_currentTenantId);
+            return;
+        }
+
+        ApplyWorkToPanel(_currentTenantId);
+    }
+
     private void WriteFlag(int value)
     {
         SettlementBridge bridge = SettlementBridge.Instance;
@@ -307,24 +386,22 @@ public class TenantInfoPanel : MonoBehaviour,
         flagBackground.color = target;
     }
 
-    private Transform GetActiveDropdownListRoot()
+    private static bool IsHitInExpandedDropdown(GameObject hitObject, TMP_Dropdown dropdown)
     {
-        if (_dropdown == null)
-            return null;
+        if (hitObject == null || dropdown == null || !dropdown.IsExpanded)
+            return false;
         try
         {
-            if (!_dropdown.IsExpanded)
-                return null;
             var field = typeof(TMP_Dropdown).GetField("m_Dropdown",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (field == null)
-                return null;
-            GameObject list = field.GetValue(_dropdown) as GameObject;
-            return list != null ? list.transform : null;
+                return false;
+            GameObject list = field.GetValue(dropdown) as GameObject;
+            return list != null && hitObject.transform.IsChildOf(list.transform);
         }
         catch
         {
-            return null;
+            return false;
         }
     }
 

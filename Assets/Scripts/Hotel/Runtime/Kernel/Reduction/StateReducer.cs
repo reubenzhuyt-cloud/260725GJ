@@ -134,6 +134,8 @@ namespace Hotel.Runtime
                     {
                         if (!s.Tenants.ContainsKey(job.TenantId))
                             return false;
+                        if (!JobCatalog.IsValid(job.JobId))
+                            return false;
                         break;
                     }
                 case AdjustResourceChange resource:

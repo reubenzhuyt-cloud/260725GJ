@@ -8,6 +8,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     public static TenantAssignmentCoordinator Instance { get; private set; }
 
     public event Action AssignmentChanged;
+    public event Action JobAssignmentChanged;
     public bool IsDragging { get; private set; }
 
     private static readonly HashSet<string> _warnedMissingRoomProperties = new HashSet<string>();
@@ -338,6 +339,58 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         }
 
         return result.Succeeded;
+    }
+
+    public bool TryAssignJob(string tenantId, string jobId)
+    {
+        if (_runState == null || _reducer == null)
+            return false;
+        if (string.IsNullOrEmpty(tenantId) || !_runState.Tenants.ContainsKey(tenantId))
+            return false;
+        if (!JobCatalog.IsValid(jobId))
+            return false;
+
+        TenantRunState tenant = _runState.Tenants[tenantId];
+        jobId ??= string.Empty;
+        if (string.Equals(tenant.JobId ?? string.Empty, jobId, StringComparison.Ordinal))
+            return true;
+
+        var changeSet = AuthorizedChangeSet.Domain(
+            _runState.RunId,
+            _runState.StateVersion,
+            "TenantAssignmentCoordinator",
+            "AssignJob");
+        changeSet.Add(new AssignJobChange(tenantId, jobId));
+
+        CommitResult result = _reducer.TryCommit(_runState, changeSet);
+        if (!result.Succeeded)
+            return false;
+
+        JobAssignmentChanged?.Invoke();
+
+        string displayName = tenantId;
+        if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
+            displayName = view.DisplayName;
+        string jobName = JobCatalog.GetDisplayName(jobId);
+
+        PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+            PlayerLogCategory.WorkAssignment,
+            _runState.Day,
+            _runState.Phase.Current,
+            "工作安排",
+            $"{displayName} → {jobName}",
+            jobId,
+            tenantId));
+
+        TenantLogManager.Record(_runState, new TenantLogWriteDto(
+            tenantId,
+            TenantLogCategory.WorkAssignment,
+            _runState.Day,
+            _runState.Phase.Current,
+            $"工作安排：{jobName}",
+            jobId));
+
+        return true;
     }
 
     public bool TryGetTenantColor(string tenantId, out Color color)

@@ -53,6 +53,7 @@ public class PlayerLogCardItem : MonoBehaviour
             case PlayerLogCategory.RoomAssignment: return "入住";
             case PlayerLogCategory.ResourceFood: return "资源";
             case PlayerLogCategory.PhaseTransition: return "阶段";
+            case PlayerLogCategory.WorkAssignment: return "工作";
             default: return "日志";
         }
     }

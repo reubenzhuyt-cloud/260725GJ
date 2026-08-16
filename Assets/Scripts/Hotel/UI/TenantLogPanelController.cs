@@ -129,13 +129,14 @@ public class TenantLogPanelController : MonoBehaviour
 
     private static string CategoryText(TenantLogCategory category)
     {
-        switch (category)
+        return category switch
         {
-            case TenantLogCategory.Recruit: return "招募";
-            case TenantLogCategory.RoomAssignment: return "入住";
-            case TenantLogCategory.RoomMove: return "换房";
-            case TenantLogCategory.Behavior: return "行为";
-            default: return "其他";
-        }
+            TenantLogCategory.Recruit => "招募",
+            TenantLogCategory.RoomAssignment => "入住",
+            TenantLogCategory.RoomMove => "换房",
+            TenantLogCategory.WorkAssignment => "工作",
+            TenantLogCategory.Behavior => "行为",
+            _ => "其他",
+        };
     }
 }

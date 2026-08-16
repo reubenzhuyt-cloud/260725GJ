@@ -12,7 +12,8 @@ public static class EventEffectExecutor
         string eventId,
         string optionId,
         int day,
-        RoomFloorRegistry floorRegistry)
+        RoomFloorRegistry floorRegistry,
+        float negativeEffectMultiplier = 1f)
     {
         var changes = new List<RunChange>();
         if (effects == null || state == null)
@@ -28,9 +29,9 @@ public static class EventEffectExecutor
             }
 
             if (effect.effectType == EffectType.ModifyTenantErosion)
-                AddErosionChanges(effect, state, ownerTenantId, i, changes, floorRegistry);
+                AddErosionChanges(effect, state, ownerTenantId, i, changes, floorRegistry, negativeEffectMultiplier);
             else if (effect.effectType == EffectType.ModifyResource)
-                AddResourceChange(effect, state, changes);
+                AddResourceChange(effect, state, changes, negativeEffectMultiplier);
             else if (effect.effectType == EffectType.ApplyBuff)
                 AddBuffChange(effect, state, ownerTenantId, eventId, optionId, i, day, changes, floorRegistry);
             else
@@ -65,16 +66,19 @@ public static class EventEffectExecutor
         }
     }
 
-    private static void AddErosionChanges(EventEffect effect, GameRunState state, string ownerTenantId, int effectIndex, List<RunChange> changes, RoomFloorRegistry floorRegistry)
+    private static void AddErosionChanges(EventEffect effect, GameRunState state, string ownerTenantId, int effectIndex, List<RunChange> changes, RoomFloorRegistry floorRegistry, float negativeEffectMultiplier)
     {
         List<string> targets = ResolveTargets(effect.target, state, ownerTenantId, effect.intValue, effectIndex, floorRegistry);
         if (targets == null)
             return;
+        float delta = effect.floatValue > 0f
+            ? effect.floatValue * Mathf.Clamp01(negativeEffectMultiplier)
+            : effect.floatValue;
         for (int i = 0; i < targets.Count; i++)
-            changes.Add(new AdjustTenantErosionChange(targets[i], effect.floatValue));
+            changes.Add(new AdjustTenantErosionChange(targets[i], delta));
     }
 
-    private static void AddResourceChange(EventEffect effect, GameRunState state, List<RunChange> changes)
+    private static void AddResourceChange(EventEffect effect, GameRunState state, List<RunChange> changes, float negativeEffectMultiplier)
     {
         if (string.IsNullOrEmpty(effect.stringValue))
         {
@@ -86,7 +90,10 @@ public static class EventEffectExecutor
             Debug.LogWarning($"[EventEffectExecutor] ModifyResource effect references unknown resource '{effect.stringValue}'; skipped");
             return;
         }
-        changes.Add(new AdjustResourceChange(effect.stringValue, SafeToInt(effect.floatValue)));
+        float delta = effect.floatValue < 0f
+            ? effect.floatValue * Mathf.Clamp01(negativeEffectMultiplier)
+            : effect.floatValue;
+        changes.Add(new AdjustResourceChange(effect.stringValue, SafeToInt(delta)));
     }
 
     private static void AddBuffChange(EventEffect effect, GameRunState state, string ownerTenantId, string eventId, string optionId, int effectIndex, int day, List<RunChange> changes, RoomFloorRegistry floorRegistry)
