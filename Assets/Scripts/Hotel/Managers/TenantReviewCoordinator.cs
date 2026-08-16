@@ -18,10 +18,16 @@ public class TenantReviewCoordinator : MonoBehaviour
     [Header("Candidates")]
     public List<TenantReviewCandidateSO> candidates = new List<TenantReviewCandidateSO>();
 
+    [Header("Pool")]
+    [Tooltip("启用 4.2.5 访客生成池（每局从名字×文案×头像池确定性组合 40 人，物化为 SO 填入 candidates）。关闭则使用场景中序列化的旧候选列表。")]
+    [System.NonSerialized]
+    public bool usePool = true;
+
     private StateReducer _reducer;
     private GameRunState _runState;
     private TenantReviewCandidateSO[] _shuffledOrder;
     private Dictionary<string, TenantReviewCandidateSO> _candidateLookup;
+    private Dictionary<string, TenantErosionTier> _tierByCandidateId;
     private IReadOnlyList<VisitorArrival> _arrivalSchedule;
     private readonly List<TenantReviewCandidateSO> _activeBatch = new List<TenantReviewCandidateSO>();
     private int _activeBatchIndex;
@@ -51,9 +57,43 @@ public class TenantReviewCoordinator : MonoBehaviour
         _reducer = SettlementBridge.Instance.Reducer;
         _runState = SettlementBridge.Instance.RunState;
 
-        BuildLookup();
-        _shuffledOrder = GetShuffledOrder(_runState.Seed);
-        _arrivalSchedule = VisitorArrivalScheduler.CreateSchedule(_runState.Seed, _shuffledOrder.Length);
+        var seed = _runState.Seed;
+        if (usePool && TenantPoolManager.BuildRun(seed, ErosionWeightProfile.Default, 40))
+        {
+            // 生成池模式：40 个池档案物化为 SO 填入 candidates，下游（UI/派遣/事件）全部按 SO 读取，行为不变。
+            candidates.Clear();
+            _tierByCandidateId = new Dictionary<string, TenantErosionTier>();
+            for (int i = 0; i < TenantPoolManager.NormalProfiles.Count; i++)
+            {
+                var p = TenantPoolManager.NormalProfiles[i];
+                var so = ScriptableObject.CreateInstance<TenantReviewCandidateSO>();
+                so.candidateId = p.candidateId;
+                so.displayName = p.displayName;
+                so.avatarKey = p.avatarKey;
+                so.portrait = p.ResolvePortrait();
+                so.avatarColor = p.avatarColor;
+                so.ability = p.ability;
+                so.activityType = p.activityType;
+                so.shortDescription = p.shortDescription;
+                // 注意：审查面板的 shortDescriptionLabel 与 detailedDescriptionLabel 在场景中绑定到同一个 TMP（Content），
+                // Show() 先写短描述、再写详细描述覆盖；详细区域是玩家实际看到的描述，因此池文案同时填入两处。
+                so.detailedDescription = p.shortDescription;
+                candidates.Add(so);
+                _tierByCandidateId[p.candidateId] = p.tier;
+            }
+            BuildLookup();
+            _shuffledOrder = GetShuffledOrder(seed);
+            var visitCount = new System.Random(seed ^ 0x50524F).Next(20, Math.Min(41, _shuffledOrder.Length + 1));
+            _arrivalSchedule = VisitorArrivalScheduler.CreateSchedule(seed, visitCount);
+            Debug.Log($"[TenantReviewCoordinator] 生成池模式：{_shuffledOrder.Length} 档案，本局到访约 {visitCount} 人");
+        }
+        else
+        {
+            _tierByCandidateId = null;
+            BuildLookup();
+            _shuffledOrder = GetShuffledOrder(seed);
+            _arrivalSchedule = VisitorArrivalScheduler.CreateSchedule(seed, _shuffledOrder.Length);
+        }
     }
 
     private void BuildLookup()
@@ -199,7 +239,6 @@ public class TenantReviewCoordinator : MonoBehaviour
             GamePhase.Night => HotelPhase.Night,
             _ => HotelPhase.Day,
         };
-
     }
 
     private void ShowCurrentReview()
@@ -254,6 +293,12 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
     }
 
+    private TenantErosionTier GetTier(TenantReviewCandidateSO candidate)
+    {
+        if (_tierByCandidateId == null) return TenantErosionTier.Any;
+        return _tierByCandidateId.TryGetValue(candidate.candidateId, out var tier) ? tier : TenantErosionTier.Any;
+    }
+
     private void OnConfirm()
     {
         if (!_panelActive) return;
@@ -264,7 +309,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         }
 
         var candidate = _activeBatch[_activeBatchIndex];
-        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId);
+        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId, GetTier(candidate));
 
         var changeSet = AuthorizedChangeSet.Domain(
             _runState.RunId,
@@ -320,7 +365,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         if (!_panelActive) return;
 
         var candidate = _activeBatch[_activeBatchIndex];
-        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId);
+        var initialErosion = VisitorArrivalScheduler.GetInitialErosion(_runState.Seed, candidate.candidateId, GetTier(candidate));
 
         var changeSet = AuthorizedChangeSet.Domain(
             _runState.RunId,

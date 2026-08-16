@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace Hotel.Runtime
 {
+    /// <summary>侵蚀档位（对应颜色标签区间，策划 4.4.2 / 4.2.5）。</summary>
+    public enum TenantErosionTier
+    {
+        Any,    // 全范围 0-70
+        Green,  // 0-30
+        Yellow, // 31-60
+        Red,    // 61-70
+    }
+
     [Serializable]
     public readonly struct VisitorArrival
     {
@@ -22,6 +31,12 @@ namespace Hotel.Runtime
     {
         public static float GetInitialErosion(int seed, string candidateId)
         {
+            return GetInitialErosion(seed, candidateId, TenantErosionTier.Any);
+        }
+
+        /// <summary>按档位生成初始侵蚀度；Any 为全范围 0-70（策划 v1.4 更新，原 0-40）。</summary>
+        public static float GetInitialErosion(int seed, string candidateId, TenantErosionTier tier)
+        {
             if (string.IsNullOrWhiteSpace(candidateId))
                 throw new ArgumentException("A candidate ID is required.", nameof(candidateId));
 
@@ -31,7 +46,14 @@ namespace Hotel.Runtime
                 for (var index = 0; index < candidateId.Length; index++)
                     stableHash = stableHash * 31 + candidateId[index];
 
-                return new Random(seed ^ stableHash).Next(0, 41);
+                var random = new Random(seed ^ stableHash);
+                switch (tier)
+                {
+                    case TenantErosionTier.Green: return random.Next(0, 31);
+                    case TenantErosionTier.Yellow: return random.Next(31, 61);
+                    case TenantErosionTier.Red: return random.Next(61, 71);
+                    default: return random.Next(0, 71);
+                }
             }
         }
 
