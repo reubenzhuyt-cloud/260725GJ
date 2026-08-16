@@ -138,6 +138,12 @@ namespace Hotel.Runtime
                             return false;
                         break;
                     }
+                    case EvictTenantChange evict:
+                    {
+                        if (!s.Tenants.ContainsKey(evict.TenantId))
+                            return false;
+                        break;
+                    }
                 case AdjustResourceChange resource:
                 {
                     if (!s.Resources.ContainsKey(resource.ResourceId))
@@ -289,6 +295,19 @@ namespace Hotel.Runtime
                 case AssignJobChange x:
                     s.Tenants[x.TenantId].JobId = x.JobId;
                     break;
+                case EvictTenantChange x:
+                {
+                    if (s.Tenants.TryGetValue(x.TenantId, out TenantRunState tenant))
+                    {
+                        if (!string.IsNullOrEmpty(tenant.RoomId)
+                            && s.Rooms.TryGetValue(tenant.RoomId, out RoomRunState room))
+                        {
+                            room.OccupantIds.Remove(x.TenantId);
+                        }
+                        s.Tenants.Remove(x.TenantId);
+                    }
+                    break;
+                }
                 case AdjustResourceChange x:
                 {
                     var resource = s.Resources[x.ResourceId];

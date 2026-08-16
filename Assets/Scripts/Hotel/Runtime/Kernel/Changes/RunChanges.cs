@@ -92,6 +92,12 @@ namespace Hotel.Runtime
         public string JobId { get; }
     }
 
+    public sealed class EvictTenantChange : RunChange
+    {
+        public EvictTenantChange(string id) { TenantId = id; }
+        public string TenantId { get; }
+    }
+
     public sealed class AdjustResourceChange : RunChange
     {
         public AdjustResourceChange(string id, int delta) { ResourceId = id; Delta = delta; }

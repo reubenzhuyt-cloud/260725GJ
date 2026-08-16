@@ -210,17 +210,19 @@ public static class JobSettlementService
         switch (job.Id)
         {
             case JobCatalog.Cooking:
-                return AddResourceOutput(state, "food", 5, efficiency, job.DisplayName, changes, resourceDeltas);
+                return AddResourceOutput(state, "food", 2, efficiency, job.DisplayName, changes, resourceDeltas);
             case JobCatalog.Farming:
-                return AddResourceOutput(state, "food", 4, efficiency, job.DisplayName, changes, resourceDeltas);
+                return AddResourceOutput(state, "food", 2, efficiency, job.DisplayName, changes, resourceDeltas);
             case JobCatalog.Trading:
                 return AddResourceOutput(state, "currency", 4, efficiency, job.DisplayName, changes, resourceDeltas);
             case JobCatalog.Chores:
                 return AddResourceOutput(state, "currency", 2, efficiency, job.DisplayName, changes, resourceDeltas);
             case JobCatalog.Exploration:
             {
-                string resourceId = StableChoice(tenantId, day, phase) ? "food" : "currency";
-                return AddResourceOutput(state, resourceId, 3, efficiency, job.DisplayName, changes, resourceDeltas);
+                bool yieldsFood = StableChoice(tenantId, day, phase);
+                string resourceId = yieldsFood ? "food" : "currency";
+                int baseAmount = yieldsFood ? 2 : 3;
+                return AddResourceOutput(state, resourceId, baseAmount, efficiency, job.DisplayName, changes, resourceDeltas);
             }
             case JobCatalog.Medical:
             {

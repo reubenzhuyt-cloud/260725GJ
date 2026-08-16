@@ -393,6 +393,47 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         return true;
     }
 
+    public bool TryEvict(string tenantId)
+    {
+        if (_runState == null || _reducer == null)
+            return false;
+        if (string.IsNullOrEmpty(tenantId) || !_runState.Tenants.ContainsKey(tenantId))
+            return false;
+
+        string displayName = tenantId;
+        if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
+            displayName = view.DisplayName;
+
+        var changeSet = AuthorizedChangeSet.Domain(
+            _runState.RunId,
+            _runState.StateVersion,
+            "TenantAssignmentCoordinator",
+            "EvictTenant");
+        changeSet.Add(new EvictTenantChange(tenantId));
+
+        CommitResult result = _reducer.TryCommit(_runState, changeSet);
+        if (!result.Succeeded)
+            return false;
+
+        _displayLookup.Remove(tenantId);
+        _tenantOrder.Remove(tenantId);
+        RebuildUnassigned();
+        RoomTenantAvatarSlot.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
+        AssignmentChanged?.Invoke();
+
+        PlayerLogManager.Record(_runState, new PlayerLogWriteDto(
+            PlayerLogCategory.TenantEvict,
+            _runState.Day,
+            _runState.Phase.Current,
+            "驱逐租客",
+            $"{displayName} 离开了旅馆",
+            tenantId,
+            tenantId));
+
+        return true;
+    }
+
     public bool TryGetTenantColor(string tenantId, out Color color)
     {
         if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))

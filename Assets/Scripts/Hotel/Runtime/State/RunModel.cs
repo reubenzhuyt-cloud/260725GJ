@@ -44,6 +44,7 @@ namespace Hotel.Runtime
         BuffTick,
         TenantRecruit,
         TenantReject,
+        TenantEvict,
         RoomAssignment,
         ResourceFood,
         PhaseTransition,

@@ -25,6 +25,13 @@ public class TenantInfoPanel : MonoBehaviour,
     public TextMeshProUGUI detailedDescriptionLabel;
     public TenantLogPanelController tenantLogPanel;
 
+    [Header("Eviction")]
+    public Button letGoButton;
+    public GameObject letGoConfirmPanel;
+    public TextMeshProUGUI letGoConfirmText;
+    public Button letGoConfirmAcceptButton;
+    public Button letGoConfirmRefuseButton;
+
     [Header("Work Assignment")]
     public TMP_Dropdown workDropdown;
 
@@ -67,6 +74,48 @@ public class TenantInfoPanel : MonoBehaviour,
             flagDropdown.onValueChanged.AddListener(OnFlagChanged);
         if (workDropdown != null)
             workDropdown.onValueChanged.AddListener(OnWorkChanged);
+        if (letGoButton == null)
+        {
+            Transform letGoTransform = transform.Find("RightPanel/Panel/LetGoButton");
+            if (letGoTransform != null)
+                letGoButton = letGoTransform.GetComponent<Button>();
+        }
+        if (letGoButton != null)
+        {
+            letGoButton.onClick.AddListener(OnLetGoPressed);
+
+            if (letGoConfirmPanel == null && transform.parent != null)
+            {
+                Transform confirmTransform = transform.parent.Find("LetGoConfirmPanel");
+                if (confirmTransform != null)
+                    letGoConfirmPanel = confirmTransform.gameObject;
+            }
+            if (letGoConfirmPanel != null)
+            {
+                if (letGoConfirmText == null)
+                {
+                    Transform textTransform = letGoConfirmPanel.transform.Find("Text (TMP)");
+                    if (textTransform != null)
+                        letGoConfirmText = textTransform.GetComponent<TextMeshProUGUI>();
+                }
+                if (letGoConfirmAcceptButton == null)
+                {
+                    Transform acceptTransform = letGoConfirmPanel.transform.Find("AcceptButton");
+                    if (acceptTransform != null)
+                        letGoConfirmAcceptButton = acceptTransform.GetComponent<Button>();
+                }
+                if (letGoConfirmRefuseButton == null)
+                {
+                    Transform refuseTransform = letGoConfirmPanel.transform.Find("RefuseButton");
+                    if (refuseTransform != null)
+                        letGoConfirmRefuseButton = refuseTransform.GetComponent<Button>();
+                }
+            }
+            if (letGoConfirmAcceptButton != null)
+                letGoConfirmAcceptButton.onClick.AddListener(OnLetGoAccept);
+            if (letGoConfirmRefuseButton != null)
+                letGoConfirmRefuseButton.onClick.AddListener(OnLetGoRefuse);
+        }
     }
 
     private void OnDestroy()
@@ -75,6 +124,12 @@ public class TenantInfoPanel : MonoBehaviour,
             flagDropdown.onValueChanged.RemoveListener(OnFlagChanged);
         if (workDropdown != null)
             workDropdown.onValueChanged.RemoveListener(OnWorkChanged);
+        if (letGoButton != null)
+            letGoButton.onClick.RemoveListener(OnLetGoPressed);
+        if (letGoConfirmAcceptButton != null)
+            letGoConfirmAcceptButton.onClick.RemoveListener(OnLetGoAccept);
+        if (letGoConfirmRefuseButton != null)
+            letGoConfirmRefuseButton.onClick.RemoveListener(OnLetGoRefuse);
     }
 
     private void Update()
@@ -161,11 +216,61 @@ public class TenantInfoPanel : MonoBehaviour,
         gameObject.SetActive(false);
     }
 
+    public void OnLetGoPressed()
+    {
+        if (string.IsNullOrEmpty(_currentTenantId))
+            return;
+
+        if (letGoConfirmPanel == null)
+        {
+            EvictCurrentTenant();
+            return;
+        }
+
+        string displayName = ResolveDisplayName(_currentTenantId);
+        if (letGoConfirmText != null)
+            letGoConfirmText.text = $"确定要让 {displayName} 离开旅馆吗？";
+        letGoConfirmPanel.SetActive(true);
+    }
+
+    public void OnLetGoAccept()
+    {
+        if (letGoConfirmPanel != null)
+            letGoConfirmPanel.SetActive(false);
+        EvictCurrentTenant();
+    }
+
+    public void OnLetGoRefuse()
+    {
+        if (letGoConfirmPanel != null)
+            letGoConfirmPanel.SetActive(false);
+    }
+
+    private void EvictCurrentTenant()
+    {
+        if (string.IsNullOrEmpty(_currentTenantId))
+            return;
+        TenantAssignmentCoordinator coordinator = TenantAssignmentCoordinator.Instance;
+        if (coordinator == null)
+            return;
+        coordinator.TryEvict(_currentTenantId);
+        Hide();
+    }
+
+    private string ResolveDisplayName(string tenantId)
+    {
+        TenantReviewCandidateSO candidate = FindCandidate(tenantId);
+        return candidate != null ? candidate.displayName : tenantId;
+    }
+
     public bool IsInternalHit(GameObject hitObject)
     {
         if (hitObject == null)
             return false;
         if (hitObject.transform.IsChildOf(transform))
+            return true;
+        if (letGoConfirmPanel != null && letGoConfirmPanel.activeSelf
+            && hitObject.transform.IsChildOf(letGoConfirmPanel.transform))
             return true;
         if (IsHitInExpandedDropdown(hitObject, flagDropdown)
             || IsHitInExpandedDropdown(hitObject, workDropdown))
