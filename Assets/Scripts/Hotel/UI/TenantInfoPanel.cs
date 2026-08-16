@@ -513,23 +513,34 @@ public class TenantInfoPanel : MonoBehaviour,
         Vector2 pivot = _selfRect.pivot;
         Vector2 half = canvasSize * 0.5f;
 
-        bool overRight = local.x + size.x > half.x;
-        bool overLeft = local.x - size.x < -half.x;
-        bool overBottom = local.y - size.y < -half.y;
+        float leftExtent = pivot.x * size.x;
+        float rightExtent = (1f - pivot.x) * size.x;
+        float bottomExtent = pivot.y * size.y;
+        float topExtent = (1f - pivot.y) * size.y;
+
+        bool overRight = local.x + rightExtent > half.x;
+        bool overLeft = local.x - leftExtent < -half.x;
+        bool overBottom = local.y - bottomExtent < -half.y;
+        bool overTop = local.y + topExtent > half.y;
 
         bool placeLeft = preferLeft ? !overLeft : overRight;
-        bool placeUp = overBottom;
+        bool placeUp = overBottom && !overTop;
 
         Vector2 target = new Vector2(
             placeLeft
-                ? local.x - (1f - pivot.x) * size.x
-                : local.x + pivot.x * size.x,
+                ? local.x - rightExtent
+                : local.x + leftExtent,
             placeUp
-                ? local.y + pivot.y * size.y
-                : local.y - (1f - pivot.y) * size.y);
+                ? local.y + bottomExtent
+                : local.y - topExtent);
 
-        target.x = Mathf.Clamp(target.x, -half.x, half.x);
-        target.y = Mathf.Clamp(target.y, -half.y, half.y);
+        float minX = -half.x + leftExtent;
+        float maxX = half.x - rightExtent;
+        float minY = -half.y + bottomExtent;
+        float maxY = half.y - topExtent;
+
+        target.x = minX < maxX ? Mathf.Clamp(target.x, minX, maxX) : 0f;
+        target.y = minY < maxY ? Mathf.Clamp(target.y, minY, maxY) : 0f;
 
         _selfRect.anchoredPosition = target;
     }

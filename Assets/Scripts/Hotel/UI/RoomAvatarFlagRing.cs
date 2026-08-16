@@ -2,17 +2,55 @@ using Hotel.Runtime;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(22)]
 public class RoomAvatarFlagRing : MonoBehaviour
 {
     [SerializeField] private Image ringImage;
+    [SerializeField] private int occupantIndex;
 
     private RoomTenantAvatarSlot _slot;
     private bool _subscribed;
     private bool _runStateRestoredSubscribed;
 
+    public int OccupantIndex
+    {
+        get => occupantIndex;
+        set => occupantIndex = value;
+    }
+
     private void Awake()
     {
-        _slot = GetComponentInParent<RoomTenantAvatarSlot>();
+        ResolveSlot();
+    }
+
+    private void ResolveSlot()
+    {
+        _slot = null;
+        Transform container = transform.parent;
+        if (container == null)
+            return;
+        RoomTenantAvatarSlot[] slots = container.GetComponentsInChildren<RoomTenantAvatarSlot>(true);
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == null || slots[i].transform == container)
+                continue;
+            if (slots[i].OccupantIndex == occupantIndex)
+            {
+                _slot = slots[i];
+                break;
+            }
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (_slot == null)
+            return;
+        RectTransform slotRect = _slot.transform as RectTransform;
+        RectTransform selfRect = transform as RectTransform;
+        if (slotRect == null || selfRect == null)
+            return;
+        selfRect.anchoredPosition = slotRect.anchoredPosition;
     }
 
     private void OnEnable()
