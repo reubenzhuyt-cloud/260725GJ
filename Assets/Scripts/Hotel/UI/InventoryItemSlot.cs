@@ -11,10 +11,15 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public TextMeshProUGUI countLabel;
 
     [SerializeField] private float doubleClickInterval = 0.3f;
+    [SerializeField] private float hoverStillDelay = 0.3f;
+    [SerializeField] private float moveThreshold = 2f;
 
     private ItemDefinition _item;
     private int _count;
     private float _lastClickTime;
+    private bool _hovered;
+    private Vector2 _lastMousePosition;
+    private float _hoverStillTime;
 
     public ItemDefinition Item => _item;
     public int Count => _count;
@@ -40,16 +45,42 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        ItemInfoPanel panel = GetInfoPanel();
-        if (panel != null && _item != null)
-            panel.Show(_item, Input.mousePosition);
+        _hovered = true;
+        _lastMousePosition = Input.mousePosition;
+        _hoverStillTime = 0f;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        _hovered = false;
         ItemInfoPanel panel = GetInfoPanel();
         if (panel != null)
             panel.Hide();
+    }
+
+    private void Update()
+    {
+        if (!_hovered || _item == null)
+            return;
+
+        Vector2 mousePosition = Input.mousePosition;
+        if (Vector2.Distance(mousePosition, _lastMousePosition) > moveThreshold)
+        {
+            ItemInfoPanel panel = GetInfoPanel();
+            if (panel != null)
+                panel.Hide();
+            _lastMousePosition = mousePosition;
+            _hoverStillTime = 0f;
+            return;
+        }
+
+        _hoverStillTime += Time.unscaledDeltaTime;
+        if (_hoverStillTime < hoverStillDelay)
+            return;
+
+        ItemInfoPanel hoverPanel = GetInfoPanel();
+        if (hoverPanel != null && !hoverPanel.IsShowing)
+            hoverPanel.Show(_item, mousePosition);
     }
 
     public void OnPointerClick(PointerEventData eventData)

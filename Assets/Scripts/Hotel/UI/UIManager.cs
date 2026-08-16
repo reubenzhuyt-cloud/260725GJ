@@ -48,6 +48,12 @@ public class UIManager : MonoBehaviour
             inventoryPanel.SetActive(!inventoryPanel.activeSelf);
     }
 
+    public void SetInventoryPanelVisible(bool visible)
+    {
+        if (inventoryPanel != null)
+            inventoryPanel.SetActive(visible);
+    }
+
     public void TogglePauseMenu()
     {
         if (gameSettingController != null)

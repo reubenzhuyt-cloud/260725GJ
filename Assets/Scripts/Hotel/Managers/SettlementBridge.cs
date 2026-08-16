@@ -32,6 +32,7 @@ public class SettlementBridge : MonoBehaviour
     private GamePhase _lastPhase;
     private Dictionary<string, int> _pendingSettlementDeltas;
     private Dictionary<string, string> _resourceDisplayNames;
+    private bool _startedFresh;
 
     private void Awake()
     {
@@ -40,6 +41,7 @@ public class SettlementBridge : MonoBehaviour
 
         _reducer = new StateReducer();
         GameLaunchContext.TryConsume(out var loadedState, out _);
+        _startedFresh = loadedState == null;
         _runState = loadedState ?? GameRunState.New(new RunId(Guid.NewGuid().ToString("N")), Environment.TickCount);
 
         _lastSettlementDay = _runState.Day;
@@ -75,6 +77,22 @@ public class SettlementBridge : MonoBehaviour
         yield return null;
         if (_runState == null)
             yield break;
+        if (_startedFresh)
+        {
+            if (ItemUseManager.Instance == null)
+            {
+                Debug.LogWarning("[SettlementBridge] Fresh run state detected but ItemUseManager.Instance is null; skipping item start-seed");
+            }
+            else
+            {
+                foreach (var def in ItemUseManager.Instance.itemDefinitions)
+                {
+                    if (def == null || string.IsNullOrWhiteSpace(def.itemId) || def.maxStack <= 0) continue;
+                    if (_runState.Inventory.ContainsKey(def.itemId)) continue;
+                    _runState.Inventory[def.itemId] = 1;
+                }
+            }
+        }
         RunStateRestored?.Invoke(_runState);
     }
 

@@ -327,6 +327,8 @@ public class ItemUseManager : MonoBehaviour
             _eventSystem.enabled = false;
             _eventSystemSuppressed = true;
         }
+        if (uiManager != null)
+            uiManager.SetInventoryPanelVisible(false);
         ShowMessage($"请点击一名房客以使用「{definition.displayName}」（右键取消）");
     }
 
@@ -597,6 +599,8 @@ public class ItemUseManager : MonoBehaviour
             confirmPanel.Hide();
         if (infoPanel != null)
             infoPanel.Hide();
+        if (uiManager != null)
+            uiManager.SetInventoryPanelVisible(true);
     }
 
     private void RaiseInventoryChanged()

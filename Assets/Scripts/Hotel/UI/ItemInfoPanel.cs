@@ -78,28 +78,28 @@ public class ItemInfoPanel : MonoBehaviour
         Vector2 pivot = _selfRect.pivot;
         Vector2 half = canvasSize * 0.5f;
 
-        float leftExtent = pivot.x * size.x;
-        float rightExtent = (1f - pivot.x) * size.x;
-        float bottomExtent = pivot.y * size.y;
-        float topExtent = (1f - pivot.y) * size.y;
+        const float offset = 12f;
 
-        bool overRight = local.x + rightExtent > half.x;
-        bool overBottom = local.y - bottomExtent < -half.y;
+        float topLeftX = local.x + offset;
+        float topLeftY = local.y - offset;
 
-        float targetX = overRight
-            ? local.x - rightExtent
-            : local.x + leftExtent;
-        float targetY = overBottom
-            ? local.y + bottomExtent
-            : local.y - topExtent;
+        float minTopLeftX = -half.x;
+        float maxTopLeftX = half.x - size.x;
+        float minTopLeftY = -half.y + size.y;
+        float maxTopLeftY = half.y;
 
-        float minX = -half.x + leftExtent;
-        float maxX = half.x - rightExtent;
-        float minY = -half.y + bottomExtent;
-        float maxY = half.y - topExtent;
+        if (minTopLeftX > maxTopLeftX)
+            topLeftX = -size.x * 0.5f;
+        else
+            topLeftX = Mathf.Clamp(topLeftX, minTopLeftX, maxTopLeftX);
 
-        targetX = minX < maxX ? Mathf.Clamp(targetX, minX, maxX) : 0f;
-        targetY = minY < maxY ? Mathf.Clamp(targetY, minY, maxY) : 0f;
+        if (minTopLeftY > maxTopLeftY)
+            topLeftY = size.y * 0.5f;
+        else
+            topLeftY = Mathf.Clamp(topLeftY, minTopLeftY, maxTopLeftY);
+
+        float targetX = topLeftX + pivot.x * size.x;
+        float targetY = topLeftY - (1f - pivot.y) * size.y;
 
         _selfRect.anchoredPosition = new Vector2(targetX, targetY);
     }
