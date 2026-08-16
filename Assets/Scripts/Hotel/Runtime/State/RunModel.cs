@@ -260,6 +260,9 @@ namespace Hotel.Runtime
         public string JobId;
         public string AvatarKey;
         public bool Vulnerable;
+        public int CheckInDay;
+        public bool ErosionLocked;
+        public float ErosionLockValue;
     }
 
     [Serializable]
@@ -345,6 +348,38 @@ namespace Hotel.Runtime
     }
 
     [Serializable]
+    public sealed class ChainRunState
+    {
+        public string ChainId;
+        public int NextStepToPresent = 1;
+        public string TargetTenantId;
+        public int StartDay;
+        /// <summary>Persisted day the chain's first event is due (never rerolled after load; 0 = legacy/missing).</summary>
+        public int FirstTriggerDay;
+        /// <summary>Persisted exact day the current step is due (advanced atomically on settlement; 0 = legacy/missing).</summary>
+        public int NextDueDay;
+        public List<string> Flags = new();
+        public bool Completed;
+        public bool Failed;
+
+        public ChainRunState Clone()
+        {
+            return new ChainRunState
+            {
+                ChainId = ChainId,
+                NextStepToPresent = NextStepToPresent,
+                TargetTenantId = TargetTenantId,
+                StartDay = StartDay,
+                FirstTriggerDay = FirstTriggerDay,
+                NextDueDay = NextDueDay,
+                Flags = Flags != null ? new List<string>(Flags) : new List<string>(),
+                Completed = Completed,
+                Failed = Failed
+            };
+        }
+    }
+
+    [Serializable]
     public sealed class GameRunState
     {
         public RunId RunId;
@@ -358,6 +393,7 @@ namespace Hotel.Runtime
         public Dictionary<string, TenantRunState> Tenants = new();
         public Dictionary<string, RoomRunState> Rooms = new();
         public Dictionary<string, ResourceRunState> Resources = new();
+        public Dictionary<string, int> Inventory = new();
         public Dictionary<string, BuffRunState> Buffs = new();
         public RunSummaryState Summary = new();
         public List<string> ResolvedReviewCandidateIds = new();
@@ -366,6 +402,8 @@ namespace Hotel.Runtime
 public bool HotelHasMirror = true;
         public bool IsStorm;
         public Dictionary<string, List<TenantLogEntry>> TenantLogs = new();
+        public Dictionary<string, ChainRunState> Chains = new();
+        public List<string> RunFlags = new();
 
         public static GameRunState New(RunId id, int seed = 1)
         {

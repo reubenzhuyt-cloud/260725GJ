@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private MonoBehaviour[] managedPanels;
     [SerializeField] private GameObject pauseOverlay;
+    [SerializeField] private GameObject inventoryPanel;
     [SerializeField] private GameSettingController gameSettingController;
     [SerializeField] private NoticePanel noticePanelTemplate;
 
@@ -39,6 +40,12 @@ public class UIManager : MonoBehaviour
     {
         if (pauseOverlay != null)
             pauseOverlay.SetActive(false);
+    }
+
+    public void ToggleInventoryPanel()
+    {
+        if (inventoryPanel != null)
+            inventoryPanel.SetActive(!inventoryPanel.activeSelf);
     }
 
     public void TogglePauseMenu()

@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_SilentDiary_03
+  m_EditorClassIdentifier: 
+  eventIndex: 303
+  eventId: chain_silentdiary_03
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: silentdiary
+    chainStep: 3
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_silentdiary
+  eventTitle: "沉默者日记（三）"
+  eventDescription: "XXX开始拒绝吃饭，说\"没时间\"。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "强行送饭"
+    choiceResult: "消耗1食物强行送饭，目标侵蚀+2，目标好感有所上升。"
+    effectText: "消耗1食物；目标侵蚀+2（好感上升，叙事）"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -1
+      stringValue: food
+    - effectType: 1
+      floatValue: 2
+  - choiceId: B
+    choiceText: "不管"
+    choiceResult: "不管，目标侵蚀+5。"
+    effectText: "目标侵蚀+5"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 5

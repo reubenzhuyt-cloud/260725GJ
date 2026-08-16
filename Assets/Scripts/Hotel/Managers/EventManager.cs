@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hotel.Runtime;
 using UnityEngine;
@@ -60,6 +61,8 @@ public class EventManager : MonoBehaviour
         _effectManager = new EventEffectManager();
         runtimeWeightModifiers.Clear();
         _plannedDay = -1;
+        ChainManager.NoticeProvider = text => { if (uiManager != null) uiManager.ShowNotice(text); };
+        ChainManager.ResetSessionState();
     }
 
     private void OnEnable()
@@ -144,6 +147,11 @@ public class EventManager : MonoBehaviour
             }
             // Consume the plan: a duplicate OnPhaseEntered for this phase must not replay it.
             preGeneratedEvents.Remove(data.phase);
+        }
+
+        if (data.phase == GamePhase.Day)
+        {
+            EnqueueDueChainEvents(data.day);
         }
 
         bool hasEvents = eventQueue.Count > 0;
@@ -439,8 +447,58 @@ public class EventManager : MonoBehaviour
             }
         }
 
+        MergeChainRuntimePatch(config, ref data);
+
         onPopupEvent.Raise(data);
         Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
+    }
+
+    /// <summary>
+    /// Merges the chain compatibility layer (ChainRuntimeCatalog) into the popup
+    /// payload: extra effects per confirm/choice plus locked choices. The merged
+    /// arrays flow into EventProcessedData so settlement applies them through the
+    /// standard EventEffectManager -> EventEffectExecutor path.
+    /// </summary>
+    private static void MergeChainRuntimePatch(EventConfig config, ref PopupData data)
+    {
+        if (config == null || config.trigger == null || config.trigger.kind != EventKind.ChainStep)
+            return;
+        var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null)
+            return;
+        ChainRuntimePatch patch = ChainManager.BuildRuntimePatch(
+            bridge.RunState,
+            config,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
+        if (patch == null)
+            return;
+
+        if (patch.ConfirmEffects != null && patch.ConfirmEffects.Length > 0)
+            data.confirmEffects = AppendEffects(data.confirmEffects, patch.ConfirmEffects);
+
+        if (patch.ChoiceLocked != null)
+            data.choiceLocked = patch.ChoiceLocked;
+
+        if (patch.ChoiceEffects != null && data.choiceEffects != null)
+        {
+            for (int i = 0; i < data.choiceEffects.Length; i++)
+            {
+                if (patch.ChoiceEffects.TryGetValue(i, out EventEffect[] extra) && extra != null && extra.Length > 0)
+                    data.choiceEffects[i] = AppendEffects(data.choiceEffects[i], extra);
+            }
+        }
+    }
+
+    private static EventEffect[] AppendEffects(EventEffect[] baseEffects, EventEffect[] extra)
+    {
+        int baseCount = baseEffects != null ? baseEffects.Length : 0;
+        if (extra == null || extra.Length == 0)
+            return baseEffects;
+        var result = new EventEffect[baseCount + extra.Length];
+        if (baseCount > 0)
+            Array.Copy(baseEffects, result, baseCount);
+        Array.Copy(extra, 0, result, baseCount, extra.Length);
+        return result;
     }
 
     private void OnEventProcessed(string eventId)
@@ -607,6 +665,9 @@ public class EventManager : MonoBehaviour
         if (state == null)
             return true;
 
+        if (config.trigger.kind == EventKind.ChainStep)
+            return ChainManager.IsChainStepStillEligible(state, config, _activeDay);
+
         if (_activeDay <= 0)
             return true;
 
@@ -742,6 +803,13 @@ public class EventManager : MonoBehaviour
         if (state == null)
             return null;
 
+        if (_currentConfig != null && _currentConfig.trigger != null && _currentConfig.trigger.kind == EventKind.ChainStep)
+        {
+            string chainOwner = ChainManager.ResolveChainOwner(state, _currentConfig);
+            if (!string.IsNullOrEmpty(chainOwner))
+                return chainOwner;
+        }
+
         string preferred = _currentConfig != null && _currentConfig.trigger != null
             ? _currentConfig.trigger.requiresTenantId
             : null;
@@ -836,6 +904,65 @@ public class EventManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(eventId)) return 1f;
         return runtimeWeightModifiers.TryGetValue(eventId, out var value) ? value : 1f;
+    }
+
+    /// <summary>
+    /// Public injection point used by ChainManager. Enqueues an event outside the
+    /// random selection flow. The event goes through the same popup/settlement
+    /// pipeline as selected events. Duplicates are ignored both by object
+    /// reference and by non-empty eventId, so the same event can never sit in the
+    /// queue twice; distinct events are unaffected.
+    /// </summary>
+    public void EnqueueEvent(EventConfig config)
+    {
+        if (config == null)
+            return;
+        if (_currentConfig != null && _currentConfig.eventId == config.eventId)
+            return;
+        foreach (EventConfig queued in eventQueue)
+        {
+            if (queued == config)
+                return;
+            if (queued != null
+                && !string.IsNullOrEmpty(queued.eventId)
+                && queued.eventId == config.eventId)
+                return;
+        }
+        eventQueue.Enqueue(config);
+        Debug.Log($"[EventManager] Enqueued injected event: {config.eventId}");
+    }
+
+    /// <summary>True while a ChainStep event is pending or being presented.</summary>
+    public bool HasPendingChainEvent()
+    {
+        if (_currentConfig != null && _currentConfig.trigger != null && _currentConfig.trigger.kind == EventKind.ChainStep)
+            return true;
+        foreach (EventConfig config in eventQueue)
+        {
+            if (config != null && config.trigger != null && config.trigger.kind == EventKind.ChainStep)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Requests the single chain step due on this Day and injects it through
+    /// EnqueueEvent, bypassing random selection entirely (ChainStep events are
+    /// never part of the random filter). No-op when SettlementBridge is missing.
+    /// </summary>
+    private void EnqueueDueChainEvents(int day)
+    {
+        var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
+            return;
+        List<EventConfig> due = ChainManager.BuildDueChainEvents(
+            bridge.RunState,
+            bridge.Reducer,
+            day,
+            allEvents,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
+        for (int i = 0; i < due.Count; i++)
+            EnqueueEvent(due[i]);
     }
 
     /// <summary>

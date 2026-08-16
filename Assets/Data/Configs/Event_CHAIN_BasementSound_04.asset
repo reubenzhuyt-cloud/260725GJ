@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_BasementSound_04
+  m_EditorClassIdentifier: 
+  eventIndex: 309
+  eventId: chain_basementsound_04
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: basementsound
+    chainStep: 4
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_basementsound
+  eventTitle: "地下室的神秘声音（四）"
+  eventDescription: "声音消失了——但地下室的灯每晚都会自己亮起。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【工程师】封死地下室入口"
+    choiceResult: "工程师封死地下室入口，消耗3食物。"
+    effectText: "消耗3食物"
+    requiredTags:
+    - 3
+    choiceEffects:
+    - effectType: 2
+      floatValue: -3
+      stringValue: food
+  - choiceId: B
+    choiceText: "继续调查"
+    choiceResult: "继续调查，全楼侵蚀+2。"
+    effectText: "全楼侵蚀+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2
+      target: 1

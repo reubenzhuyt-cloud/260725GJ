@@ -6,7 +6,23 @@ public enum GamePhase { Day, Dawn, Night, Dusk }
 
 public enum GameEventType { Confirm, Choice }
 
-public enum EffectType { None, ModifyTenantErosion, ModifyResource, ApplyBuff }
+public enum EffectType { None = 0, ModifyTenantErosion = 1, ModifyResource = 2, ApplyBuff = 3, GrantItem = 4, ChainSetFlag = 5, ChainLockErosion = 6, ChainRemoveTenant = 7, ChainConditionalErosion = 8, ChainIdentifyYellowTenant = 9, ChainReserveChildRoom = 10, ChainReleaseChildRoom = 11 }
+
+/// <summary>
+/// Condition kinds used by EffectType.ChainConditionalErosion. Evaluated at
+/// settlement time against the live run state. Data is authored in code
+/// (ChainRuntimeCatalog) as a bridge until Unity assets carry richer metadata.
+/// </summary>
+public enum ChainConditionKind
+{
+    None = 0,
+    /// <summary>Applies when any assigned tenant has TrueErosion &gt; effect.intValue.</summary>
+    AnyTenantErosionAbove = 1,
+    /// <summary>Applies when any tenant owns any of the abilities in effect.stringValue (comma separated).</summary>
+    AbilityAny = 2,
+    /// <summary>Applies to the yellow tenant identified by a prior ChainIdentifyYellowTenant step of the same chain.</summary>
+    IdentifiedYellow = 3
+}
 
 [System.Flags]
 public enum EventPhase
@@ -75,6 +91,7 @@ public class EventEffect
     public string stringValue = "";
     public int intValue;
     public int durationTicks;
+    public ChainConditionKind conditionKind = ChainConditionKind.None;
 }
 
 /// <summary>

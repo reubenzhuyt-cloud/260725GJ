@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_TaintedSupplies_03
+  m_EditorClassIdentifier: 
+  eventIndex: 317
+  eventId: chain_taintedsupplies_03
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: taintedsupplies
+    chainStep: 3
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_taintedsupplies
+  eventTitle: "被污染的物资（三）"
+  eventDescription: "XXX（【厨师】）发现：食物被人掺了东西——不像是毒，像是……灰烬。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "【医生】调查"
+    choiceResult: "医生调查，获得线索T02。"
+    effectText: "获得线索T02（叙事）"
+    requiredTags:
+    - 1
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "销毁库存"
+    choiceResult: "销毁库存，消耗15食物，安全。"
+    effectText: "消耗15食物；安全"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 2
+      floatValue: -15
+      stringValue: food

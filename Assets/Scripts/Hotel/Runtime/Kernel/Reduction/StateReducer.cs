@@ -35,6 +35,7 @@ namespace Hotel.Runtime
             var plannedCandidateIds = new HashSet<string>();
             var plannedTenantErosion = new Dictionary<string, float>();
             var plannedBuffIds = new HashSet<string>();
+            var plannedChainIds = new HashSet<string>();
             var reviewRecords = new List<ReviewDecisionRecord>();
 
             foreach (var c in set.Changes)
@@ -144,62 +145,199 @@ namespace Hotel.Runtime
                             return false;
                         break;
                     }
-                case AdjustResourceChange resource:
-                {
-                    if (!s.Resources.ContainsKey(resource.ResourceId))
-                        return false;
-                    break;
-                }
-                case AddBuffChange add:
-                {
-                    if (add.Value == null || string.IsNullOrEmpty(add.Value.BuffId))
-                        return false;
-                    if (s.Buffs == null || s.Buffs.ContainsKey(add.Value.BuffId))
-                        return false;
-                    if (!plannedBuffIds.Add(add.Value.BuffId))
-                        return false;
-                    break;
-                }
-                case RemoveBuffChange remove:
-                {
-                    if (string.IsNullOrEmpty(remove.BuffId))
-                        return false;
-                    if (s.Buffs == null || !s.Buffs.ContainsKey(remove.BuffId))
-                        return false;
-                    break;
-                }
-                case UpdateBuffTicksChange update:
-                {
-                    if (string.IsNullOrEmpty(update.BuffId))
-                        return false;
-                    if (s.Buffs == null || !s.Buffs.ContainsKey(update.BuffId))
-                        return false;
-                    if (update.RemainingTicks < -1)
-                        return false;
-                    if (update.LastTickDay < 0)
-                        return false;
-                    if (update.LastTickDay > s.Day)
-                        return false;
-                    break;
-                }
-                case AddTenantChange add:
-                {
-                    if (s.Tenants.ContainsKey(add.TenantId))
-                        return false;
-                    if (!plannedTenantIds.Add(add.TenantId))
-                        return false;
-                    plannedTenantErosion.Add(add.TenantId, add.InitialErosion);
-                    break;
-                }
-                case ResolveCandidateChange resolve:
-                {
-                    if (s.ResolvedReviewCandidateIds.Contains(resolve.CandidateId))
-                        return false;
-                    if (!plannedCandidateIds.Add(resolve.CandidateId))
-                        return false;
-                    if (resolve.Record != null) reviewRecords.Add(resolve.Record);
-                    break;
-                }
+                    case AdjustResourceChange resource:
+                    {
+                        if (!s.Resources.ContainsKey(resource.ResourceId))
+                            return false;
+                        break;
+                    }
+                    case AdjustItemChange item:
+                    {
+                        if (string.IsNullOrEmpty(item.ItemId))
+                            return false;
+                        if (item.Delta == 0)
+                            return false;
+                        if (s.Inventory == null)
+                            return false;
+                        if (item.Delta < 0)
+                        {
+                            if (!s.Inventory.TryGetValue(item.ItemId, out int current))
+                                return false;
+                            if (current + item.Delta < 0)
+                                return false;
+                        }
+                        break;
+                    }
+                    case StartChainChange start:
+                    {
+                        if (string.IsNullOrEmpty(start.ChainId))
+                            return false;
+                        if (start.StartDay < 1)
+                            return false;
+                        if (start.FirstTriggerDay < 1)
+                            return false;
+                        if (start.NextDueDay > 0 && start.NextDueDay < start.FirstTriggerDay)
+                            return false;
+                        if (!s.Tenants.ContainsKey(start.TenantId))
+                            return false;
+                        if (s.Chains.ContainsKey(start.ChainId))
+                            return false;
+                        if (!plannedChainIds.Add(start.ChainId))
+                            return false;
+                        break;
+                    }
+                    case SetChainFlagChange flag:
+                    {
+                        if (string.IsNullOrEmpty(flag.ChainId) || string.IsNullOrEmpty(flag.Flag))
+                            return false;
+                        if (!s.Chains.ContainsKey(flag.ChainId) && !plannedChainIds.Contains(flag.ChainId))
+                            return false;
+                        break;
+                    }
+                    case AdvanceChainStepChange advance:
+                    {
+                        if (string.IsNullOrEmpty(advance.ChainId))
+                            return false;
+                        if (!s.Chains.TryGetValue(advance.ChainId, out ChainRunState chain))
+                            return false;
+                        if (chain.Completed || chain.Failed)
+                            return false;
+                        if (advance.NextStep != chain.NextStepToPresent + 1)
+                            return false;
+                        if (advance.Completed)
+                        {
+                            if (advance.NextDueDay != 0)
+                                return false;
+                        }
+                        else
+                        {
+                            if (advance.NextDueDay < 1)
+                                return false;
+                            if (chain.FirstTriggerDay > 0 && advance.NextDueDay < chain.FirstTriggerDay)
+                                return false;
+                        }
+                        break;
+                    }
+                    case SetChainScheduleChange schedule:
+                    {
+                        if (string.IsNullOrEmpty(schedule.ChainId))
+                            return false;
+                        if (!s.Chains.TryGetValue(schedule.ChainId, out ChainRunState chain))
+                            return false;
+                        if (chain.Completed || chain.Failed)
+                            return false;
+                        if (schedule.FirstTriggerDay < 1)
+                            return false;
+                        if (schedule.NextDueDay < schedule.FirstTriggerDay)
+                            return false;
+                        break;
+                    }
+                    case FailChainChange fail:
+                    {
+                        if (string.IsNullOrEmpty(fail.ChainId))
+                            return false;
+                        if (!s.Chains.TryGetValue(fail.ChainId, out ChainRunState chain))
+                            return false;
+                        if (chain.Completed || chain.Failed)
+                            return false;
+                        break;
+                    }
+                    case LockTenantErosionChange lockErosion:
+                    {
+                        if (!s.Tenants.ContainsKey(lockErosion.TenantId))
+                            return false;
+                        if (float.IsNaN(lockErosion.Value) || float.IsInfinity(lockErosion.Value))
+                            return false;
+                        if (lockErosion.Value < 0f || lockErosion.Value > 100f)
+                            return false;
+                        break;
+                    }
+                    case SetTenantCheckInChange checkIn:
+                    {
+                        if (!s.Tenants.ContainsKey(checkIn.TenantId))
+                            return false;
+                        if (checkIn.Day < 1)
+                            return false;
+                        break;
+                    }
+                    case SetRunFlagChange runFlag:
+                    {
+                        if (string.IsNullOrEmpty(runFlag.Flag))
+                            return false;
+                        if (s.RunFlags != null && s.RunFlags.Contains(runFlag.Flag))
+                            return false;
+                        break;
+                    }
+                    case AddRoomOccupantChange addOcc:
+                    {
+                        if (string.IsNullOrEmpty(addOcc.RoomId) || string.IsNullOrEmpty(addOcc.OccupantId))
+                            return false;
+                        if (!s.Rooms.TryGetValue(addOcc.RoomId, out RoomRunState room))
+                            return false;
+                        if (room.OccupantIds != null && room.OccupantIds.Contains(addOcc.OccupantId))
+                            return false;
+                        break;
+                    }
+                    case RemoveRoomOccupantChange removeOcc:
+                    {
+                        if (string.IsNullOrEmpty(removeOcc.RoomId) || string.IsNullOrEmpty(removeOcc.OccupantId))
+                            return false;
+                        if (!s.Rooms.TryGetValue(removeOcc.RoomId, out RoomRunState room))
+                            return false;
+                        if (room.OccupantIds == null || !room.OccupantIds.Contains(removeOcc.OccupantId))
+                            return false;
+                        break;
+                    }
+                    case AddBuffChange add:
+                    {
+                        if (add.Value == null || string.IsNullOrEmpty(add.Value.BuffId))
+                            return false;
+                        if (s.Buffs == null || s.Buffs.ContainsKey(add.Value.BuffId))
+                            return false;
+                        if (!plannedBuffIds.Add(add.Value.BuffId))
+                            return false;
+                        break;
+                    }
+                    case RemoveBuffChange remove:
+                    {
+                        if (string.IsNullOrEmpty(remove.BuffId))
+                            return false;
+                        if (s.Buffs == null || !s.Buffs.ContainsKey(remove.BuffId))
+                            return false;
+                        break;
+                    }
+                    case UpdateBuffTicksChange update:
+                    {
+                        if (string.IsNullOrEmpty(update.BuffId))
+                            return false;
+                        if (s.Buffs == null || !s.Buffs.ContainsKey(update.BuffId))
+                            return false;
+                        if (update.RemainingTicks < -1)
+                            return false;
+                        if (update.LastTickDay < 0)
+                            return false;
+                        if (update.LastTickDay > s.Day)
+                            return false;
+                        break;
+                    }
+                    case AddTenantChange add:
+                    {
+                        if (s.Tenants.ContainsKey(add.TenantId))
+                            return false;
+                        if (!plannedTenantIds.Add(add.TenantId))
+                            return false;
+                        plannedTenantErosion.Add(add.TenantId, add.InitialErosion);
+                        break;
+                    }
+                    case ResolveCandidateChange resolve:
+                    {
+                        if (s.ResolvedReviewCandidateIds.Contains(resolve.CandidateId))
+                            return false;
+                        if (!plannedCandidateIds.Add(resolve.CandidateId))
+                            return false;
+                        if (resolve.Record != null) reviewRecords.Add(resolve.Record);
+                        break;
+                    }
                 }
             }
 
@@ -273,6 +411,8 @@ namespace Hotel.Runtime
                     if (float.IsNaN(x.Delta) || float.IsInfinity(x.Delta))
                         break;
                     var tenant = s.Tenants[x.TenantId];
+                    if (tenant.ErosionLocked)
+                        break;
                     var clamped = tenant.TrueErosion + x.Delta;
                     if (clamped < 0f) clamped = 0f;
                     if (clamped > 100f) clamped = 100f;
@@ -314,6 +454,112 @@ namespace Hotel.Runtime
                     var amount = resource.Amount + x.Delta;
                     if (amount < 0) amount = 0;
                     resource.Amount = amount;
+                    break;
+                }
+                case AdjustItemChange x:
+                {
+                    int current = s.Inventory.TryGetValue(x.ItemId, out int existing) ? existing : 0;
+                    long combined = (long)current + x.Delta;
+                    int amount = combined > int.MaxValue ? int.MaxValue : (int)combined;
+                    if (amount == 0)
+                        s.Inventory.Remove(x.ItemId);
+                    else
+                        s.Inventory[x.ItemId] = amount;
+                    break;
+                }
+                case StartChainChange x:
+                    s.Chains[x.ChainId] = new ChainRunState
+                    {
+                        ChainId = x.ChainId,
+                        NextStepToPresent = 1,
+                        TargetTenantId = x.TenantId,
+                        StartDay = x.StartDay,
+                        FirstTriggerDay = x.FirstTriggerDay,
+                        NextDueDay = x.NextDueDay > 0 ? x.NextDueDay : x.FirstTriggerDay
+                    };
+                    break;
+                case SetChainFlagChange x:
+                {
+                    if (!s.Chains.TryGetValue(x.ChainId, out ChainRunState chain))
+                        break;
+                    if (chain.Flags == null)
+                        chain.Flags = new List<string>();
+                    if (!chain.Flags.Contains(x.Flag))
+                        chain.Flags.Add(x.Flag);
+                    break;
+                }
+                case AdvanceChainStepChange x:
+                {
+                    if (!s.Chains.TryGetValue(x.ChainId, out ChainRunState chain))
+                        break;
+                    if (chain.Failed)
+                        break;
+                    chain.NextStepToPresent = x.NextStep;
+                    if (x.Completed)
+                    {
+                        chain.NextDueDay = 0;
+                        chain.Completed = true;
+                    }
+                    else if (x.NextDueDay > 0)
+                    {
+                        chain.NextDueDay = x.NextDueDay;
+                    }
+                    break;
+                }
+                case SetChainScheduleChange x:
+                {
+                    if (!s.Chains.TryGetValue(x.ChainId, out ChainRunState chain))
+                        break;
+                    if (chain.FirstTriggerDay < 1)
+                        chain.FirstTriggerDay = x.FirstTriggerDay;
+                    if (chain.NextDueDay < 1)
+                        chain.NextDueDay = x.NextDueDay;
+                    break;
+                }
+                case FailChainChange x:
+                {
+                    if (s.Chains.TryGetValue(x.ChainId, out ChainRunState chain))
+                        chain.Failed = true;
+                    break;
+                }
+                case LockTenantErosionChange x:
+                {
+                    if (!s.Tenants.TryGetValue(x.TenantId, out TenantRunState tenant))
+                        break;
+                    tenant.ErosionLocked = true;
+                    tenant.ErosionLockValue = x.Value;
+                    if (tenant.TrueErosion != x.Value)
+                        tenant.TrueErosion = x.Value;
+                    break;
+                }
+                case SetTenantCheckInChange x:
+                {
+                    if (s.Tenants.TryGetValue(x.TenantId, out TenantRunState tenant))
+                        tenant.CheckInDay = x.Day;
+                    break;
+                }
+                case SetRunFlagChange x:
+                {
+                    if (s.RunFlags == null)
+                        s.RunFlags = new List<string>();
+                    if (!s.RunFlags.Contains(x.Flag))
+                        s.RunFlags.Add(x.Flag);
+                    break;
+                }
+                case AddRoomOccupantChange x:
+                {
+                    if (!s.Rooms.TryGetValue(x.RoomId, out RoomRunState room))
+                        break;
+                    if (room.OccupantIds == null)
+                        room.OccupantIds = new List<string>();
+                    if (!room.OccupantIds.Contains(x.OccupantId))
+                        room.OccupantIds.Add(x.OccupantId);
+                    break;
+                }
+                case RemoveRoomOccupantChange x:
+                {
+                    if (s.Rooms.TryGetValue(x.RoomId, out RoomRunState room) && room.OccupantIds != null)
+                        room.OccupantIds.Remove(x.OccupantId);
                     break;
                 }
                 case AddBuffChange x:

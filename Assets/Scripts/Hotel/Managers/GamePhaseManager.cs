@@ -98,6 +98,8 @@ public class GamePhaseManager : MonoBehaviour
             return false;
         if (TenantAssignmentCoordinator.Instance != null && TenantAssignmentCoordinator.Instance.HasUnassignedTenants)
             return false;
+        if (ItemUseManager.Instance != null && ItemUseManager.Instance.IsAwaitingTarget)
+            return false;
         return EventManager.Instance == null || EventManager.Instance.IsPhaseComplete;
     }
 

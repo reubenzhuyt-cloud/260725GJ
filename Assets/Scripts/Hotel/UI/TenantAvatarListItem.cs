@@ -16,6 +16,8 @@ public class TenantAvatarListItem : MonoBehaviour
     private bool _dragFinished;
     private float _authoredAlpha;
 
+    public string TenantId => _tenantId;
+
     private void Awake()
     {
         if (avatarImage != null)

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_VanishingGuest_04
+  m_EditorClassIdentifier: 
+  eventIndex: 314
+  eventId: chain_vanishingguest_04
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: vanishingguest
+    chainStep: 4
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_vanishingguest
+  eventTitle: "逐渐消失的房客（四）"
+  eventDescription: "XXX不见了。他的房间里只剩下一张字条：\"它们终于找到我了\"。剧情要求：目标房客将被永久移除；若3天内未干预，结局将固定。"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects:
+  - effectType: 1
+    floatValue: 3
+    target: 1
+  choices: []

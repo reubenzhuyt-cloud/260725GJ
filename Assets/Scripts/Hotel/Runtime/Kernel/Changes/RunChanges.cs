@@ -105,6 +105,105 @@ namespace Hotel.Runtime
         public int Delta { get; }
     }
 
+    public sealed class AdjustItemChange : RunChange
+    {
+        public AdjustItemChange(string id, int delta) { ItemId = id; Delta = delta; }
+        public string ItemId { get; }
+        public int Delta { get; }
+    }
+
+    public sealed class StartChainChange : RunChange
+    {
+        public StartChainChange(string chainId, string tenantId, int startDay, int firstTriggerDay = 0, int nextDueDay = 0)
+        {
+            ChainId = chainId;
+            TenantId = tenantId;
+            StartDay = startDay;
+            FirstTriggerDay = firstTriggerDay;
+            NextDueDay = nextDueDay;
+        }
+        public string ChainId { get; }
+        public string TenantId { get; }
+        public int StartDay { get; }
+        public int FirstTriggerDay { get; }
+        public int NextDueDay { get; }
+    }
+
+    public sealed class SetChainFlagChange : RunChange
+    {
+        public SetChainFlagChange(string chainId, string flag) { ChainId = chainId; Flag = flag; }
+        public string ChainId { get; }
+        public string Flag { get; }
+    }
+
+    public sealed class AdvanceChainStepChange : RunChange
+    {
+        public AdvanceChainStepChange(string chainId, int nextStep, bool completed, int nextDueDay = 0)
+        {
+            ChainId = chainId;
+            NextStep = nextStep;
+            Completed = completed;
+            NextDueDay = nextDueDay;
+        }
+        public string ChainId { get; }
+        public int NextStep { get; }
+        public bool Completed { get; }
+        public int NextDueDay { get; }
+    }
+
+    public sealed class SetChainScheduleChange : RunChange
+    {
+        public SetChainScheduleChange(string chainId, int firstTriggerDay, int nextDueDay)
+        {
+            ChainId = chainId;
+            FirstTriggerDay = firstTriggerDay;
+            NextDueDay = nextDueDay;
+        }
+        public string ChainId { get; }
+        public int FirstTriggerDay { get; }
+        public int NextDueDay { get; }
+    }
+
+    public sealed class FailChainChange : RunChange
+    {
+        public FailChainChange(string chainId) { ChainId = chainId; }
+        public string ChainId { get; }
+    }
+
+    public sealed class LockTenantErosionChange : RunChange
+    {
+        public LockTenantErosionChange(string tenantId, float value) { TenantId = tenantId; Value = value; }
+        public string TenantId { get; }
+        public float Value { get; }
+    }
+
+    public sealed class SetTenantCheckInChange : RunChange
+    {
+        public SetTenantCheckInChange(string tenantId, int day) { TenantId = tenantId; Day = day; }
+        public string TenantId { get; }
+        public int Day { get; }
+    }
+
+    public sealed class SetRunFlagChange : RunChange
+    {
+        public SetRunFlagChange(string flag) { Flag = flag; }
+        public string Flag { get; }
+    }
+
+    public sealed class AddRoomOccupantChange : RunChange
+    {
+        public AddRoomOccupantChange(string roomId, string occupantId) { RoomId = roomId; OccupantId = occupantId; }
+        public string RoomId { get; }
+        public string OccupantId { get; }
+    }
+
+    public sealed class RemoveRoomOccupantChange : RunChange
+    {
+        public RemoveRoomOccupantChange(string roomId, string occupantId) { RoomId = roomId; OccupantId = occupantId; }
+        public string RoomId { get; }
+        public string OccupantId { get; }
+    }
+
     public sealed class AddBuffChange : RunChange
     {
         public AddBuffChange(BuffRunState value) { Value = value; }

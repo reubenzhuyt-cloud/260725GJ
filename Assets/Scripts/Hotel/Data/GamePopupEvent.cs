@@ -22,4 +22,5 @@ public struct PopupData
     public string[] choiceIds;
     public TenantAbility[][] choiceRequiredTags;
     public EventEffect[][] choiceEffects;
+    public bool[] choiceLocked;
 }

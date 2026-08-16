@@ -16,6 +16,8 @@ public static class JobSettlementService
     private const float SecurityTeamLossMultiplier = 0.4f;
     private const float ForcedActivityErosion = 5f;
     private const float RedWorkerContamination = 1f;
+    private const string ToolboxBuffPrefix = "item_toolbox_";
+    private const float ToolboxEfficiencyMultiplier = 1.3f;
 
     private sealed class PendingLog
     {
@@ -63,8 +65,16 @@ public static class JobSettlementService
             TenantAbility ability = TenantAbilityResolver.ResolveAbility(tenantId, candidates);
             TenantActivityType activity = TenantAbilityResolver.ResolveActivityType(tenantId, candidates);
             float efficiency = CalculateEfficiency(job, ability, tenant.TrueErosion, activity, phase);
+            BuffRunState toolboxBuff = FindToolboxBuff(state, tenantId);
+            if (toolboxBuff != null)
+            {
+                efficiency *= ToolboxEfficiencyMultiplier;
+                changes.Add(new RemoveBuffChange(toolboxBuff.BuffId));
+            }
             string summary = BuildJobChanges(
                 state, tenantId, job, efficiency, day, phase, floorRegistry, changes, resourceDeltas);
+            if (toolboxBuff != null)
+                summary += $"；工具箱效率 +{(int)((ToolboxEfficiencyMultiplier - 1f) * 100f)}%";
 
             if (IsWrongActivityPeriod(activity, phase))
             {
@@ -193,11 +203,40 @@ public static class JobSettlementService
                 hasFormerEmployee = true;
         }
 
+        float multiplier = 1f;
         if (hasWatchSpecialist && hasFormerEmployee)
-            return SecurityTeamLossMultiplier;
-        if (hasWatchSpecialist || hasFormerEmployee)
-            return NightWatchLossMultiplier;
-        return 1f;
+            multiplier = SecurityTeamLossMultiplier;
+        else if (hasWatchSpecialist || hasFormerEmployee)
+            multiplier = NightWatchLossMultiplier;
+        return ApplyItemModifiersToNightLossMultiplier(state, multiplier);
+    }
+
+    private static BuffRunState FindToolboxBuff(GameRunState state, string tenantId)
+    {
+        if (state.Buffs == null || string.IsNullOrEmpty(tenantId))
+            return null;
+        foreach (KeyValuePair<string, BuffRunState> pair in state.Buffs)
+        {
+            BuffRunState buff = pair.Value;
+            if (buff == null || string.IsNullOrEmpty(buff.BuffId))
+                continue;
+            if (!buff.BuffId.StartsWith(ToolboxBuffPrefix, StringComparison.Ordinal))
+                continue;
+            if (string.Equals(buff.OwnerTenantId, tenantId, StringComparison.Ordinal))
+                return buff;
+            if (buff.TargetTenantIds != null && buff.TargetTenantIds.Contains(tenantId))
+                return buff;
+        }
+        return null;
+    }
+
+    public static float ApplyItemModifiersToNightLossMultiplier(GameRunState state, float multiplier)
+    {
+        if (state == null || multiplier <= 0f)
+            return multiplier;
+        if (state.RunFlags != null && state.RunFlags.Contains(ItemUseManager.FlashlightFlag))
+            multiplier *= ItemUseManager.FlashlightLossMultiplier;
+        return multiplier;
     }
 
     private static string BuildJobChanges(

@@ -177,7 +177,8 @@ public class EventUI : MonoBehaviour
                 ? data.choiceEffects[i]
                 : null;
             bool affordable = EventAffordability.CanAfford(effects, runState);
-            btn.interactable = TenantAbilityResolver.HasAllRequiredTags(required, ownedAbilities) && affordable;
+            bool locked = data.choiceLocked != null && i < data.choiceLocked.Length && data.choiceLocked[i];
+            btn.interactable = TenantAbilityResolver.HasAllRequiredTags(required, ownedAbilities) && affordable && !locked;
 
             int choiceIndex = i;
             PopupData capturedData = data;

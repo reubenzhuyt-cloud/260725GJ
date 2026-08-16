@@ -24,6 +24,7 @@ namespace Hotel.Runtime
         public List<TenantRunState> Tenants = new List<TenantRunState>();
         public List<RoomRunState> Rooms = new List<RoomRunState>();
         public List<ResourceRunState> Resources = new List<ResourceRunState>();
+        public List<InventoryListEntry> Inventory = new List<InventoryListEntry>();
         public List<BuffRunState> Buffs = new List<BuffRunState>();
         public RunSummaryState Summary = new RunSummaryState();
         public List<string> ResolvedReviewCandidateIds = new List<string>();
@@ -32,6 +33,8 @@ namespace Hotel.Runtime
 public bool HotelHasMirror = true;
         public bool IsStorm;
         public List<TenantLogListEntry> TenantLogs = new List<TenantLogListEntry>();
+        public List<ChainRunState> Chains = new List<ChainRunState>();
+        public List<string> RunFlags = new List<string>();
     }
 
     [Serializable]
@@ -39,6 +42,13 @@ public bool HotelHasMirror = true;
     {
         public string TenantId;
         public List<TenantLogEntry> Entries = new List<TenantLogEntry>();
+    }
+
+    [Serializable]
+    public sealed class InventoryListEntry
+    {
+        public string ItemId;
+        public int Amount;
     }
 
     public static class RunSaveCodec
@@ -120,14 +130,33 @@ public bool HotelHasMirror = true;
                 save.Rooms.Add(CloneRoom(pair.Value));
             foreach (var pair in state.Resources)
                 save.Resources.Add(CloneResource(pair.Value));
+            if (state.Inventory != null)
+            {
+                foreach (var pair in state.Inventory)
+                    save.Inventory.Add(new InventoryListEntry { ItemId = pair.Key, Amount = pair.Value });
+            }
             foreach (var pair in state.Buffs)
                 save.Buffs.Add(CloneBuff(pair.Value));
+
+            if (state.Chains != null)
+            {
+                foreach (var pair in state.Chains)
+                {
+                    if (pair.Value == null)
+                        continue;
+                    save.Chains.Add(CloneChain(pair.Value));
+                }
+            }
+            if (state.RunFlags != null)
+                save.RunFlags.AddRange(state.RunFlags);
 
             save.Tenants.Sort((a, b) => string.CompareOrdinal(a.TenantId, b.TenantId));
             save.Rooms.Sort((a, b) => string.CompareOrdinal(a.RoomId, b.RoomId));
             save.Resources.Sort((a, b) => string.CompareOrdinal(a.ResourceId, b.ResourceId));
+            save.Inventory.Sort((a, b) => string.CompareOrdinal(a.ItemId, b.ItemId));
             save.Buffs.Sort((a, b) => string.CompareOrdinal(a.BuffId, b.BuffId));
             save.TenantLogs.Sort((a, b) => string.CompareOrdinal(a.TenantId, b.TenantId));
+            save.Chains.Sort((a, b) => string.CompareOrdinal(a.ChainId, b.ChainId));
             return save;
         }
 
@@ -147,6 +176,21 @@ public bool HotelHasMirror = true;
             state.ReviewHistory = RestoreReviewHistory(save.ReviewHistory);
             state.HotelHasMirror = save.HotelHasMirror;
             state.IsStorm = save.IsStorm;
+
+            state.Chains = new Dictionary<string, ChainRunState>();
+            if (save.Chains != null)
+            {
+                foreach (var chain in save.Chains)
+                {
+                    if (chain == null || string.IsNullOrEmpty(chain.ChainId))
+                        continue;
+                    state.Chains[chain.ChainId] = CloneChain(chain);
+                }
+            }
+
+            state.RunFlags = new List<string>();
+            if (save.RunFlags != null)
+                state.RunFlags.AddRange(save.RunFlags);
 
             state.PlayerLogs = new List<PlayerLogEntry>();
             if (save.PlayerLogs != null)
@@ -202,6 +246,18 @@ public bool HotelHasMirror = true;
                 {
                     if (resource != null && !string.IsNullOrEmpty(resource.ResourceId))
                         state.Resources[resource.ResourceId] = CloneResource(resource);
+                }
+            }
+
+            state.Inventory = new Dictionary<string, int>();
+            if (save.Inventory != null)
+            {
+                foreach (var entry in save.Inventory)
+                {
+                    if (entry == null || string.IsNullOrEmpty(entry.ItemId) || entry.Amount <= 0)
+                        continue;
+                    int existing = state.Inventory.TryGetValue(entry.ItemId, out int current) ? current : 0;
+                    state.Inventory[entry.ItemId] = CombineItemAmounts(existing, entry.Amount);
                 }
             }
 
@@ -289,6 +345,16 @@ public bool HotelHasMirror = true;
             return candidate.Day > existing.Day;
         }
 
+        private static int CombineItemAmounts(int existing, int add)
+        {
+            long combined = (long)existing + add;
+            if (combined > int.MaxValue)
+                return int.MaxValue;
+            if (combined < int.MinValue)
+                return int.MinValue;
+            return (int)combined;
+        }
+
         private static bool IsMoreMeaningfulEventHistory(EventHistoryRecord candidate, EventHistoryRecord existing)
         {
             if (candidate.Resolved != existing.Resolved)
@@ -356,7 +422,10 @@ public bool HotelHasMirror = true;
                 RoomId = value.RoomId,
                 JobId = value.JobId,
                 AvatarKey = value.AvatarKey,
-                Vulnerable = value.Vulnerable
+                Vulnerable = value.Vulnerable,
+                CheckInDay = value.CheckInDay,
+                ErosionLocked = value.ErosionLocked,
+                ErosionLockValue = value.ErosionLockValue
             };
         }
 
@@ -383,6 +452,11 @@ public bool HotelHasMirror = true;
         }
 
         private static BuffRunState CloneBuff(BuffRunState value)
+        {
+            return value.Clone();
+        }
+
+        private static ChainRunState CloneChain(ChainRunState value)
         {
             return value.Clone();
         }

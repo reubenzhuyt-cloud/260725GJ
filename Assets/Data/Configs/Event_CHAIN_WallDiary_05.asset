@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_WallDiary_05
+  m_EditorClassIdentifier: 
+  eventIndex: 326
+  eventId: chain_walldiary_05
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: walldiary
+    chainStep: 5
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_walldiary
+  eventTitle: "墙里的日记本（五）"
+  eventDescription: "有一名房客的名字在旧名单上——但那份名单写于五年前。剧情要求：指认该房客为异常；目标随后消失；获得线索T07。"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects:
+  - effectType: 1
+    floatValue: 3
+    target: 1
+  choices: []

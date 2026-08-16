@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_UninvitedChild_02
+  m_EditorClassIdentifier: 
+  eventIndex: 319
+  eventId: chain_uninvitedchild_02
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: uninvitedchild
+    chainStep: 2
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_uninvitedchild
+  eventTitle: "不请自来的孩子（二）"
+  eventDescription: "阿元开始和其他房客玩捉迷藏——但他经常藏在奇怪的地方，如衣柜深处。剧情要求：若任一房客侵蚀>40，阿元会避开他们，全楼侵蚀+1。"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects: []
+  choices: []

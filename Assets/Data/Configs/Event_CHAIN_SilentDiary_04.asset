@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_SilentDiary_04
+  m_EditorClassIdentifier: 
+  eventIndex: 304
+  eventId: chain_silentdiary_04
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: silentdiary
+    chainStep: 4
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_silentdiary
+  eventTitle: "沉默者日记（四）"
+  eventDescription: "XXX在凌晨去了地下室——手里拿着那本笔记本。"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "派【守夜人】跟踪"
+    choiceResult: "（需在第2步获得符号线索）守夜人跟踪XXX，获得线索T04。"
+    effectText: "获得线索T04（叙事；需先获得符号线索）"
+    requiredTags:
+    - 4
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "不跟踪"
+    choiceResult: "不跟踪，全楼侵蚀+2。"
+    effectText: "全楼侵蚀+2"
+    requiredTags: []
+    choiceEffects:
+    - effectType: 1
+      floatValue: 2
+      target: 1

@@ -54,6 +54,7 @@ public static class NoticeTextFormatter
     {
         var parts = new List<string>();
         var resourceDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
+        var itemDeltas = new Dictionary<string, int>(StringComparer.Ordinal);
         var buffParts = new List<string>();
 
         if (changes != null)
@@ -66,6 +67,12 @@ public static class NoticeTextFormatter
                         ? current + resource.Delta
                         : resource.Delta;
                 }
+                else if (changes[i] is AdjustItemChange item)
+                {
+                    itemDeltas[item.ItemId] = itemDeltas.TryGetValue(item.ItemId, out int current)
+                        ? current + item.Delta
+                        : item.Delta;
+                }
                 else if (changes[i] is AddBuffChange buff)
                 {
                     string buffText = FormatBuffNotice(buff.Value, nameResolver);
@@ -76,6 +83,7 @@ public static class NoticeTextFormatter
         }
 
         parts.AddRange(BuildResourceParts(resourceDeltas, nameResolver));
+        parts.AddRange(BuildItemParts(itemDeltas));
 
         if (effects != null && state != null)
         {
@@ -150,6 +158,26 @@ public static class NoticeTextFormatter
 
         for (int i = 0; i < sorted.Count; i++)
             parts.Add($"{ResolveResourceName(sorted[i], nameResolver)} {FormatInt(deltas[sorted[i]])}");
+        return parts;
+    }
+
+    private static List<string> BuildItemParts(IReadOnlyDictionary<string, int> deltas)
+    {
+        var parts = new List<string>();
+        if (deltas == null || deltas.Count == 0)
+            return parts;
+
+        var sorted = new List<string>();
+        foreach (KeyValuePair<string, int> pair in deltas)
+        {
+            if (pair.Value == 0)
+                continue;
+            sorted.Add(pair.Key);
+        }
+        sorted.Sort(StringComparer.Ordinal);
+
+        for (int i = 0; i < sorted.Count; i++)
+            parts.Add($"{sorted[i]} {FormatInt(deltas[sorted[i]])}");
         return parts;
     }
 

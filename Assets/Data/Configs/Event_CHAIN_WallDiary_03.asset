@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_CHAIN_WallDiary_03
+  m_EditorClassIdentifier: 
+  eventIndex: 324
+  eventId: chain_walldiary_03
+  trigger:
+    eligiblePhases: 1
+    kind: 1
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: 
+    requiresTenant: {fileID: 0}
+    chainId: walldiary
+    chainStep: 3
+    conditions: []
+    requireAll: true
+    weightScale: 0
+    baseWeight: 10
+    category: chain_walldiary
+  eventTitle: "墙里的日记本（三）"
+  eventDescription: "日记中提到：\"三楼306房间的墙上有一扇不存在的门。\"剧情要求：调查306房间；需已解锁三楼，然后发现松动的墙板。"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects: []
+  choices: []

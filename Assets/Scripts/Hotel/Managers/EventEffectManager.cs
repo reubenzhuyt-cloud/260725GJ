@@ -41,6 +41,13 @@ public class EventEffectManager
             return EventSettleResult.Rejected;
         }
 
+        if (ChainRuntimeCatalog.TryParseEvent(eventId, out _, out _)
+            && !ChainManager.IsOptionAvailable(state, eventId, optionId, candidates))
+        {
+            Debug.LogWarning($"[EventEffectManager] event={eventId} option={optionId}: chain option not available in current state; rejecting settlement.");
+            return EventSettleResult.Rejected;
+        }
+
         var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "EventEffectManager", "ResolveEvent");
         set.Add(new ResolveEventHistoryChange(eventId, optionId));
 
@@ -48,44 +55,43 @@ public class EventEffectManager
         int effectCount = effects != null ? effects.Length : 0;
         PlayerLogWriteDto pendingEffectSummary = default;
         List<RunChange> changes = null;
-        string ownerTenantId = null;
-        float negativeEffectMultiplier = 1f;
-        if (effectCount == 0)
+        string ownerTenantId = payload.ownerTenantId;
+        if (!string.IsNullOrEmpty(ownerTenantId) && !state.Tenants.ContainsKey(ownerTenantId))
+            ownerTenantId = null;
+        float negativeEffectMultiplier = state.Phase.Current == HotelPhase.Night
+            ? JobSettlementService.GetNightEventLossMultiplier(state, candidates)
+            : 1f;
+        changes = EventEffectExecutor.BuildChanges(
+            effects,
+            state,
+            ownerTenantId,
+            eventId,
+            optionId,
+            state.Day,
+            RoomFloorRegistry.Instance,
+            negativeEffectMultiplier,
+            candidates);
+        if (effectCount > 0)
         {
-            Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: no effects to apply");
+            LogEffects(state, eventId, optionId, effects, changes, ownerTenantId);
         }
         else
         {
-            ownerTenantId = payload.ownerTenantId;
-            if (!string.IsNullOrEmpty(ownerTenantId) && !state.Tenants.ContainsKey(ownerTenantId))
-                ownerTenantId = null;
-            negativeEffectMultiplier = state.Phase.Current == HotelPhase.Night
-                ? JobSettlementService.GetNightEventLossMultiplier(state, candidates)
-                : 1f;
-            changes = EventEffectExecutor.BuildChanges(
-                effects,
-                state,
-                ownerTenantId,
-                eventId,
-                optionId,
-                state.Day,
-                RoomFloorRegistry.Instance,
-                negativeEffectMultiplier);
-            LogEffects(state, eventId, optionId, effects, changes, ownerTenantId);
-            for (int i = 0; i < changes.Count; i++)
-                set.Add(changes[i]);
-            if (changes.Count > 0)
-            {
-                int summaryDay = logDay > 0 ? logDay : state.Day;
-                HotelPhase summaryPhase = logPhase.HasValue ? logPhase.Value : state.Phase.Current;
-                pendingEffectSummary = new PlayerLogWriteDto(
-                    PlayerLogCategory.EffectSettlement,
-                    summaryDay,
-                    summaryPhase,
-                    "效果结算",
-                    BuildEffectSummaryText(changes),
-                    eventId);
-            }
+            Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: no effects to apply");
+        }
+        for (int i = 0; i < changes.Count; i++)
+            set.Add(changes[i]);
+        if (changes.Count > 0)
+        {
+            int summaryDay = logDay > 0 ? logDay : state.Day;
+            HotelPhase summaryPhase = logPhase.HasValue ? logPhase.Value : state.Phase.Current;
+            pendingEffectSummary = new PlayerLogWriteDto(
+                PlayerLogCategory.EffectSettlement,
+                summaryDay,
+                summaryPhase,
+                "效果结算",
+                BuildEffectSummaryText(changes),
+                eventId);
         }
 
         CommitResult result = reducer.TryCommit(state, set);
@@ -277,6 +283,8 @@ public class EventEffectManager
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: tenant={erosion.TenantId} erosionDelta={erosion.Delta}");
             else if (change is AdjustResourceChange resource)
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: resource={resource.ResourceId} delta={resource.Delta}");
+            else if (change is AdjustItemChange item)
+                Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: item={item.ItemId} delta={item.Delta}");
             else if (change is AddBuffChange buff)
                 Debug.Log($"[EventEffectManager] event={eventId} option={optionId}: buff={buff.Value.BuffId} target={buff.Value.Target} remaining={buff.Value.RemainingTicks}");
         }
@@ -292,6 +300,8 @@ public class EventEffectManager
                 parts.Add("效果已生效");
             else if (change is AdjustResourceChange resource)
                 parts.Add($"{ResourceName(resource.ResourceId)} {resource.Delta:+#;-#;0}");
+            else if (change is AdjustItemChange item)
+                parts.Add($"物品「{item.ItemId}」{item.Delta:+#;-#;0}");
             else if (change is AddBuffChange buff)
                 parts.Add($"状态「{buff.Value.BuffId}」{buff.Value.RemainingTicks} 天");
         }
