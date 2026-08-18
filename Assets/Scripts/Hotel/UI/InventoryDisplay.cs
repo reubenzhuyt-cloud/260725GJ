@@ -15,10 +15,10 @@ public class InventoryDisplay : MonoBehaviour
     public PhaseEnteredEvent onPhaseEntered;
 
     private readonly List<InventoryItemSlot> _createdSlots = new List<InventoryItemSlot>();
+    private readonly List<GameObject> _createdRoots = new List<GameObject>();
     private bool _runStateRestoredSubscribed;
     private bool _inventoryChangedSubscribed;
     private bool _warnedMissingTemplate;
-    private bool _warnedMissingSlotComponent;
 
     private void OnEnable()
     {
@@ -56,6 +56,17 @@ public class InventoryDisplay : MonoBehaviour
             return;
         }
 
+        Transform panelTemplate = slotTemplate.transform.Find("ItemPanel");
+        if (panelTemplate == null)
+        {
+            if (!_warnedMissingTemplate)
+            {
+                _warnedMissingTemplate = true;
+                Debug.LogWarning("[InventoryDisplay] slotTemplate has no 'ItemPanel' child; inventory slots will not be shown.");
+            }
+            return;
+        }
+
         GameRunState state = SettlementBridge.Instance != null
             ? SettlementBridge.Instance.RunState
             : null;
@@ -77,7 +88,7 @@ public class InventoryDisplay : MonoBehaviour
             if (definition == null)
                 continue;
 
-            GameObject instance = Instantiate(slotTemplate, slotContainer);
+            GameObject instance = Instantiate(panelTemplate.gameObject, slotContainer);
             if (instance == null)
                 continue;
             instance.name = "ItemSlot_" + itemId;
@@ -86,15 +97,17 @@ public class InventoryDisplay : MonoBehaviour
             InventoryItemSlot slot = instance.GetComponent<InventoryItemSlot>();
             if (slot == null)
             {
-                if (!_warnedMissingSlotComponent)
-                {
-                    _warnedMissingSlotComponent = true;
-                    Debug.LogWarning("[InventoryDisplay] slotTemplate has no InventoryItemSlot component; added at runtime. Wire the iconImage/nameLabel/countLabel serialized references on the slot template for visuals.");
-                }
                 slot = instance.AddComponent<InventoryItemSlot>();
+                Transform iconTf = instance.transform.Find("Icon");
+                Transform nameTf = instance.transform.Find("NameLabel");
+                Transform countTf = instance.transform.Find("CountLabel");
+                slot.iconImage = iconTf != null ? iconTf.GetComponent<UnityEngine.UI.Image>() : null;
+                slot.nameLabel = nameTf != null ? nameTf.GetComponent<TMPro.TextMeshProUGUI>() : null;
+                slot.countLabel = countTf != null ? countTf.GetComponent<TMPro.TextMeshProUGUI>() : null;
             }
             slot.Bind(definition, count);
             _createdSlots.Add(slot);
+            _createdRoots.Add(instance);
         }
     }
 
@@ -111,13 +124,14 @@ public class InventoryDisplay : MonoBehaviour
 
     private void ClearCreatedSlots()
     {
-        for (int i = 0; i < _createdSlots.Count; i++)
+        for (int i = 0; i < _createdRoots.Count; i++)
         {
-            InventoryItemSlot slot = _createdSlots[i];
-            if (slot != null && slot.gameObject != null)
-                Destroy(slot.gameObject);
+            GameObject root = _createdRoots[i];
+            if (root != null)
+                Destroy(root);
         }
         _createdSlots.Clear();
+        _createdRoots.Clear();
     }
 
     private void OnPhaseEntered(PhaseEnterData data)

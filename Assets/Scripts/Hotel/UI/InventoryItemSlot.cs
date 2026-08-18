@@ -31,10 +31,10 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         if (item != null)
         {
-            if (iconImage != null)
+            if (iconImage != null && item.icon != null)
             {
                 iconImage.sprite = item.icon;
-                iconImage.enabled = item.icon != null;
+                iconImage.enabled = true;
             }
             if (nameLabel != null)
                 nameLabel.text = item.displayName;
