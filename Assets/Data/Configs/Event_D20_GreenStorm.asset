@@ -25,29 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_weather
-  eventTitle: "绿色雷暴"
-  eventDescription: "雷暴中出现了绿色的闪电——每次照亮天空时，地面都会出现奇怪的阴影。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u7EFF\u8272\u96F7\u66B4"
+  eventDescription: "\u96F7\u66B4\u4E2D\u51FA\u73B0\u4E86\u7EFF\u8272\u7684\u95EA\u7535\u2014\u2014\u6BCF\u6B21\u7167\u4EAE\u5929\u7A7A\u65F6\uFF0C\u5730\u9762\u90FD\u4F1A\u51FA\u73B0\u5947\u602A\u7684\u9634\u5F71\u3002"
+  eventImage: {fileID: 21300000, guid: 05146e82623d1494ba2c32d68b942bab, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "所有人进入地下室"
-    choiceResult: "所有人进入地下室，全楼侵蚀+1。"
-    effectText: "全楼侵蚀+1"
-    requiredTags: []
+    choiceText: "\u6240\u6709\u4EBA\u8FDB\u5165\u5730\u4E0B\u5BA4"
+    choiceResult: "\u6240\u6709\u4EBA\u8FDB\u5165\u5730\u4E0B\u5BA4\uFF0C\u5168\u697C\u4FB5\u8680+1\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+1"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 1
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "加强守夜"
-    choiceResult: "加强守夜，全楼侵蚀-1。"
-    effectText: "全楼侵蚀-1"
-    requiredTags: []
+    choiceText: "\u52A0\u5F3A\u5B88\u591C"
+    choiceResult: "\u52A0\u5F3A\u5B88\u591C\uFF0C\u5168\u697C\u4FB5\u8680-1\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680-1"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -1
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

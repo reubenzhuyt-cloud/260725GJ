@@ -30,34 +30,46 @@ MonoBehaviour:
       intValue: 3
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 1
     baseWeight: 8
     category: night_erosion
-  eventTitle: "侵蚀爆发"
-  eventDescription: "XXX的侵蚀度急剧恶化——他的身体以不自然的方式扭曲着。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u4FB5\u8680\u7206\u53D1"
+  eventDescription: "XXX\u7684\u4FB5\u8680\u5EA6\u6025\u5267\u6076\u5316\u2014\u2014\u4ED6\u7684\u8EAB\u4F53\u4EE5\u4E0D\u81EA\u7136\u7684\u65B9\u5F0F\u626D\u66F2\u7740\u3002"
+  eventImage: {fileID: 21300000, guid: bfaaed6d945e4ae40830a573e223df94, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【医生】稳定"
-    choiceResult: "医生处理，消耗5货币，侵蚀度-10，暂时稳定。"
-    effectText: "消耗5货币，侵蚀度-10，暂时稳定"
-    requiredTags:
-    - 1
+    choiceText: "\u3010\u533B\u751F\u3011\u7A33\u5B9A"
+    choiceResult: "\u533B\u751F\u5904\u7406\uFF0C\u6D88\u80175\u8D27\u5E01\uFF0C\u4FB5\u8680\u5EA6-10\uFF0C\u6682\u65F6\u7A33\u5B9A\u3002"
+    effectText: "\u6D88\u80175\u8D27\u5E01\uFF0C\u4FB5\u8680\u5EA6-10\uFF0C\u6682\u65F6\u7A33\u5B9A"
+    requiredTags: 01000000
     choiceEffects:
     - effectType: 2
       floatValue: -5
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: -10
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房客变为完全体伪人，全楼侵蚀+15，次日必须驱逐。"
-    effectText: "该房客变为完全体伪人，全楼侵蚀+15，次日必须驱逐"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u5BA2\u53D8\u4E3A\u5B8C\u5168\u4F53\u4F2A\u4EBA\uFF0C\u5168\u697C\u4FB5\u8680+15\uFF0C\u6B21\u65E5\u5FC5\u987B\u9A71\u9010\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u53D8\u4E3A\u5B8C\u5168\u4F53\u4F2A\u4EBA\uFF0C\u5168\u697C\u4FB5\u8680+15\uFF0C\u6B21\u65E5\u5FC5\u987B\u9A71\u9010"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 15
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

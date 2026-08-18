@@ -30,30 +30,39 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_behavior
-  eventTitle: "拒绝入睡"
-  eventDescription: "XXX拒绝合眼，说\"一闭眼就会看到它们\"。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u62D2\u7EDD\u5165\u7761"
+  eventDescription: "XXX\u62D2\u7EDD\u5408\u773C\uFF0C\u8BF4\"\u4E00\u95ED\u773C\u5C31\u4F1A\u770B\u5230\u5B83\u4EEC\"\u3002"
+  eventImage: {fileID: 21300000, guid: c19cb8663cead4e43af2f13e3cf22869, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【教师】陪伴聊天至入睡"
-    choiceResult: "教师陪伴聊天至入睡，侵蚀度-4。"
-    effectText: "侵蚀度-4"
-    requiredTags:
-    - 10
+    choiceText: "\u3010\u6559\u5E08\u3011\u966A\u4F34\u804A\u5929\u81F3\u5165\u7761"
+    choiceResult: "\u6559\u5E08\u966A\u4F34\u804A\u5929\u81F3\u5165\u7761\uFF0C\u4FB5\u8680\u5EA6-4\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-4"
+    requiredTags: 0a000000
     choiceEffects:
     - effectType: 1
       floatValue: -4
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房客侵蚀度+8，次日效率-30%。"
-    effectText: "该房客侵蚀度+8，次日效率-30%"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+8\uFF0C\u6B21\u65E5\u6548\u7387-30%\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+8\uFF0C\u6B21\u65E5\u6548\u7387-30%"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 8
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

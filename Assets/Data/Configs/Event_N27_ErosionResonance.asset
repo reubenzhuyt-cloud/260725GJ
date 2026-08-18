@@ -30,47 +30,59 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_erosion
-  eventTitle: "侵蚀共振"
-  eventDescription: "旅馆里的所有灯同时闪烁了几下——一种无形的力量在同层扩散。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u4FB5\u8680\u5171\u632F"
+  eventDescription: "\u65C5\u9986\u91CC\u7684\u6240\u6709\u706F\u540C\u65F6\u95EA\u70C1\u4E86\u51E0\u4E0B\u2014\u2014\u4E00\u79CD\u65E0\u5F62\u7684\u529B\u91CF\u5728\u540C\u5C42\u6269\u6563\u3002"
+  eventImage: {fileID: 21300000, guid: 3e55c86b7f4afdb4d800b389a3ae7352, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【前员工】引导疏散该层"
-    choiceResult: "前员工引导疏散该层，该层侵蚀+3。"
-    effectText: "该层侵蚀+3"
-    requiredTags:
-    - 5
+    choiceText: "\u3010\u524D\u5458\u5DE5\u3011\u5F15\u5BFC\u758F\u6563\u8BE5\u5C42"
+    choiceResult: "\u524D\u5458\u5DE5\u5F15\u5BFC\u758F\u6563\u8BE5\u5C42\uFF0C\u8BE5\u5C42\u4FB5\u8680+3\u3002"
+    effectText: "\u8BE5\u5C42\u4FB5\u8680+3"
+    requiredTags: 05000000
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 3
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: A2
-    choiceText: "【守夜人】引导疏散该层"
-    choiceResult: "守夜人引导疏散该层，该层侵蚀+3。"
-    effectText: "该层侵蚀+3"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u5F15\u5BFC\u758F\u6563\u8BE5\u5C42"
+    choiceResult: "\u5B88\u591C\u4EBA\u5F15\u5BFC\u758F\u6563\u8BE5\u5C42\uFF0C\u8BE5\u5C42\u4FB5\u8680+3\u3002"
+    effectText: "\u8BE5\u5C42\u4FB5\u8680+3"
+    requiredTags: 04000000
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 3
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该层所有房客侵蚀+8，红色房客侵蚀+12。"
-    effectText: "该层所有房客侵蚀+8，红色房客侵蚀+12"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u5C42\u6240\u6709\u623F\u5BA2\u4FB5\u8680+8\uFF0C\u7EA2\u8272\u623F\u5BA2\u4FB5\u8680+12\u3002"
+    effectText: "\u8BE5\u5C42\u6240\u6709\u623F\u5BA2\u4FB5\u8680+8\uFF0C\u7EA2\u8272\u623F\u5BA2\u4FB5\u8680+12"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 8
       target: 3
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: 12
       target: 4
       stringValue: 
       intValue: 3
+      durationTicks: 0
+      conditionKind: 0

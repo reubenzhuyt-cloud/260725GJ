@@ -30,36 +30,38 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 10
     category: night_pollution
-  eventTitle: "低语"
-  eventDescription: "走廊尽头传来低语声，但那里明明没有人。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u4F4E\u8BED"
+  eventDescription: "\u8D70\u5ECA\u5C3D\u5934\u4F20\u6765\u4F4E\u8BED\u58F0\uFF0C\u4F46\u90A3\u91CC\u660E\u660E\u6CA1\u6709\u4EBA\u3002"
+  eventImage: {fileID: 21300000, guid: 95ed71affe414b842a933394dde01906, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【前员工】安抚房客"
-    choiceResult: "前员工安抚房客，侵蚀无变化。"
-    effectText: "侵蚀度无变化"
-    requiredTags:
-    - 5
+    choiceText: "\u3010\u524D\u5458\u5DE5\u3011\u5B89\u629A\u623F\u5BA2"
+    choiceResult: "\u524D\u5458\u5DE5\u5B89\u629A\u623F\u5BA2\uFF0C\u4FB5\u8680\u65E0\u53D8\u5316\u3002"
+    effectText: "\u4FB5\u8680\u5EA6\u65E0\u53D8\u5316"
+    requiredTags: 05000000
     choiceEffects: []
   - choiceId: A2
-    choiceText: "【守夜人】巡查安抚"
-    choiceResult: "守夜人巡查后安抚房客，侵蚀无变化。"
-    effectText: "侵蚀度无变化"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u5DE1\u67E5\u5B89\u629A"
+    choiceResult: "\u5B88\u591C\u4EBA\u5DE1\u67E5\u540E\u5B89\u629A\u623F\u5BA2\uFF0C\u4FB5\u8680\u65E0\u53D8\u5316\u3002"
+    effectText: "\u4FB5\u8680\u5EA6\u65E0\u53D8\u5316"
+    requiredTags: 04000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "低语声持续回荡，全楼房客感到不安。"
-    effectText: "全楼房客侵蚀度+2"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u4F4E\u8BED\u58F0\u6301\u7EED\u56DE\u8361\uFF0C\u5168\u697C\u623F\u5BA2\u611F\u5230\u4E0D\u5B89\u3002"
+    effectText: "\u5168\u697C\u623F\u5BA2\u4FB5\u8680\u5EA6+2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

@@ -25,26 +25,33 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_weather
-  eventTitle: "浓雾"
-  eventDescription: "一场浓雾包围了旅馆，能见度不到五米。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u6D53\u96FE"
+  eventDescription: "\u4E00\u573A\u6D53\u96FE\u5305\u56F4\u4E86\u65C5\u9986\uFF0C\u80FD\u89C1\u5EA6\u4E0D\u5230\u4E94\u7C73\u3002"
+  eventImage: {fileID: 21300000, guid: acb880df122388545b6e1e723dd49842, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "所有人不得外出"
-    choiceResult: "所有人不得外出。"
-    effectText: "无影响"
-    requiredTags: []
+    choiceText: "\u6240\u6709\u4EBA\u4E0D\u5F97\u5916\u51FA"
+    choiceResult: "\u6240\u6709\u4EBA\u4E0D\u5F97\u5916\u51FA\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 
     choiceEffects: []
   - choiceId: B
-    choiceText: "【守夜人】派人探查雾中动静"
-    choiceResult: "守夜人探查雾中动静，该房客侵蚀+3。"
-    effectText: "该房客侵蚀+3"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u6D3E\u4EBA\u63A2\u67E5\u96FE\u4E2D\u52A8\u9759"
+    choiceResult: "\u5B88\u591C\u4EBA\u63A2\u67E5\u96FE\u4E2D\u52A8\u9759\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680+3\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u4FB5\u8680+3"
+    requiredTags: 04000000
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

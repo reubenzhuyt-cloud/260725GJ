@@ -25,32 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_intrusion
-  eventTitle: "广播杂音"
-  eventDescription: "无线电突然响起，里面是模糊不清的人声和尖叫。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u5E7F\u64AD\u6742\u97F3"
+  eventDescription: "\u65E0\u7EBF\u7535\u7A81\u7136\u54CD\u8D77\uFF0C\u91CC\u9762\u662F\u6A21\u7CCA\u4E0D\u6E05\u7684\u4EBA\u58F0\u548C\u5C16\u53EB\u3002"
+  eventImage: {fileID: 21300000, guid: e0596460aa7aca34bbce062aa5a63a82, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】调试"
-    choiceResult: "工程师调试后听到半句话：\"……它们在等待净化信号……\"。"
-    effectText: "听到半句话：\"……它们在等待净化信号……\""
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u8C03\u8BD5"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u8C03\u8BD5\u540E\u542C\u5230\u534A\u53E5\u8BDD\uFF1A\"\u2026\u2026\u5B83\u4EEC\u5728\u7B49\u5F85\u51C0\u5316\u4FE1\u53F7\u2026\u2026\"\u3002"
+    effectText: "\u542C\u5230\u534A\u53E5\u8BDD\uFF1A\"\u2026\u2026\u5B83\u4EEC\u5728\u7B49\u5F85\u51C0\u5316\u4FE1\u53F7\u2026\u2026\""
+    requiredTags: 03000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，全楼侵蚀+5，黄色房客侵蚀+10。"
-    effectText: "全楼侵蚀+5，黄色房客侵蚀+10"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u5168\u697C\u4FB5\u8680+5\uFF0C\u9EC4\u8272\u623F\u5BA2\u4FB5\u8680+10\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+5\uFF0C\u9EC4\u8272\u623F\u5BA2\u4FB5\u8680+10"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 5
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: 10
       target: 4
       stringValue: 
       intValue: 2
+      durationTicks: 0
+      conditionKind: 0

@@ -30,30 +30,39 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_pollution
-  eventTitle: "夜游"
-  eventDescription: "XXX在半夜打开了其他房间的门，站在门口看着里面熟睡的人。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u591C\u6E38"
+  eventDescription: "XXX\u5728\u534A\u591C\u6253\u5F00\u4E86\u5176\u4ED6\u623F\u95F4\u7684\u95E8\uFF0C\u7AD9\u5728\u95E8\u53E3\u770B\u7740\u91CC\u9762\u719F\u7761\u7684\u4EBA\u3002"
+  eventImage: {fileID: 21300000, guid: 2926f596927c70b40a935ff6f49e9280, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【守夜人】预警并阻止"
-    choiceResult: "守夜人预警并阻止，被看者侵蚀+2。"
-    effectText: "被看者侵蚀+2"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u9884\u8B66\u5E76\u963B\u6B62"
+    choiceResult: "\u5B88\u591C\u4EBA\u9884\u8B66\u5E76\u963B\u6B62\uFF0C\u88AB\u770B\u8005\u4FB5\u8680+2\u3002"
+    effectText: "\u88AB\u770B\u8005\u4FB5\u8680+2"
+    requiredTags: 04000000
     choiceEffects:
     - effectType: 1
       floatValue: 2
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，被看房客侵蚀+5，红色房客侵蚀+3。"
-    effectText: "被看房客侵蚀+5，红色房客侵蚀+3"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u88AB\u770B\u623F\u5BA2\u4FB5\u8680+5\uFF0C\u7EA2\u8272\u623F\u5BA2\u4FB5\u8680+3\u3002"
+    effectText: "\u88AB\u770B\u623F\u5BA2\u4FB5\u8680+5\uFF0C\u7EA2\u8272\u623F\u5BA2\u4FB5\u8680+3"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

@@ -25,30 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_facility
-  eventTitle: "电路起火"
-  eventDescription: "电线短路了，走廊里闪过一道火花。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u7535\u8DEF\u8D77\u706B"
+  eventDescription: "\u7535\u7EBF\u77ED\u8DEF\u4E86\uFF0C\u8D70\u5ECA\u91CC\u95EA\u8FC7\u4E00\u9053\u706B\u82B1\u3002"
+  eventImage: {fileID: 21300000, guid: 4eeb52044bd7d3047a44cdd38bbf26bc, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】切断电路并修复"
-    choiceResult: "工程师切断电路并修复，消耗1货币。"
-    effectText: "消耗1货币"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u5207\u65AD\u7535\u8DEF\u5E76\u4FEE\u590D"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u5207\u65AD\u7535\u8DEF\u5E76\u4FEE\u590D\uFF0C\u6D88\u80171\u8D27\u5E01\u3002"
+    effectText: "\u6D88\u80171\u8D27\u5E01"
+    requiredTags: 03000000
     choiceEffects:
     - effectType: 2
       floatValue: -1
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，设施耐久-20%，全楼侵蚀+3。"
-    effectText: "设施耐久-20%，全楼侵蚀+3"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BBE\u65BD\u8010\u4E45-20%\uFF0C\u5168\u697C\u4FB5\u8680+3\u3002"
+    effectText: "\u8BBE\u65BD\u8010\u4E45-20%\uFF0C\u5168\u697C\u4FB5\u8680+3"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

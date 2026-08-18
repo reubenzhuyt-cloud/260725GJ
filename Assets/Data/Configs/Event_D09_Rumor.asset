@@ -30,41 +30,52 @@ MonoBehaviour:
       intValue: 1
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "谣言扩散"
-  eventDescription: "\"他们说XXX其实是伪人\"——这句话在旅馆里传开了。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u8C23\u8A00\u6269\u6563"
+  eventDescription: "\"\u4ED6\u4EEC\u8BF4XXX\u5176\u5B9E\u662F\u4F2A\u4EBA\"\u2014\u2014\u8FD9\u53E5\u8BDD\u5728\u65C5\u9986\u91CC\u4F20\u5F00\u4E86\u3002"
+  eventImage: {fileID: 21300000, guid: 09f519a8259c8584b9e506b212d7061b, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "公开调查"
-    choiceResult: "公开调查，消耗半天，全楼侵蚀-1。"
-    effectText: "消耗半天，全楼侵蚀-1"
-    requiredTags: []
+    choiceText: "\u516C\u5F00\u8C03\u67E5"
+    choiceResult: "\u516C\u5F00\u8C03\u67E5\uFF0C\u6D88\u8017\u534A\u5929\uFF0C\u5168\u697C\u4FB5\u8680-1\u3002"
+    effectText: "\u6D88\u8017\u534A\u5929\uFF0C\u5168\u697C\u4FB5\u8680-1"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -1
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "【教师】压制谣言"
-    choiceResult: "教师压制谣言，消耗2食物。"
-    effectText: "消耗2食物"
-    requiredTags:
-    - 10
+    choiceText: "\u3010\u6559\u5E08\u3011\u538B\u5236\u8C23\u8A00"
+    choiceResult: "\u6559\u5E08\u538B\u5236\u8C23\u8A00\uFF0C\u6D88\u80172\u98DF\u7269\u3002"
+    effectText: "\u6D88\u80172\u98DF\u7269"
+    requiredTags: 0a000000
     choiceEffects:
     - effectType: 2
       floatValue: -2
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: C
-    choiceText: "无视"
-    choiceResult: "无视，全楼侵蚀+2。"
-    effectText: "全楼侵蚀+2"
-    requiredTags: []
+    choiceText: "\u65E0\u89C6"
+    choiceResult: "\u65E0\u89C6\uFF0C\u5168\u697C\u4FB5\u8680+2\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

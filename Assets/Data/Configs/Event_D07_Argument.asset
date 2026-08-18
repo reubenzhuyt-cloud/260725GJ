@@ -30,37 +30,45 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "房客争吵"
-  eventDescription: "XXX和XXX在走廊里大声争吵。一个说\"他每天晚上都在盯着我\"，另一个说\"你疯了\"。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u623F\u5BA2\u4E89\u5435"
+  eventDescription: "XXX\u548CXXX\u5728\u8D70\u5ECA\u91CC\u5927\u58F0\u4E89\u5435\u3002\u4E00\u4E2A\u8BF4\"\u4ED6\u6BCF\u5929\u665A\u4E0A\u90FD\u5728\u76EF\u7740\u6211\"\uFF0C\u53E6\u4E00\u4E2A\u8BF4\"\u4F60\u75AF\u4E86\"\u3002"
+  eventImage: {fileID: 21300000, guid: 21e55c05eae043b44a04bc7d938f217e, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "介入调解"
-    choiceResult: "介入调解，消耗3食物。"
-    effectText: "消耗3食物"
-    requiredTags: []
+    choiceText: "\u4ECB\u5165\u8C03\u89E3"
+    choiceResult: "\u4ECB\u5165\u8C03\u89E3\uFF0C\u6D88\u80173\u98DF\u7269\u3002"
+    effectText: "\u6D88\u80173\u98DF\u7269"
+    requiredTags: 
     choiceEffects:
     - effectType: 2
       floatValue: -3
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "把两人分别安排到不同楼层"
-    choiceResult: "把两人分别安排到不同楼层。"
-    effectText: "把两人分别安排到不同楼层"
-    requiredTags: []
+    choiceText: "\u628A\u4E24\u4EBA\u5206\u522B\u5B89\u6392\u5230\u4E0D\u540C\u697C\u5C42"
+    choiceResult: "\u628A\u4E24\u4EBA\u5206\u522B\u5B89\u6392\u5230\u4E0D\u540C\u697C\u5C42\u3002"
+    effectText: "\u628A\u4E24\u4EBA\u5206\u522B\u5B89\u6392\u5230\u4E0D\u540C\u697C\u5C42"
+    requiredTags: 
     choiceEffects: []
   - choiceId: C
-    choiceText: "冷处理"
-    choiceResult: "冷处理，全楼侵蚀+1。"
-    effectText: "全楼侵蚀+1"
-    requiredTags: []
+    choiceText: "\u51B7\u5904\u7406"
+    choiceResult: "\u51B7\u5904\u7406\uFF0C\u5168\u697C\u4FB5\u8680+1\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+1"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 1
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

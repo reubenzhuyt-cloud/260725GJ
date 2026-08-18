@@ -30,48 +30,73 @@ MonoBehaviour:
       intValue: 0
       floatValue: 70
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_medical
-  eventTitle: "精神崩溃"
-  eventDescription: "XXX开始尖叫，反复用头撞击墙壁，仿佛看到了什么。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u7CBE\u795E\u5D29\u6E83"
+  eventDescription: "XXX\u5F00\u59CB\u5C16\u53EB\uFF0C\u53CD\u590D\u7528\u5934\u649E\u51FB\u5899\u58C1\uFF0C\u4EFF\u4F5B\u770B\u5230\u4E86\u4EC0\u4E48\u3002"
+  eventImage: {fileID: 21300000, guid: a3bee7e53f2c6ee469a752f3e908629e, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【医生】成功安抚"
-    choiceResult: "医生成功安抚，侵蚀度-6，消耗3货币。"
-    effectText: "侵蚀度-6，消耗3货币"
-    requiredTags:
-    - 1
+    choiceText: "\u3010\u533B\u751F\u3011\u6210\u529F\u5B89\u629A"
+    choiceResult: "\u533B\u751F\u6210\u529F\u5B89\u629A\uFF0C\u4FB5\u8680\u5EA6-6\uFF0C\u6D88\u80173\u8D27\u5E01\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-6\uFF0C\u6D88\u80173\u8D27\u5E01"
+    requiredTags: 01000000
     choiceEffects:
     - effectType: 1
       floatValue: -6
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 2
       floatValue: -3
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: A2
-    choiceText: "【教师】成功安抚"
-    choiceResult: "教师成功安抚，侵蚀度-6，消耗3货币。"
-    effectText: "侵蚀度-6，消耗3货币"
-    requiredTags:
-    - 10
+    choiceText: "\u3010\u6559\u5E08\u3011\u6210\u529F\u5B89\u629A"
+    choiceResult: "\u6559\u5E08\u6210\u529F\u5B89\u629A\uFF0C\u4FB5\u8680\u5EA6-6\uFF0C\u6D88\u80173\u8D27\u5E01\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-6\uFF0C\u6D88\u80173\u8D27\u5E01"
+    requiredTags: 0a000000
     choiceEffects:
     - effectType: 1
       floatValue: -6
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 2
       floatValue: -3
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房客侵蚀度+20，同层房客侵蚀度+5。"
-    effectText: "该房客侵蚀度+20，同层房客侵蚀度+5"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+20\uFF0C\u540C\u5C42\u623F\u5BA2\u4FB5\u8680\u5EA6+5\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+20\uFF0C\u540C\u5C42\u623F\u5BA2\u4FB5\u8680\u5EA6+5"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 5
       target: 3
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: 20
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

@@ -25,28 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_medical
-  eventTitle: "高烧"
-  eventDescription: "半夜，XXX开始高烧不退，身体滚烫，说着胡话。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u9AD8\u70E7"
+  eventDescription: "\u534A\u591C\uFF0CXXX\u5F00\u59CB\u9AD8\u70E7\u4E0D\u9000\uFF0C\u8EAB\u4F53\u6EDA\u70EB\uFF0C\u8BF4\u7740\u80E1\u8BDD\u3002"
+  eventImage: {fileID: 21300000, guid: ac31b3aa5403ea7418fb91fbe094ba01, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【医生】进行治疗"
-    choiceResult: "医生进行治疗，侵蚀度-3，次日康复。"
-    effectText: "侵蚀度-3，次日康复"
-    requiredTags:
-    - 1
+    choiceText: "\u3010\u533B\u751F\u3011\u8FDB\u884C\u6CBB\u7597"
+    choiceResult: "\u533B\u751F\u8FDB\u884C\u6CBB\u7597\uFF0C\u4FB5\u8680\u5EA6-3\uFF0C\u6B21\u65E5\u5EB7\u590D\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-3\uFF0C\u6B21\u65E5\u5EB7\u590D"
+    requiredTags: 01000000
     choiceEffects:
     - effectType: 1
       floatValue: -3
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房客侵蚀度+10，次日效率-50%。"
-    effectText: "该房客侵蚀度+10，次日效率-50%"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+10\uFF0C\u6B21\u65E5\u6548\u7387-50%\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+10\uFF0C\u6B21\u65E5\u6548\u7387-50%"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 10
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

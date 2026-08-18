@@ -25,27 +25,33 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_weather
-  eventTitle: "异常声响"
-  eventDescription: "天空传来一声低沉的号角声，持续了整整一分钟。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u5F02\u5E38\u58F0\u54CD"
+  eventDescription: "\u5929\u7A7A\u4F20\u6765\u4E00\u58F0\u4F4E\u6C89\u7684\u53F7\u89D2\u58F0\uFF0C\u6301\u7EED\u4E86\u6574\u6574\u4E00\u5206\u949F\u3002"
+  eventImage: {fileID: 21300000, guid: 90fa2df5bf2128c4ebd61bcedc915121, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【司机】派司机探查方向"
-    choiceResult: "派司机探查方向，成功获线索，失败司机侵蚀+5。"
-    effectText: "成功获线索，失败司机侵蚀+5"
-    requiredTags:
-    - 9
+    choiceText: "\u3010\u53F8\u673A\u3011\u6D3E\u53F8\u673A\u63A2\u67E5\u65B9\u5411"
+    choiceResult: "\u6D3E\u53F8\u673A\u63A2\u67E5\u65B9\u5411\uFF0C\u6210\u529F\u83B7\u7EBF\u7D22\uFF0C\u5931\u8D25\u53F8\u673A\u4FB5\u8680+5\u3002"
+    effectText: "\u6210\u529F\u83B7\u7EBF\u7D22\uFF0C\u5931\u8D25\u53F8\u673A\u4FB5\u8680+5"
+    requiredTags: 09000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "安抚房客"
-    choiceResult: "安抚房客，全楼侵蚀-2。"
-    effectText: "全楼侵蚀-2"
-    requiredTags: []
+    choiceText: "\u5B89\u629A\u623F\u5BA2"
+    choiceResult: "\u5B89\u629A\u623F\u5BA2\uFF0C\u5168\u697C\u4FB5\u8680-2\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680-2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

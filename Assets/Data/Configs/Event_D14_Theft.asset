@@ -30,38 +30,45 @@ MonoBehaviour:
       intValue: 0
       floatValue: 50
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "偷窃事件"
-  eventDescription: "有人偷了仓库里的食物。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u5077\u7A83\u4E8B\u4EF6"
+  eventDescription: "\u6709\u4EBA\u5077\u4E86\u4ED3\u5E93\u91CC\u7684\u98DF\u7269\u3002"
+  eventImage: {fileID: 21300000, guid: e95aa4771603a854f8d6ea0c6da059a7, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "全楼搜查"
-    choiceResult: "全楼搜查，全楼侵蚀+2。"
-    effectText: "全楼侵蚀+2"
-    requiredTags: []
+    choiceText: "\u5168\u697C\u641C\u67E5"
+    choiceResult: "\u5168\u697C\u641C\u67E5\uFF0C\u5168\u697C\u4FB5\u8680+2\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "【守夜人】设陷阱"
-    choiceResult: "守夜人设陷阱。"
-    effectText: "设陷阱"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u8BBE\u9677\u9631"
+    choiceResult: "\u5B88\u591C\u4EBA\u8BBE\u9677\u9631\u3002"
+    effectText: "\u8BBE\u9677\u9631"
+    requiredTags: 04000000
     choiceEffects: []
   - choiceId: C
-    choiceText: "无视"
-    choiceResult: "无视，损失5食物。"
-    effectText: "损失5食物"
-    requiredTags: []
+    choiceText: "\u65E0\u89C6"
+    choiceResult: "\u65E0\u89C6\uFF0C\u635F\u59315\u98DF\u7269\u3002"
+    effectText: "\u635F\u59315\u98DF\u7269"
+    requiredTags: 
     choiceEffects:
     - effectType: 2
       floatValue: -5
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

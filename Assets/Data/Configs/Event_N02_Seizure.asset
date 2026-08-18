@@ -30,36 +30,53 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_medical
-  eventTitle: "癫痫发作"
-  eventDescription: "XXX突然在房间里剧烈抽搐，口吐白沫。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u766B\u75EB\u53D1\u4F5C"
+  eventDescription: "XXX\u7A81\u7136\u5728\u623F\u95F4\u91CC\u5267\u70C8\u62BD\u6410\uFF0C\u53E3\u5410\u767D\u6CAB\u3002"
+  eventImage: {fileID: 21300000, guid: e90b649a8213ab24e8095b28913c4a6d, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【医生】成功控制"
-    choiceResult: "医生成功控制，侵蚀度-4，消耗3货币买药。"
-    effectText: "侵蚀度-4，消耗3货币买药"
-    requiredTags:
-    - 1
+    choiceText: "\u3010\u533B\u751F\u3011\u6210\u529F\u63A7\u5236"
+    choiceResult: "\u533B\u751F\u6210\u529F\u63A7\u5236\uFF0C\u4FB5\u8680\u5EA6-4\uFF0C\u6D88\u80173\u8D27\u5E01\u4E70\u836F\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-4\uFF0C\u6D88\u80173\u8D27\u5E01\u4E70\u836F"
+    requiredTags: 01000000
     choiceEffects:
     - effectType: 1
       floatValue: -4
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 2
       floatValue: -3
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房客侵蚀度+15，同房其他房客侵蚀度+3。"
-    effectText: "该房客侵蚀度+15，同房其他房客侵蚀度+3"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+15\uFF0C\u540C\u623F\u5176\u4ED6\u623F\u5BA2\u4FB5\u8680\u5EA6+3\u3002"
+    effectText: "\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+15\uFF0C\u540C\u623F\u5176\u4ED6\u623F\u5BA2\u4FB5\u8680\u5EA6+3"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 2
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: 15
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

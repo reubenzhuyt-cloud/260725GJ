@@ -30,30 +30,39 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 10
     category: night_behavior
-  eventTitle: "食物异常"
-  eventDescription: "XXX把食物摆成奇怪的形状后才肯吃。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u98DF\u7269\u5F02\u5E38"
+  eventDescription: "XXX\u628A\u98DF\u7269\u6446\u6210\u5947\u602A\u7684\u5F62\u72B6\u540E\u624D\u80AF\u5403\u3002"
+  eventImage: {fileID: 21300000, guid: f4a337e827a52254f8000a381a2c6ff6, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【厨师】重新烹饪"
-    choiceResult: "厨师重新烹饪，侵蚀度-2。"
-    effectText: "侵蚀度-2"
-    requiredTags:
-    - 2
+    choiceText: "\u3010\u53A8\u5E08\u3011\u91CD\u65B0\u70F9\u996A"
+    choiceResult: "\u53A8\u5E08\u91CD\u65B0\u70F9\u996A\uFF0C\u4FB5\u8680\u5EA6-2\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-2"
+    requiredTags: 02000000
     choiceEffects:
     - effectType: 1
       floatValue: -2
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "房客在怪异的仪式感中进食，侵蚀加深。"
-    effectText: "侵蚀度+5"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u623F\u5BA2\u5728\u602A\u5F02\u7684\u4EEA\u5F0F\u611F\u4E2D\u8FDB\u98DF\uFF0C\u4FB5\u8680\u52A0\u6DF1\u3002"
+    effectText: "\u4FB5\u8680\u5EA6+5"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 5
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

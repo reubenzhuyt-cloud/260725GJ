@@ -25,27 +25,33 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_intrusion
-  eventTitle: "野狗群"
-  eventDescription: "一群野狗在旅馆外徘徊，发出低吼。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u91CE\u72D7\u7FA4"
+  eventDescription: "\u4E00\u7FA4\u91CE\u72D7\u5728\u65C5\u9986\u5916\u5F98\u5F8A\uFF0C\u53D1\u51FA\u4F4E\u543C\u3002"
+  eventImage: {fileID: 21300000, guid: 2b470027d232d6744b828f7aa4b98dc2, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【守夜人】驱散"
-    choiceResult: "守夜人驱散，无影响。"
-    effectText: "无影响"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u9A71\u6563"
+    choiceResult: "\u5B88\u591C\u4EBA\u9A71\u6563\uFF0C\u65E0\u5F71\u54CD\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 04000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，次日外出探索不可用，全楼侵蚀+2。"
-    effectText: "次日外出探索不可用，全楼侵蚀+2"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u6B21\u65E5\u5916\u51FA\u63A2\u7D22\u4E0D\u53EF\u7528\uFF0C\u5168\u697C\u4FB5\u8680+2\u3002"
+    effectText: "\u6B21\u65E5\u5916\u51FA\u63A2\u7D22\u4E0D\u53EF\u7528\uFF0C\u5168\u697C\u4FB5\u8680+2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

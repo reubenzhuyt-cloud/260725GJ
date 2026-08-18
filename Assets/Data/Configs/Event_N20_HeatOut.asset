@@ -25,27 +25,33 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_facility
-  eventTitle: "供暖中断"
-  eventDescription: "半夜暖气管停止了响动——没有暖气了。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u4F9B\u6696\u4E2D\u65AD"
+  eventDescription: "\u534A\u591C\u6696\u6C14\u7BA1\u505C\u6B62\u4E86\u54CD\u52A8\u2014\u2014\u6CA1\u6709\u6696\u6C14\u4E86\u3002"
+  eventImage: {fileID: 21300000, guid: 2dbce18d6ba7ca042a036c62654b47d8, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】检查"
-    choiceResult: "工程师检查，发现是阀门被关。"
-    effectText: "发现是阀门被关"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u68C0\u67E5"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u68C0\u67E5\uFF0C\u53D1\u73B0\u662F\u9600\u95E8\u88AB\u5173\u3002"
+    effectText: "\u53D1\u73B0\u662F\u9600\u95E8\u88AB\u5173"
+    requiredTags: 03000000
     choiceEffects: []
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，全楼房客侵蚀+5。"
-    effectText: "全楼房客侵蚀+5"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u5168\u697C\u623F\u5BA2\u4FB5\u8680+5\u3002"
+    effectText: "\u5168\u697C\u623F\u5BA2\u4FB5\u8680+5"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 5
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

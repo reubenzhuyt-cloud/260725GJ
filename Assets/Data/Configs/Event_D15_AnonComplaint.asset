@@ -25,26 +25,33 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "匿名投诉"
-  eventDescription: "经理室门缝下塞进来一封信，列举了对旅馆管理的多项不满。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u533F\u540D\u6295\u8BC9"
+  eventDescription: "\u7ECF\u7406\u5BA4\u95E8\u7F1D\u4E0B\u585E\u8FDB\u6765\u4E00\u5C01\u4FE1\uFF0C\u5217\u4E3E\u4E86\u5BF9\u65C5\u9986\u7BA1\u7406\u7684\u591A\u9879\u4E0D\u6EE1\u3002"
+  eventImage: {fileID: 21300000, guid: b6be0e0621a44c547afbede2765c7a3a, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "公开回应"
-    choiceResult: "公开回应，全楼侵蚀-2。"
-    effectText: "全楼侵蚀-2"
-    requiredTags: []
+    choiceText: "\u516C\u5F00\u56DE\u5E94"
+    choiceResult: "\u516C\u5F00\u56DE\u5E94\uFF0C\u5168\u697C\u4FB5\u8680-2\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680-2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "调查是谁写的"
-    choiceResult: "调查是谁写的。"
-    effectText: "无影响"
-    requiredTags: []
+    choiceText: "\u8C03\u67E5\u662F\u8C01\u5199\u7684"
+    choiceResult: "\u8C03\u67E5\u662F\u8C01\u5199\u7684\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 
     choiceEffects: []

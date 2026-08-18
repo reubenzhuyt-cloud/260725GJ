@@ -30,31 +30,39 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_facility
-  eventTitle: "窗户碎裂"
-  eventDescription: "暴风把窗户吹碎了，冷风和雨水灌进来。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u7A97\u6237\u788E\u88C2"
+  eventDescription: "\u66B4\u98CE\u628A\u7A97\u6237\u5439\u788E\u4E86\uFF0C\u51B7\u98CE\u548C\u96E8\u6C34\u704C\u8FDB\u6765\u3002"
+  eventImage: {fileID: 21300000, guid: 316ea195170c3f14ba4242cb8d9a506e, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】临时修补"
-    choiceResult: "工程师临时修补，消耗1货币。"
-    effectText: "消耗1货币"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u4E34\u65F6\u4FEE\u8865"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u4E34\u65F6\u4FEE\u8865\uFF0C\u6D88\u80171\u8D27\u5E01\u3002"
+    effectText: "\u6D88\u80171\u8D27\u5E01"
+    requiredTags: 03000000
     choiceEffects:
     - effectType: 2
       floatValue: -1
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，该房间房客侵蚀+8，设施耐久-15%。"
-    effectText: "该房间房客侵蚀+8，设施耐久-15%"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u8BE5\u623F\u95F4\u623F\u5BA2\u4FB5\u8680+8\uFF0C\u8BBE\u65BD\u8010\u4E45-15%\u3002"
+    effectText: "\u8BE5\u623F\u95F4\u623F\u5BA2\u4FB5\u8680+8\uFF0C\u8BBE\u65BD\u8010\u4E45-15%"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 8
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

@@ -30,33 +30,46 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_behavior
-  eventTitle: "自言自语"
-  eventDescription: "XXX坐在床边，对着空荡荡的墙壁说了整整两个小时的话。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u81EA\u8A00\u81EA\u8BED"
+  eventDescription: "XXX\u5750\u5728\u5E8A\u8FB9\uFF0C\u5BF9\u7740\u7A7A\u8361\u8361\u7684\u5899\u58C1\u8BF4\u4E86\u6574\u6574\u4E24\u4E2A\u5C0F\u65F6\u7684\u8BDD\u3002"
+  eventImage: {fileID: 21300000, guid: 1defbfc9bf99f424e958e617d2a506df, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【医生】介入谈话"
-    choiceResult: "医生介入谈话，侵蚀度-5。"
-    effectText: "侵蚀度-5"
-    requiredTags:
-    - 1
+    choiceText: "\u3010\u533B\u751F\u3011\u4ECB\u5165\u8C08\u8BDD"
+    choiceResult: "\u533B\u751F\u4ECB\u5165\u8C08\u8BDD\uFF0C\u4FB5\u8680\u5EA6-5\u3002"
+    effectText: "\u4FB5\u8680\u5EA6-5"
+    requiredTags: 01000000
     choiceEffects:
     - effectType: 1
       floatValue: -5
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，同房房客侵蚀度+3，该房客侵蚀度+5。"
-    effectText: "同房房客侵蚀度+3，该房客侵蚀度+5"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u540C\u623F\u623F\u5BA2\u4FB5\u8680\u5EA6+3\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+5\u3002"
+    effectText: "\u540C\u623F\u623F\u5BA2\u4FB5\u8680\u5EA6+3\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680\u5EA6+5"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 2
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: 5
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

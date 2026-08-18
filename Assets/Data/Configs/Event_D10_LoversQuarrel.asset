@@ -25,33 +25,39 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "情侣争执"
-  eventDescription: "一对情侣在公共区域大声争吵，女方哭着说\"你变了\"。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u60C5\u4FA3\u4E89\u6267"
+  eventDescription: "\u4E00\u5BF9\u60C5\u4FA3\u5728\u516C\u5171\u533A\u57DF\u5927\u58F0\u4E89\u5435\uFF0C\u5973\u65B9\u54ED\u7740\u8BF4\"\u4F60\u53D8\u4E86\"\u3002"
+  eventImage: {fileID: 21300000, guid: 3cb95096b99ac3048999b23369e6226b, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【教师】介入调解"
-    choiceResult: "教师介入调解，消耗2食物。"
-    effectText: "消耗2食物"
-    requiredTags:
-    - 10
+    choiceText: "\u3010\u6559\u5E08\u3011\u4ECB\u5165\u8C03\u89E3"
+    choiceResult: "\u6559\u5E08\u4ECB\u5165\u8C03\u89E3\uFF0C\u6D88\u80172\u98DF\u7269\u3002"
+    effectText: "\u6D88\u80172\u98DF\u7269"
+    requiredTags: 0a000000
     choiceEffects:
     - effectType: 2
       floatValue: -2
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "给他们单独房间"
-    choiceResult: "给他们单独房间，消耗1间空房。"
-    effectText: "消耗1间空房"
-    requiredTags: []
+    choiceText: "\u7ED9\u4ED6\u4EEC\u5355\u72EC\u623F\u95F4"
+    choiceResult: "\u7ED9\u4ED6\u4EEC\u5355\u72EC\u623F\u95F4\uFF0C\u6D88\u80171\u95F4\u7A7A\u623F\u3002"
+    effectText: "\u6D88\u80171\u95F4\u7A7A\u623F"
+    requiredTags: 
     choiceEffects: []
   - choiceId: C
-    choiceText: "冷处理"
-    choiceResult: "冷处理。"
-    effectText: "无影响"
-    requiredTags: []
+    choiceText: "\u51B7\u5904\u7406"
+    choiceResult: "\u51B7\u5904\u7406\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 
     choiceEffects: []

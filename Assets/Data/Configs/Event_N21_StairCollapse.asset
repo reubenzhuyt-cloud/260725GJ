@@ -25,30 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: night_facility
-  eventTitle: "楼梯塌陷"
-  eventDescription: "一声巨响——通往二楼的楼梯塌了一半。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u697C\u68AF\u584C\u9677"
+  eventDescription: "\u4E00\u58F0\u5DE8\u54CD\u2014\u2014\u901A\u5F80\u4E8C\u697C\u7684\u697C\u68AF\u584C\u4E86\u4E00\u534A\u3002"
+  eventImage: {fileID: 21300000, guid: 927597e5f05000848b5180f8454f5e62, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】修复"
-    choiceResult: "工程师修复，消耗8食物+5货币+1天修复。"
-    effectText: "消耗8食物+5货币+1天修复"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u4FEE\u590D"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u4FEE\u590D\uFF0C\u6D88\u80178\u98DF\u7269+5\u8D27\u5E01+1\u5929\u4FEE\u590D\u3002"
+    effectText: "\u6D88\u80178\u98DF\u7269+5\u8D27\u5E01+1\u5929\u4FEE\u590D"
+    requiredTags: 03000000
     choiceEffects:
     - effectType: 2
       floatValue: -8
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 2
       floatValue: -5
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，二三楼层被阻断，上层房客侵蚀度+5/天直至修复。"
-    effectText: "二三楼层被阻断，上层房客侵蚀度+5/天直至修复"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u4E8C\u4E09\u697C\u5C42\u88AB\u963B\u65AD\uFF0C\u4E0A\u5C42\u623F\u5BA2\u4FB5\u8680\u5EA6+5/\u5929\u76F4\u81F3\u4FEE\u590D\u3002"
+    effectText: "\u4E8C\u4E09\u697C\u5C42\u88AB\u963B\u65AD\uFF0C\u4E0A\u5C42\u623F\u5BA2\u4FB5\u8680\u5EA6+5/\u5929\u76F4\u81F3\u4FEE\u590D"
+    requiredTags: 
     choiceEffects: []

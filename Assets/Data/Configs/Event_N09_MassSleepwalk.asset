@@ -30,32 +30,39 @@ MonoBehaviour:
       intValue: 3
       floatValue: 0
       stringValue: 
-    requireAll: true
+    requireAll: 0
     weightScale: 0
     baseWeight: 8
     category: night_pollution
-  eventTitle: "集体梦游"
-  eventDescription: "半夜，多名房客同时起身，排成一行在走廊里行走。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u96C6\u4F53\u68A6\u6E38"
+  eventDescription: "\u534A\u591C\uFF0C\u591A\u540D\u623F\u5BA2\u540C\u65F6\u8D77\u8EAB\uFF0C\u6392\u6210\u4E00\u884C\u5728\u8D70\u5ECA\u91CC\u884C\u8D70\u3002"
+  eventImage: {fileID: 21300000, guid: bde9a430b9566c5409000625505d5ef3, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【守夜人】逐一唤醒带回"
-    choiceResult: "守夜人逐一唤醒带回，每人侵蚀+2。"
-    effectText: "每人侵蚀+2"
-    requiredTags:
-    - 4
+    choiceText: "\u3010\u5B88\u591C\u4EBA\u3011\u9010\u4E00\u5524\u9192\u5E26\u56DE"
+    choiceResult: "\u5B88\u591C\u4EBA\u9010\u4E00\u5524\u9192\u5E26\u56DE\uFF0C\u6BCF\u4EBA\u4FB5\u8680+2\u3002"
+    effectText: "\u6BCF\u4EBA\u4FB5\u8680+2"
+    requiredTags: 04000000
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "无人处理"
-    choiceResult: "无人处理，每人侵蚀+8，全楼侵蚀+2。"
-    effectText: "每人侵蚀+8，全楼侵蚀+2"
-    requiredTags: []
+    choiceText: "\u65E0\u4EBA\u5904\u7406"
+    choiceResult: "\u65E0\u4EBA\u5904\u7406\uFF0C\u6BCF\u4EBA\u4FB5\u8680+8\uFF0C\u5168\u697C\u4FB5\u8680+2\u3002"
+    effectText: "\u6BCF\u4EBA\u4FB5\u8680+8\uFF0C\u5168\u697C\u4FB5\u8680+2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

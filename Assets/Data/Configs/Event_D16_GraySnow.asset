@@ -25,30 +25,40 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_weather
-  eventTitle: "灰雪"
-  eventDescription: "天空中飘起了灰黑色的雪——这不是普通的雪。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u7070\u96EA"
+  eventDescription: "\u5929\u7A7A\u4E2D\u98D8\u8D77\u4E86\u7070\u9ED1\u8272\u7684\u96EA\u2014\u2014\u8FD9\u4E0D\u662F\u666E\u901A\u7684\u96EA\u3002"
+  eventImage: {fileID: 21300000, guid: 1af29b240032f6e4986f37a1e211f736, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "【工程师】封锁门窗"
-    choiceResult: "工程师封锁门窗，消耗2食物。"
-    effectText: "消耗2食物"
-    requiredTags:
-    - 3
+    choiceText: "\u3010\u5DE5\u7A0B\u5E08\u3011\u5C01\u9501\u95E8\u7A97"
+    choiceResult: "\u5DE5\u7A0B\u5E08\u5C01\u9501\u95E8\u7A97\uFF0C\u6D88\u80172\u98DF\u7269\u3002"
+    effectText: "\u6D88\u80172\u98DF\u7269"
+    requiredTags: 03000000
     choiceEffects:
     - effectType: 2
       floatValue: -2
+      target: 0
       stringValue: food
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "提醒房客不要外出"
-    choiceResult: "提醒房客不要外出，全楼侵蚀-1。"
-    effectText: "全楼侵蚀-1"
-    requiredTags: []
+    choiceText: "\u63D0\u9192\u623F\u5BA2\u4E0D\u8981\u5916\u51FA"
+    choiceResult: "\u63D0\u9192\u623F\u5BA2\u4E0D\u8981\u5916\u51FA\uFF0C\u5168\u697C\u4FB5\u8680-1\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680-1"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -1
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0

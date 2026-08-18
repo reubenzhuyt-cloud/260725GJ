@@ -25,40 +25,60 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "霸凌事件"
-  eventDescription: "几个房客在嘲笑XXX，因为他昨晚行为异常。"
-  eventImage: {fileID: 0}
+  eventTitle: "\u9738\u51CC\u4E8B\u4EF6"
+  eventDescription: "\u51E0\u4E2A\u623F\u5BA2\u5728\u5632\u7B11XXX\uFF0C\u56E0\u4E3A\u4ED6\u6628\u665A\u884C\u4E3A\u5F02\u5E38\u3002"
+  eventImage: {fileID: 21300000, guid: bb9462988cc2b234d8dccb2382da5201, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "制止霸凌"
-    choiceResult: "制止霸凌，全楼侵蚀-2。"
-    effectText: "全楼侵蚀-2"
-    requiredTags: []
+    choiceText: "\u5236\u6B62\u9738\u51CC"
+    choiceResult: "\u5236\u6B62\u9738\u51CC\uFF0C\u5168\u697C\u4FB5\u8680-2\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680-2"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: -2
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: B
-    choiceText: "私下安慰受害者"
-    choiceResult: "私下安慰受害者，消耗2货币，该房客侵蚀-3。"
-    effectText: "消耗2货币，该房客侵蚀-3"
-    requiredTags: []
+    choiceText: "\u79C1\u4E0B\u5B89\u6170\u53D7\u5BB3\u8005"
+    choiceResult: "\u79C1\u4E0B\u5B89\u6170\u53D7\u5BB3\u8005\uFF0C\u6D88\u80172\u8D27\u5E01\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680-3\u3002"
+    effectText: "\u6D88\u80172\u8D27\u5E01\uFF0C\u8BE5\u623F\u5BA2\u4FB5\u8680-3"
+    requiredTags: 
     choiceEffects:
     - effectType: 2
       floatValue: -2
+      target: 0
       stringValue: currency
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
     - effectType: 1
       floatValue: -3
+      target: 0
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
   - choiceId: C
-    choiceText: "无视"
-    choiceResult: "无视，全楼侵蚀+3。"
-    effectText: "全楼侵蚀+3"
-    requiredTags: []
+    choiceText: "\u65E0\u89C6"
+    choiceResult: "\u65E0\u89C6\uFF0C\u5168\u697C\u4FB5\u8680+3\u3002"
+    effectText: "\u5168\u697C\u4FB5\u8680+3"
+    requiredTags: 
     choiceEffects:
     - effectType: 1
       floatValue: 3
       target: 1
+      stringValue: 
+      intValue: 0
+      durationTicks: 0
+      conditionKind: 0
