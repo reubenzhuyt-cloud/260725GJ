@@ -2107,7 +2107,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1534724626}
         m_TargetAssemblyTypeName: GameSettingController, Assembly-CSharp
         m_MethodName: OnFrameRateChanged
-        m_Mode: 3
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -3208,7 +3208,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1534724626}
         m_TargetAssemblyTypeName: GameSettingController, Assembly-CSharp
         m_MethodName: OnDisplayModeChanged
-        m_Mode: 3
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -6241,7 +6241,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1534724626}
         m_TargetAssemblyTypeName: GameSettingController, Assembly-CSharp
         m_MethodName: OnBgmVolumeChanged
-        m_Mode: 4
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -7030,11 +7030,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 585241873}
+  - {fileID: 1135859304}
   - {fileID: 1613615222}
   - {fileID: 1845144459}
   - {fileID: 38737030}
   - {fileID: 1324614488}
-  - {fileID: 1135859304}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -8875,8 +8875,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 100}
-  m_SizeDelta: {x: 627.84, y: 150.115}
+  m_AnchoredPosition: {x: -5.798, y: 147.724}
+  m_SizeDelta: {x: 701.596, y: 245.563}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1316234188
 MonoBehaviour:
@@ -10311,6 +10311,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiManager: {fileID: 0}
+  pauseOverlay: {fileID: 1324614487}
   displayModeDropdown: {fileID: 456584904}
   resolutionDropdown: {fileID: 1860259821}
   frameRateDropdown: {fileID: 361410925}
@@ -11709,7 +11710,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1534724626}
         m_TargetAssemblyTypeName: GameSettingController, Assembly-CSharp
         m_MethodName: OnSfxVolumeChanged
-        m_Mode: 4
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -12308,7 +12309,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1534724626}
         m_TargetAssemblyTypeName: GameSettingController, Assembly-CSharp
         m_MethodName: OnResolutionChanged
-        m_Mode: 3
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -13481,8 +13482,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -17.999983, y: -0.000045776367}
-  m_SizeDelta: {x: 800, y: 132.435}
+  m_AnchoredPosition: {x: -9.346, y: -0.000045776367}
+  m_SizeDelta: {x: 609.148, y: 132.435}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1975343498
 MonoBehaviour:
@@ -13531,10 +13532,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 104
+  m_fontSize: 72
   m_fontSizeBase: 104
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
