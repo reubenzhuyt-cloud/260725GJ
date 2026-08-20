@@ -21,6 +21,7 @@ public sealed class GameSettingController : MonoBehaviour
     private static readonly int[] ResolutionHeights = { 720, 900, 1080, 1440 };
 
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private GameObject pauseOverlay;
     [SerializeField] private TMP_Dropdown displayModeDropdown;
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private TMP_Dropdown frameRateDropdown;
@@ -30,6 +31,9 @@ public sealed class GameSettingController : MonoBehaviour
     private GameSettingsData settings;
     private float timeScaleBeforePause = 1f;
     private bool isPauseMenuOpen;
+
+    private bool IsOverlayVisible =>
+        uiManager != null ? uiManager.IsPauseOverlayVisible : pauseOverlay != null && pauseOverlay.activeSelf;
 
     private void Awake()
     {
@@ -63,8 +67,8 @@ public sealed class GameSettingController : MonoBehaviour
 
     public void TogglePauseMenu()
     {
-        if (uiManager == null) return;
-        if (uiManager.IsPauseOverlayVisible)
+        if (uiManager == null && pauseOverlay == null) return;
+        if (IsOverlayVisible)
             ClosePauseMenu();
         else
             OpenPauseMenu();
@@ -72,10 +76,10 @@ public sealed class GameSettingController : MonoBehaviour
 
     public void OpenPauseMenu()
     {
-        if (uiManager == null) return;
+        if (uiManager == null && pauseOverlay == null) return;
         if (isPauseMenuOpen)
         {
-            if (uiManager.IsPauseOverlayVisible)
+            if (IsOverlayVisible)
                 return;
 
             Time.timeScale = timeScaleBeforePause;
@@ -84,16 +88,22 @@ public sealed class GameSettingController : MonoBehaviour
 
         timeScaleBeforePause = Time.timeScale;
         isPauseMenuOpen = true;
-        uiManager.ShowPauseOverlay();
+        if (uiManager != null)
+            uiManager.ShowPauseOverlay();
+        else
+            pauseOverlay.SetActive(true);
         Time.timeScale = 0f;
         RefreshUiFromRuntimeState();
     }
 
     public void ClosePauseMenu()
     {
-        if (uiManager == null || !isPauseMenuOpen) return;
+        if ((uiManager == null && pauseOverlay == null) || !isPauseMenuOpen) return;
         isPauseMenuOpen = false;
-        uiManager.HidePauseOverlay();
+        if (uiManager != null)
+            uiManager.HidePauseOverlay();
+        else
+            pauseOverlay.SetActive(false);
         Time.timeScale = timeScaleBeforePause;
     }
 
@@ -265,6 +275,8 @@ public sealed class GameSettingController : MonoBehaviour
         if (!isPauseMenuOpen) return;
         if (uiManager != null)
             uiManager.HidePauseOverlay();
+        else if (pauseOverlay != null)
+            pauseOverlay.SetActive(false);
         isPauseMenuOpen = false;
         Time.timeScale = timeScaleBeforePause;
     }
