@@ -16,7 +16,7 @@ MonoBehaviour:
   eventId: d12_merchant
   trigger:
     eligiblePhases: 1
-    kind: 0
+    kind: 3
     minDay: 1
     maxDay: 0
     repeatPolicy: 1
@@ -25,30 +25,32 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions: []
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_management
-  eventTitle: "商贩到访"
-  eventDescription: "一辆破旧的面包车停在旅馆门口——是流浪商人。"
+  eventTitle: "\u5546\u8D29\u5230\u8BBF"
+  eventDescription: "\u4E00\u8F86\u7834\u65E7\u7684\u9762\u5305\u8F66\u505C\u5728\u65C5\u9986\u95E8\u53E3\u2014\u2014\u662F\u6D41\u6D6A\u5546\u4EBA\u3002"
   eventImage: {fileID: 0}
   eventType: 1
   confirmEffects: []
   choices:
   - choiceId: A
-    choiceText: "交易"
-    choiceResult: "交易，货币换物资。"
-    effectText: "货币换物资"
-    requiredTags: []
+    choiceText: "\u4EA4\u6613"
+    choiceResult: "\u4EA4\u6613\uFF0C\u8D27\u5E01\u6362\u7269\u8D44\u3002"
+    effectText: "\u8D27\u5E01\u6362\u7269\u8D44"
+    requiredTags: 
     choiceEffects: []
   - choiceId: B
-    choiceText: "【司机】用情报换物资"
-    choiceResult: "司机用情报换物资。"
-    effectText: "用情报换物资"
-    requiredTags:
-    - 9
+    choiceText: "\u3010\u53F8\u673A\u3011\u7528\u60C5\u62A5\u6362\u7269\u8D44"
+    choiceResult: "\u53F8\u673A\u7528\u60C5\u62A5\u6362\u7269\u8D44\u3002"
+    effectText: "\u7528\u60C5\u62A5\u6362\u7269\u8D44"
+    requiredTags: 09000000
     choiceEffects: []
   - choiceId: C
-    choiceText: "赶走"
-    choiceResult: "赶走商贩。"
-    effectText: "无影响"
-    requiredTags: []
+    choiceText: "\u8D76\u8D70"
+    choiceResult: "\u8D76\u8D70\u5546\u8D29\u3002"
+    effectText: "\u65E0\u5F71\u54CD"
+    requiredTags: 
     choiceEffects: []

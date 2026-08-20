@@ -608,6 +608,11 @@ public class ItemUseManager : MonoBehaviour
         InventoryChanged?.Invoke();
     }
 
+    public static void NotifyInventoryChanged()
+    {
+        InventoryChanged?.Invoke();
+    }
+
     private void ShowMessage(string message)
     {
         if (uiManager != null)

@@ -12,6 +12,10 @@ public class EventManager : MonoBehaviour
     [Header("Event Catalog (single list; filtered at runtime by TriggerSpec)")]
     public List<EventConfig> allEvents = new List<EventConfig>();
 
+    [Header("Special Visitors")]
+    public List<EventConfig> specialVisitorConfigs = new List<EventConfig>();
+    [SerializeField] private bool testForceDay1Merchant = false;
+
     [Header("Probability Settings")]
     [Tooltip("Chance (percent) that the Day phase enqueues an event when eligible candidates exist. Defaults inside the 40-60 band.")]
     [Range(0, 100)] public int dayEventChance = 50;
@@ -58,6 +62,7 @@ public class EventManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        SpecialVisitorManager.ForceDay1MerchantTest = testForceDay1Merchant;
         _effectManager = new EventEffectManager();
         runtimeWeightModifiers.Clear();
         _plannedDay = -1;
@@ -151,6 +156,7 @@ public class EventManager : MonoBehaviour
 
         if (data.phase == GamePhase.Day)
         {
+            EnqueueDueSpecialVisitorEvents(data.day);
             EnqueueDueChainEvents(data.day);
         }
 
@@ -258,6 +264,7 @@ public class EventManager : MonoBehaviour
                 bridge.RunState,
                 candidates,
                 RoomFloorRegistry.Instance);
+
             if (candidatesForPhase == null || candidatesForPhase.Count == 0) continue;
 
             int baseSeed = EventSelectionService.ComputeSelectionSeed(state.Seed, phaseDay, phase, occurrence);
@@ -378,37 +385,57 @@ public class EventManager : MonoBehaviour
                 Debug.LogError("[EventManager] onPopupEvent channel is null; cannot display popup. Skipping event safely so the phase can complete.");
                 continue;
             }
+
+            var bridge = SettlementBridge.Instance;
+            if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
+            {
+                Debug.LogWarning($"[EventManager] SettlementBridge unavailable when dequeuing '{next.eventId}'; deferring presentation.");
+                return;
+            }
+
             EventConfig config = eventQueue.Dequeue();
-            TriggerEvent(config);
+            bool triggered = TriggerEvent(config);
+            if (!triggered)
+            {
+                return;
+            }
             return;
         }
         NotifyQueueEmpty();
     }
 
-    private void TriggerEvent(EventConfig config)
+    private bool TriggerEvent(EventConfig config)
     {
         if (onPopupEvent == null)
         {
             Debug.LogError("[EventManager] onPopupEvent is null; popup cannot be shown.");
-            return;
+            return false;
         }
         if (_currentConfig != null)
         {
             Debug.LogError($"[EventManager] Cannot trigger '{config.eventId}': popup '{_currentConfig.eventId}' is still active. Deferred; event stays queued.");
             RequeueEvent(config);
-            return;
+            return false;
         }
-        _currentConfig = config;
 
         var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
+        {
+            Debug.LogWarning($"[EventManager] Cannot trigger '{config.eventId}': SettlementBridge/RunState/Reducer is unavailable. Requeueing event.");
+            RequeueEvent(config);
+            return false;
+        }
+
+        if (!RecordEventPlanned(config))
+        {
+            Debug.LogWarning($"[EventManager] RecordEventPlanned failed for '{config.eventId}'. Event not displayed.");
+            return false;
+        }
+
+        _currentConfig = config;
         _triggerDay = _activeDay > 0 ? _activeDay : (bridge != null && bridge.RunState != null ? bridge.RunState.Day : 0);
         _triggerPhase = _activeDay > 0 ? _activePhase : ToGamePhase(bridge != null && bridge.RunState != null ? bridge.RunState.Phase.Current : HotelPhase.Day);
         _currentProtagonistTenantId = ResolveProtagonist(bridge != null ? bridge.RunState : null);
-
-        // Record the event as planned (unresolved) before it is shown, so that
-        // OncePerRun / cooldown selection on later days excludes it. The record is
-        // only resolved once the player completes the popup (OnEventProcessed).
-        RecordEventPlanned(config);
 
         PopupData data = new PopupData
         {
@@ -451,6 +478,7 @@ public class EventManager : MonoBehaviour
 
         onPopupEvent.Raise(data);
         Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
+        return true;
     }
 
     /// <summary>
@@ -621,7 +649,8 @@ public class EventManager : MonoBehaviour
             optionId = source.optionId,
             effects = source.effects,
             ownerTenantId = source.ownerTenantId,
-            requiredTags = source.requiredTags
+            requiredTags = source.requiredTags,
+            noticeText = source.noticeText
         };
         if (string.IsNullOrEmpty(data.ownerTenantId))
             data.ownerTenantId = _currentProtagonistTenantId;
@@ -667,6 +696,9 @@ public class EventManager : MonoBehaviour
 
         if (config.trigger.kind == EventKind.ChainStep)
             return ChainManager.IsChainStepStillEligible(state, config, _activeDay);
+
+        if (config.trigger.kind == EventKind.SpecialVisitor)
+            return SpecialVisitorManager.IsSpecialVisitorStillEligible(state, config, _activeDay, _activePhase);
 
         if (_activeDay <= 0)
             return true;
@@ -732,7 +764,12 @@ public class EventManager : MonoBehaviour
             return EventSettleResult.Settled;
 
         if (uiManager != null)
-            uiManager.ShowNotice(string.IsNullOrEmpty(effectNoticeText) ? "无事发生" : effectNoticeText);
+        {
+            string finalNotice = !string.IsNullOrEmpty(payload.noticeText)
+                ? payload.noticeText
+                : (string.IsNullOrEmpty(effectNoticeText) ? "无事发生" : effectNoticeText);
+            uiManager.ShowNotice(finalNotice);
+        }
 
         RecordEventLog(bridge.RunState, payload);
         if (effectSummary.Summary != null)
@@ -945,6 +982,41 @@ public class EventManager : MonoBehaviour
         return false;
     }
 
+    private void EnqueueDueSpecialVisitorEvents(int day)
+    {
+        var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null)
+            return;
+
+        if (specialVisitorConfigs == null || specialVisitorConfigs.Count == 0)
+            return;
+
+        var state = bridge.RunState;
+        for (int i = 0; i < specialVisitorConfigs.Count; i++)
+        {
+            EventConfig config = specialVisitorConfigs[i];
+            if (config == null || string.IsNullOrEmpty(config.eventId) || config.trigger == null)
+                continue;
+
+            if (config.trigger.kind != EventKind.SpecialVisitor)
+                continue;
+
+            if (!config.trigger.AllowsPhase(EventPhase.Day))
+                continue;
+
+            if (day < config.trigger.minDay)
+                continue;
+
+            if (config.trigger.maxDay > 0 && day > config.trigger.maxDay)
+                continue;
+
+            if (SpecialVisitorManager.IsDueOnDay(state, config.eventId, day))
+            {
+                EnqueueEvent(config);
+            }
+        }
+    }
+
     /// <summary>
     /// Requests the single chain step due on this Day and injects it through
     /// EnqueueEvent, bypassing random selection entirely (ChainStep events are
@@ -971,26 +1043,43 @@ public class EventManager : MonoBehaviour
     /// coordinators. Skipped silently when the event is already tracked this run
     /// (the reducer forbids duplicate EventIds). Never blocks the popup.
     /// </summary>
-    private void RecordEventPlanned(EventConfig config)
+    private bool RecordEventPlanned(EventConfig config)
     {
-        if (config == null) return;
+        if (config == null) return false;
 
         var bridge = SettlementBridge.Instance;
-        if (bridge == null || bridge.RunState == null)
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
         {
-            Debug.Log("[EventManager] SettlementBridge/RunState unavailable; event history not recorded.");
-            return;
+            Debug.Log("[EventManager] SettlementBridge/RunState/Reducer unavailable; event history not recorded.");
+            return false;
         }
 
         var state = bridge.RunState;
-        if (EventSelectionService.HasOccurred(state.EventHistory, config.eventId))
-            return;
+        int day = _activeDay > 0 ? _activeDay : state.Day;
+
+        if (config.trigger != null && config.trigger.repeatPolicy == RepeatPolicy.Repeatable)
+        {
+            if (SpecialVisitorManager.HasOccurredOnDay(state.EventHistory, config.eventId, day))
+                return false;
+        }
+        else
+        {
+            if (EventSelectionService.HasOccurred(state.EventHistory, config.eventId))
+                return false;
+        }
+
+        string instanceEventId = config.trigger != null && config.trigger.repeatPolicy == RepeatPolicy.Repeatable
+            ? $"{config.eventId}#D{day}"
+            : config.eventId;
+
+        if (EventSelectionService.HasOccurred(state.EventHistory, instanceEventId))
+            return false;
 
         var record = new EventHistoryRecord
         {
-            EventId = config.eventId,
+            EventId = instanceEventId,
             DefinitionId = config.eventId,
-            Day = _activeDay > 0 ? _activeDay : state.Day,
+            Day = day,
             Phase = _activeDay > 0 ? ToHotelPhase(_activePhase) : state.Phase.Current,
             Occurrence = 1,
             RequiresDecision = config.eventType == GameEventType.Choice,
@@ -1001,6 +1090,11 @@ public class EventManager : MonoBehaviour
         set.Add(new PlanEventHistoryChange(record));
         CommitResult result = bridge.Reducer.TryCommit(state, set);
         if (!result.Succeeded)
-            Debug.Log($"[EventManager] Event history plan rejected for '{config.eventId}'.");
+        {
+            Debug.LogWarning($"[EventManager] Event history plan rejected for '{config.eventId}'.");
+            return false;
+        }
+
+        return true;
     }
 }

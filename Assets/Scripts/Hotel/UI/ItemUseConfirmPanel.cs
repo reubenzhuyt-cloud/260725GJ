@@ -48,6 +48,16 @@ public class ItemUseConfirmPanel : MonoBehaviour
             Root.SetActive(true);
     }
 
+    public void ShowPurchase(string displayName, int price)
+    {
+        if (titleText != null)
+            titleText.text = displayName;
+        if (descriptionText != null)
+            descriptionText.text = $"确认购买 {displayName}，花费 {price} 货币？";
+        if (Root != null)
+            Root.SetActive(true);
+    }
+
     public void Hide()
     {
         if (Root != null)

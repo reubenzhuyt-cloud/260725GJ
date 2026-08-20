@@ -38,6 +38,11 @@ public class EventUI : MonoBehaviour
     [Header("Event Channel")]
     public EventProcessedEvent onEventProcessed;
 
+    [Header("Vendor Shop")]
+    [SerializeField] private VendorShopPanel vendorShopPanel;
+    [SerializeField] private string vendorEventId;
+    [SerializeField] private string vendorOptionId;
+
     private EventEffect[] currentConfirmEffects;
     private string currentEventId;
 
@@ -301,6 +306,19 @@ public class EventUI : MonoBehaviour
         string optionId = (data.choiceIds != null && index >= 0 && index < data.choiceIds.Length)
             ? data.choiceIds[index]
             : string.Empty;
+
+        string targetVendorEventId = !string.IsNullOrEmpty(vendorEventId) ? vendorEventId : "d12_merchant";
+        string targetVendorOptionId = !string.IsNullOrEmpty(vendorOptionId) ? vendorOptionId : "A";
+
+        if (vendorShopPanel != null && currentEventId == targetVendorEventId && optionId == targetVendorOptionId)
+        {
+            string savedEventId = currentEventId;
+            ResetPopupState();
+            Close();
+            vendorShopPanel.Show(savedEventId, optionId, onEventProcessed);
+            return;
+        }
+
         EventEffect[] effects = (data.choiceEffects != null && index >= 0 && index < data.choiceEffects.Length)
             ? data.choiceEffects[index]
             : null;

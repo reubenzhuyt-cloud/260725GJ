@@ -87,7 +87,7 @@ namespace Hotel.Runtime
                         bool found = false;
                         foreach (var e in s.EventHistory)
                         {
-                            if (e.EventId == resolved.EventId)
+                            if (e.EventId == resolved.EventId || (e.DefinitionId == resolved.EventId && !e.Resolved))
                             {
                                 if (e.Resolved)
                                     return false;
@@ -392,7 +392,7 @@ namespace Hotel.Runtime
                 case ResolveEventHistoryChange x:
                     foreach (var e in s.EventHistory)
                     {
-                        if (e.EventId == x.EventId)
+                        if (e.EventId == x.EventId || (e.DefinitionId == x.EventId && !e.Resolved))
                         {
                             e.Resolved = true;
                             e.OptionId = x.OptionId;

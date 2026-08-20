@@ -8,6 +8,7 @@ public class EventProcessedData
     public EventEffect[] effects;
     public string ownerTenantId;
     public TenantAbility[] requiredTags;
+    public string noticeText;
 }
 
 [CreateAssetMenu(fileName = "EventProcessedEvent", menuName = "Events/EventProcessedEvent")]

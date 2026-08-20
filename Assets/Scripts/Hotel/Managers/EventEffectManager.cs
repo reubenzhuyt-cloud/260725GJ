@@ -19,7 +19,8 @@ public class EventEffectManager
         if (state == null || reducer == null)
             return EventSettleResult.Pending;
 
-        if (!EventSelectionService.HasUnresolvedOccurrence(state.EventHistory, payload.eventId))
+        if (!EventSelectionService.HasUnresolvedOccurrence(state.EventHistory, payload.eventId)
+            && !HasUnresolvedSpecialVisitor(state.EventHistory, payload.eventId))
             return EventSettleResult.Settled;
 
         string eventId = payload.eventId;
@@ -319,5 +320,16 @@ public class EventEffectManager
             case "medicine": return "药品";
             default: return resourceId;
         }
+    }
+
+    private static bool HasUnresolvedSpecialVisitor(IReadOnlyList<EventHistoryRecord> history, string eventId)
+    {
+        if (history == null || string.IsNullOrEmpty(eventId)) return false;
+        for (int i = 0; i < history.Count; i++)
+        {
+            EventHistoryRecord record = history[i];
+            if (record != null && (record.EventId == eventId || record.DefinitionId == eventId) && !record.Resolved) return true;
+        }
+        return false;
     }
 }
