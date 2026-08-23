@@ -344,7 +344,26 @@ namespace Hotel.Runtime
         public bool IsComplete;
         public int CompletedDay;
         public int MisclassificationCount;
+        public int ClassifiedTenantCount;
+        public float MisclassificationRate;
         public int FinalTenantCount;
+        public float AverageErosion;
+        public string HighestErosionTenantId;
+        public float HighestErosion;
+        public string LowestErosionTenantId;
+        public float LowestErosion;
+        public int TruthItemCount;
+        public int CompletedChainCount;
+        public RunEnding Ending;
+    }
+
+    public enum RunEnding
+    {
+        None,
+        Bad,
+        Normal,
+        Good,
+        Truth
     }
 
     [Serializable]
