@@ -89,8 +89,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3b609beaeae2f645899cc42e50593d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _image: {fileID: 0}
-  _isVisible: 1
+  _image: {fileID: 1395591058393874841}
 --- !u!114 &2787748527414363205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,7 +102,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 098460a1d874504488626504ebc15a2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _minScale: 0.85
-  _maxScale: 1.15
-  _pulseSpeed: 3
-  _animateOnEnable: 1
+  targetImage: {fileID: 1395591058393874841}
+  cycleDuration: 2.5

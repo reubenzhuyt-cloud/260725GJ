@@ -12,15 +12,6 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     [SerializeField] private Transform positionAnchor;
     [SerializeField, Min(1f)] private float screenSize = 120f;
     [SerializeField] private int occupantIndex;
-    [SerializeField] private RedDotIndicator redDotIndicatorPrefab;
-
-    private static RedDotIndicator s_sharedRedDotPrefab;
-
-    public static RedDotIndicator SharedRedDotPrefab
-    {
-        get => s_sharedRedDotPrefab;
-        set => s_sharedRedDotPrefab = value;
-    }
 
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
@@ -28,7 +19,6 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     private static void ResetStatics()
     {
         AllSlots.Clear();
-        s_sharedRedDotPrefab = null;
     }
 
     private bool _isDragVisual;
@@ -66,18 +56,10 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private void InitializeRedDotIndicator()
     {
-        RedDotIndicator prefabToUse = redDotIndicatorPrefab != null ? redDotIndicatorPrefab : s_sharedRedDotPrefab;
-        if (prefabToUse == null)
+        RedDotIndicator prefab = Resources.Load<RedDotIndicator>("UI/RedDotIndicator");
+        if (prefab != null)
         {
-            prefabToUse = Resources.Load<RedDotIndicator>("UI/RedDotIndicator");
-        }
-
-        if (prefabToUse != null)
-        {
-            if (s_sharedRedDotPrefab == null)
-                s_sharedRedDotPrefab = prefabToUse;
-
-            _instantiatedRedDot = Instantiate(prefabToUse, transform, false);
+            _instantiatedRedDot = Instantiate(prefab, transform, false);
             RectTransform rect = _instantiatedRedDot.transform as RectTransform;
             if (rect != null)
             {
