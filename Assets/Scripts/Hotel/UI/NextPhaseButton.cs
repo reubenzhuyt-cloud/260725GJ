@@ -1,3 +1,4 @@
+using Hotel.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -34,6 +35,10 @@ public class NextPhaseButton : MonoBehaviour, IPointerDownHandler, IPointerUpHan
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        AudioManager.Instance?.PlayUISound(UISoundType.Click);
+
         isHolding = true;
         holdTimer = 0f;
         triggered = false;
@@ -60,7 +65,9 @@ public class NextPhaseButton : MonoBehaviour, IPointerDownHandler, IPointerUpHan
     private void OnLongPress()
     {
         Debug.Log("[NextPhaseButton] Long press triggered — advancing phase");
-        if (GamePhaseManager.Instance != null)
-            GamePhaseManager.Instance.AdvancePhase();
+        if (GamePhaseManager.Instance != null && GamePhaseManager.Instance.AdvancePhase())
+        {
+            AudioManager.Instance?.PlayUISound(UISoundType.NextPhaseButtonSE);
+        }
     }
 }

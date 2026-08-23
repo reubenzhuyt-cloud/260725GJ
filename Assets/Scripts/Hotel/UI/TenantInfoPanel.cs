@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hotel.Audio;
 using Hotel.Runtime;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -202,10 +203,13 @@ public class TenantInfoPanel : MonoBehaviour,
         ApplyFlagToPanel(tenantId);
         ApplyWorkToPanel(tenantId);
         PositionAt(screenPoint, false);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     public void Hide()
     {
+        bool wasPinned = Mode == PanelMode.Pinned;
         Mode = PanelMode.Hidden;
         Source = DisplaySource.None;
         if (tenantLogPanel != null)
@@ -214,10 +218,15 @@ public class TenantInfoPanel : MonoBehaviour,
         IsPointerOver = false;
         ApplyInteractionMode();
         gameObject.SetActive(false);
+        if (wasPinned && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     public void OnLetGoPressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (string.IsNullOrEmpty(_currentTenantId))
             return;
 
@@ -235,6 +244,9 @@ public class TenantInfoPanel : MonoBehaviour,
 
     public void OnLetGoAccept()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (letGoConfirmPanel != null)
             letGoConfirmPanel.SetActive(false);
         EvictCurrentTenant();
@@ -242,6 +254,9 @@ public class TenantInfoPanel : MonoBehaviour,
 
     public void OnLetGoRefuse()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (letGoConfirmPanel != null)
             letGoConfirmPanel.SetActive(false);
     }
@@ -349,6 +364,8 @@ public class TenantInfoPanel : MonoBehaviour,
             return;
         if (string.IsNullOrEmpty(_currentTenantId))
             return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         WriteFlag(value);
         if (flagLabel != null)
             flagLabel.text = GetFlagText(value);
@@ -402,6 +419,9 @@ public class TenantInfoPanel : MonoBehaviour,
     {
         if (_suppressWorkWrite || string.IsNullOrEmpty(_currentTenantId))
             return;
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
 
         IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
         string jobId = value > 0 && value <= jobs.Count

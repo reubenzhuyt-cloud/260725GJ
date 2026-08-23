@@ -42,19 +42,19 @@ public class GamePhaseManager : MonoBehaviour
         NotifyPhaseEntered();
     }
 
-    public void AdvancePhase()
+    public bool AdvancePhase()
     {
         if (!CanAdvancePhase())
         {
             Debug.Log("[GamePhaseManager] Advance blocked until review, assignment, and events are complete.");
-            return;
+            return false;
         }
 
         if (SettlementBridge.Instance != null
             && !SettlementBridge.Instance.TrySettleJobs(currentDay, currentPhase))
         {
             Debug.LogError("[GamePhaseManager] Advance blocked because job settlement failed.");
-            return;
+            return false;
         }
 
         GamePhase nextPhase = GetNextPhase();
@@ -90,6 +90,7 @@ public class GamePhaseManager : MonoBehaviour
 
         Debug.Log($"[GamePhaseManager] Advanced to Day {currentDay} - {currentPhase}");
         NotifyPhaseEntered();
+        return true;
     }
 
     public bool CanAdvancePhase()

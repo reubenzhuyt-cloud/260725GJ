@@ -1,3 +1,4 @@
+using Hotel.Audio;
 using Hotel.Runtime;
 using TMPro;
 using UnityEngine;
@@ -62,18 +63,24 @@ public sealed class MainMenuController : MonoBehaviour
 
     public void OnPlayPressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         OpenSlotGrid();
     }
 
     // Kept while the existing Play button still uses this older scene callback.
     public void OnDeleteSavePressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         OnPlayPressed();
     }
 
     // Kept for the disabled legacy Continue button in the scene.
     public void OnContinuePressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         if (!SaveGameService.HasSave(1))
         {
             SetStatus("暂无存档可继续", true);
@@ -85,6 +92,8 @@ public sealed class MainMenuController : MonoBehaviour
 
     public void OnBackPressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         if (confirmOverlay != null && confirmOverlay.activeSelf)
         {
             OnConfirmNo();
@@ -96,6 +105,8 @@ public sealed class MainMenuController : MonoBehaviour
 
     public void OnQuitPressed()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -111,6 +122,8 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (menuCard != null) menuCard.SetActive(false);
         if (slotGridPanel != null) slotGridPanel.SetActive(true);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     private void CloseSlotGrid()
@@ -119,10 +132,14 @@ public sealed class MainMenuController : MonoBehaviour
         if (confirmOverlay != null) confirmOverlay.SetActive(false);
         if (slotGridPanel != null) slotGridPanel.SetActive(false);
         if (menuCard != null) menuCard.SetActive(true);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     private void OnSlotPressed(int index)
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         int slot = index + 1;
         if (SaveGameService.HasSave(slot))
         {
@@ -150,6 +167,8 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void OnDeletePressed(int index)
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         int slot = index + 1;
         if (!SaveGameService.HasSave(slot)) return;
 
@@ -162,11 +181,17 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (confirmTitle != null) confirmTitle.text = message;
         if (confirmOverlay != null) confirmOverlay.SetActive(true);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     private void OnConfirmYes()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         if (confirmOverlay != null) confirmOverlay.SetActive(false);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
 
         int slot = pendingSlotIndex + 1;
         switch (pendingAction)
@@ -190,8 +215,12 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void OnConfirmNo()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         pendingAction = PendingAction.None;
         if (confirmOverlay != null) confirmOverlay.SetActive(false);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     private void RefreshSlots()

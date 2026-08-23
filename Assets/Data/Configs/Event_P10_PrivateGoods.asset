@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_P10_PrivateGoods
+  m_EditorClassIdentifier: 
+  eventIndex: 410
+  eventId: p10_private_goods
+  trigger:
+    eligiblePhases: 1
+    kind: 2
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: merchant
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    conditions:
+    - condition: 11
+      intValue: 0
+      floatValue: 0
+      stringValue: Merchant
+    requireAll: 1
+    weightScale: 0
+    baseWeight: 10
+    category: personal
+  eventTitle: "私藏货物"
+  eventDescription: "“XXX拿出了一些私藏的货物——‘特殊渠道弄来的’。”"
+  eventImage: {fileID: 0}
+  eventType: 1
+  confirmEffects: []
+  choices:
+  - choiceId: A
+    choiceText: "查看货物"
+    choiceResult: "XXX展示了随身携带的私藏物资。"
+    effectText: "消耗货币可购买稀有物品"
+    requiredTags: []
+    choiceEffects: []
+  - choiceId: B
+    choiceText: "拒绝购买"
+    choiceResult: "你婉拒了XXX的兜售。"
+    effectText: "无事发生"
+    requiredTags: []
+    choiceEffects: []

@@ -3,9 +3,18 @@ using UnityEngine;
 
 namespace Hotel.Audio
 {
+    public enum UISoundType
+    {
+        Click,
+        PanelOpen,
+        PanelClose,
+        NextPhaseButtonSE
+    }
+
     /// <summary>
-    /// Scene-scoped audio manager. Owns exactly two AudioSource channels:
-    /// "BGM Audio" (looping background music) and "SFX Audio" (one-shot effects).
+    /// Scene-scoped audio manager. Owns exactly three AudioSource channels:
+    /// "BGM Audio" (looping background music), "SFX Audio" (one-shot effects),
+    /// and "UI Audio" (UI sound effects with deduplication and override).
     /// Does not persist across scene loads.
     /// </summary>
     public class AudioManager : MonoBehaviour
@@ -17,11 +26,27 @@ namespace Hotel.Audio
         [SerializeField] private AudioClip defaultBgm;
         [SerializeField] private SoundEffectEvent playSoundEffectEvent;
 
+        [Header("UI Sound Clips")]
+        [SerializeField] private AudioClip uiClickClip;
+        [SerializeField] private AudioClip uiPanelOpenClip;
+        [SerializeField] private AudioClip uiPanelCloseClip;
+        [SerializeField] private AudioClip uiNextPhaseButtonSEClip;
+
         [Range(0f, 1f)] [SerializeField] private float bgmVolume = 1f;
         [Range(0f, 1f)] [SerializeField] private float soundEffectVolume = 1f;
 
+        [Header("UI Equalizer (dB)")]
+        [Range(-12f, 12f)] [SerializeField] private float uiEqLowGain = 0f;
+        [Range(-12f, 12f)] [SerializeField] private float uiEqMidGain = 0f;
+        [Range(-12f, 12f)] [SerializeField] private float uiEqHighGain = 0f;
+
         private AudioSource bgmSource;
         private AudioSource sfxSource;
+        private AudioSource uiSource;
+        private UIEqualizerFilter uiEqFilter;
+
+        private const float UiCooldownInterval = 0.05f;
+        private readonly float[] lastUiPlayTimes = new float[Enum.GetValues(typeof(UISoundType)).Length];
 
         private void Awake()
         {
@@ -35,6 +60,22 @@ namespace Hotel.Audio
             sfxSource = GetOrCreateSource("SFX Audio");
             sfxSource.loop = false;
             sfxSource.playOnAwake = false;
+
+            uiSource = GetOrCreateSource("UI Audio");
+            uiSource.loop = false;
+            uiSource.playOnAwake = false;
+            uiSource.volume = soundEffectVolume;
+
+            uiEqFilter = uiSource.GetComponent<UIEqualizerFilter>();
+            if (uiEqFilter == null)
+                uiEqFilter = uiSource.gameObject.AddComponent<UIEqualizerFilter>();
+
+            UpdateUIEqualizerGains();
+        }
+
+        private void Update()
+        {
+            UpdateUIEqualizerGains();
         }
 
         private void Start()
@@ -68,6 +109,38 @@ namespace Hotel.Audio
             sfxSource.PlayOneShot(clip, soundEffectVolume);
         }
 
+        public void PlayUISound(UISoundType type)
+        {
+            int index = (int)type;
+            float now = Time.unscaledTime;
+            if (index >= 0 && index < lastUiPlayTimes.Length)
+            {
+                if (now - lastUiPlayTimes[index] < UiCooldownInterval)
+                    return;
+                lastUiPlayTimes[index] = now;
+            }
+
+            AudioClip clip = GetUIClip(type);
+            if (clip == null || uiSource == null)
+                return;
+
+            uiSource.clip = clip;
+            uiSource.volume = soundEffectVolume;
+            uiSource.Play();
+        }
+
+        private AudioClip GetUIClip(UISoundType type)
+        {
+            return type switch
+            {
+                UISoundType.Click => uiClickClip,
+                UISoundType.PanelOpen => uiPanelOpenClip,
+                UISoundType.PanelClose => uiPanelCloseClip,
+                UISoundType.NextPhaseButtonSE => uiNextPhaseButtonSEClip,
+                _ => null
+            };
+        }
+
         public void SetBgmVolume(float volume)
         {
             bgmVolume = Mathf.Clamp01(volume);
@@ -84,6 +157,14 @@ namespace Hotel.Audio
             // Applied as the volume scale of each new PlayOneShot call
             // (AudioSource.volume does not affect PlayOneShot).
             soundEffectVolume = Mathf.Clamp01(volume);
+            if (uiSource != null)
+                uiSource.volume = soundEffectVolume;
+        }
+
+        private void UpdateUIEqualizerGains()
+        {
+            if (uiEqFilter != null)
+                uiEqFilter.SetGains(uiEqLowGain, uiEqMidGain, uiEqHighGain);
         }
 
         private void PlayBgm(AudioClip clip)

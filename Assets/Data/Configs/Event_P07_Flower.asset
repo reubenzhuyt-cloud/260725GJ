@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_P07_Flower
+  m_EditorClassIdentifier: 
+  eventIndex: 407
+  eventId: p07_flower
+  trigger:
+    eligiblePhases: 1
+    kind: 2
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: random_tenant
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    conditions:
+    - condition: 8
+      intValue: 0
+      floatValue: 20
+      stringValue: 
+    requireAll: 1
+    weightScale: 0
+    baseWeight: 10
+    category: personal
+  eventTitle: "院中小花"
+  eventDescription: "“XXX在院子里种了一棵小花。”"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects:
+  - effectType: 3
+    floatValue: -1
+    target: 1
+    stringValue: 
+    intValue: 0
+    durationTicks: 3
+    conditionKind: 0
+  choices: []

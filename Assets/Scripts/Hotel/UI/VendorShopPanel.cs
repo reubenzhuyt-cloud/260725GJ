@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hotel.Audio;
 using Hotel.Authoring.Items;
 using Hotel.Runtime;
 using UnityEngine;
@@ -86,6 +87,9 @@ public class VendorShopPanel : MonoBehaviour
 
         if (root != null && !root.activeSelf)
             root.SetActive(true);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     private void ForceClose()
@@ -165,6 +169,9 @@ public class VendorShopPanel : MonoBehaviour
 
     private void OnBuyClicked(VendorShopItemSlot slot, ItemDefinition definition)
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (slot == null || slot.IsSold || definition == null)
             return;
 
@@ -334,6 +341,8 @@ public class VendorShopPanel : MonoBehaviour
 
     private void OnCloseClicked()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         Close();
     }
 
@@ -355,6 +364,9 @@ public class VendorShopPanel : MonoBehaviour
         else
             gameObject.SetActive(false);
         ClearSlots();
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
 
         if (_onEventProcessed != null && !string.IsNullOrEmpty(_eventId))
         {

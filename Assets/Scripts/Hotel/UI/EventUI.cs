@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hotel.Audio;
 using Hotel.Runtime;
 using UnityEngine;
 using UnityEngine.UI;
@@ -91,6 +92,9 @@ public class EventUI : MonoBehaviour
 
         if (eventPanel != null)
             eventPanel.SetActive(true);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
 
         // Set shared content
         if (eventImage != null && data.image != null)
@@ -254,6 +258,9 @@ public class EventUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (string.IsNullOrEmpty(currentEventId))
         {
             Debug.LogWarning("[EventUI] Confirm ignored: no active popup.");
@@ -275,6 +282,9 @@ public class EventUI : MonoBehaviour
 
     private void OnChoiceSelected(int index, PopupData data)
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         if (string.IsNullOrEmpty(currentEventId))
         {
             Debug.LogWarning("[EventUI] Choice ignored: no active popup.");
@@ -347,7 +357,10 @@ public class EventUI : MonoBehaviour
 
     private void Close()
     {
+        bool wasOpen = (eventPanel != null && eventPanel.activeSelf) || (eventOverlay != null && eventOverlay.activeSelf);
         if (eventPanel != null) eventPanel.SetActive(false);
         if (eventOverlay != null) eventOverlay.SetActive(false);
+        if (wasOpen && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 }

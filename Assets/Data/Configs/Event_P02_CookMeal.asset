@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bea5de3295633045900cea9957fcca1, type: 3}
+  m_Name: Event_P02_CookMeal
+  m_EditorClassIdentifier: 
+  eventIndex: 402
+  eventId: p02_cook_meal
+  trigger:
+    eligiblePhases: 1
+    kind: 2
+    minDay: 1
+    maxDay: 0
+    repeatPolicy: 0
+    cooldownDays: 0
+    requiresTenantId: cook
+    requiresTenant: {fileID: 0}
+    chainId: 
+    chainStep: 0
+    conditions:
+    - condition: 11
+      intValue: 0
+      floatValue: 0
+      stringValue: Cook
+    - condition: 8
+      intValue: 0
+      floatValue: 40
+      stringValue: 
+    requireAll: 1
+    weightScale: 0
+    baseWeight: 10
+    category: personal
+  eventTitle: "热饭"
+  eventDescription: "“XXX今天用有限的食材做了一顿像样的热饭。”"
+  eventImage: {fileID: 0}
+  eventType: 0
+  confirmEffects:
+  - effectType: 1
+    floatValue: -2
+    target: 1
+    stringValue: 
+    intValue: 0
+    durationTicks: 0
+    conditionKind: 0
+  - effectType: 3
+    floatValue: 0
+    target: 0
+    stringValue: food
+    intValue: 1
+    durationTicks: 1
+    conditionKind: 0
+  choices: []

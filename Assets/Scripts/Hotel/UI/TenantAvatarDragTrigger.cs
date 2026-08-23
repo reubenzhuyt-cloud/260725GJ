@@ -1,3 +1,4 @@
+using Hotel.Audio;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -14,11 +15,13 @@ public class TenantAvatarDragTrigger : MonoBehaviour,
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             _finished = false;
+            AudioManager.Instance?.PlayUISound(UISoundType.Click);
             if (owner != null)
                 owner.BeginAvatarHold();
         }
         else if (eventData.button == PointerEventData.InputButton.Right)
         {
+            AudioManager.Instance?.PlayUISound(UISoundType.Click);
             if (owner != null)
                 owner.OpenPinnedFromTrigger();
         }

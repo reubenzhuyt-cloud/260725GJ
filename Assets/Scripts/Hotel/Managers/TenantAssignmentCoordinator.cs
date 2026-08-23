@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hotel.Audio;
 using Hotel.Runtime;
 using UnityEngine;
 
@@ -251,6 +252,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
         if (result.Succeeded)
         {
+            AudioManager.Instance?.PlayUISound(UISoundType.Click);
             RebuildUnassigned();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
@@ -328,6 +330,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
         if (result.Succeeded)
         {
+            AudioManager.Instance?.PlayUISound(UISoundType.Click);
             RebuildUnassigned();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
@@ -472,6 +475,17 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         {
             return TenantAvatarResolver.TryResolve(view.AvatarKey, out avatar);
         }
+        return false;
+    }
+
+    public bool TryGetTenantDisplayName(string tenantId, out string displayName)
+    {
+        if (!string.IsNullOrEmpty(tenantId) && _displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
+        {
+            displayName = view.DisplayName;
+            return true;
+        }
+        displayName = tenantId;
         return false;
     }
 

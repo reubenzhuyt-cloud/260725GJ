@@ -94,6 +94,9 @@ public sealed class GameSettingController : MonoBehaviour
             pauseOverlay.SetActive(true);
         Time.timeScale = 0f;
         RefreshUiFromRuntimeState();
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     public void ClosePauseMenu()
@@ -105,10 +108,16 @@ public sealed class GameSettingController : MonoBehaviour
         else
             pauseOverlay.SetActive(false);
         Time.timeScale = timeScaleBeforePause;
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     public void SaveAndQuit()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         SaveAndQuitFlow.Execute(
             isPauseMenuOpen,
             SettlementBridge.Instance != null ? SettlementBridge.Instance.RunState : null,
@@ -126,6 +135,8 @@ public sealed class GameSettingController : MonoBehaviour
     public void OnDisplayModeChanged(int value)
     {
         if (!isPauseMenuOpen) return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         int index = Mathf.Clamp(value, 0, DisplayModes.Length - 1);
         settings.FullScreen = DisplayModes[index] == FullScreenMode.FullScreenWindow;
         ApplySettings(settings);
@@ -135,6 +146,8 @@ public sealed class GameSettingController : MonoBehaviour
     public void ResetToDefaults()
     {
         if (!isPauseMenuOpen) return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         settings = GameSettingsCodec.Default();
         ApplySettings(settings);
         RefreshUiFromRuntimeState();
@@ -144,6 +157,8 @@ public sealed class GameSettingController : MonoBehaviour
     public void OnResolutionChanged(int value)
     {
         if (!isPauseMenuOpen) return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         int index = Mathf.Clamp(value, 0, ResolutionWidths.Length - 1);
         settings.ResolutionWidth = ResolutionWidths[index];
         settings.ResolutionHeight = ResolutionHeights[index];
@@ -154,6 +169,8 @@ public sealed class GameSettingController : MonoBehaviour
     public void OnFrameRateChanged(int value)
     {
         if (!isPauseMenuOpen) return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         int[] frameRates = GameSettingsCodec.SupportedFrameRates;
         int index = Mathf.Clamp(value, 0, frameRates.Length - 1);
         settings.TargetFrameRate = frameRates[index];

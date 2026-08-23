@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Hotel.Audio;
 using Hotel.Runtime;
 
 public class TenantReviewPanel : MonoBehaviour
@@ -94,6 +95,9 @@ public class TenantReviewPanel : MonoBehaviour
             Canvas.ForceUpdateCanvases();
             detailedDescriptionScroll.verticalNormalizedPosition = 1f;
         }
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     private void RefreshTagPanel(TenantAbility[] abilities)
@@ -158,6 +162,8 @@ public class TenantReviewPanel : MonoBehaviour
         _onConfirm = null;
         _onReject = null;
         // Deactivation is handled externally by TenantReviewCoordinator.
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     private void HandleConfirm()
@@ -165,12 +171,18 @@ public class TenantReviewPanel : MonoBehaviour
         if (confirmButton != null && !confirmButton.interactable)
             return;
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         var callback = _onConfirm;
         callback?.Invoke();
     }
 
     private void HandleReject()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
+
         var callback = _onReject;
         callback?.Invoke();
     }

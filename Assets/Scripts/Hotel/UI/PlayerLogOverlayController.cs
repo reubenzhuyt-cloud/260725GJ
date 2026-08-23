@@ -1,3 +1,4 @@
+using Hotel.Audio;
 using UnityEngine;
 
 public class PlayerLogOverlayController : MonoBehaviour
@@ -70,6 +71,9 @@ public class PlayerLogOverlayController : MonoBehaviour
             _panel = logOverlay.GetComponentInChildren<PlayerLogPanelController>(true);
         if (_panel != null)
             _panel.RefreshTimeline();
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     private void Close()
@@ -79,6 +83,9 @@ public class PlayerLogOverlayController : MonoBehaviour
         logOverlay.SetActive(false);
         _openedByController = false;
         _openLogOverlayCount--;
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     private void OnDisable()

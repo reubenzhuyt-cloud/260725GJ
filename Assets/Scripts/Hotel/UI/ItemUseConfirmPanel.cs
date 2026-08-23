@@ -1,4 +1,5 @@
 using System;
+using Hotel.Audio;
 using Hotel.Authoring.Items;
 using TMPro;
 using UnityEngine;
@@ -37,6 +38,7 @@ public class ItemUseConfirmPanel : MonoBehaviour
 
     public void Show(ItemDefinition item)
     {
+        bool wasShowing = IsShowing;
         if (item != null)
         {
             if (titleText != null)
@@ -46,31 +48,43 @@ public class ItemUseConfirmPanel : MonoBehaviour
         }
         if (Root != null)
             Root.SetActive(true);
+        if (!wasShowing && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     public void ShowPurchase(string displayName, int price)
     {
+        bool wasShowing = IsShowing;
         if (titleText != null)
             titleText.text = displayName;
         if (descriptionText != null)
             descriptionText.text = $"确认购买 {displayName}，花费 {price} 货币？";
         if (Root != null)
             Root.SetActive(true);
+        if (!wasShowing && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
     public void Hide()
     {
+        bool wasShowing = IsShowing;
         if (Root != null)
             Root.SetActive(false);
+        if (wasShowing && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
     }
 
     private void OnAcceptClicked()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         Accepted?.Invoke();
     }
 
     private void OnCancelClicked()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUISound(UISoundType.Click);
         Cancelled?.Invoke();
     }
 }
