@@ -57,6 +57,7 @@ public class TenantInfoPanel : MonoBehaviour,
     private bool _suppressWorkWrite;
     private Color _defaultFlagBackgroundColor;
     private Sprite _defaultAvatarSprite;
+    private readonly List<string> _visibleJobIds = new List<string>();
 
     private void Awake()
     {
@@ -66,7 +67,6 @@ public class TenantInfoPanel : MonoBehaviour,
             if (workDropdownTransform != null)
                 workDropdown = workDropdownTransform.GetComponent<TMP_Dropdown>();
         }
-        ConfigureWorkDropdown();
         if (flagBackground != null)
             _defaultFlagBackgroundColor = flagBackground.color;
         if (tenantImage != null)
@@ -180,6 +180,7 @@ public class TenantInfoPanel : MonoBehaviour,
         Source = source;
         ApplyInteractionMode();
         gameObject.SetActive(true);
+        ConfigureWorkDropdown();
         ApplyFlagToPanel(tenantId);
         ApplyWorkToPanel(tenantId);
         PositionAt(screenPoint, preferLeft);
@@ -200,6 +201,7 @@ public class TenantInfoPanel : MonoBehaviour,
             tenantLogPanel.RefreshForTenant(tenantId);
         ApplyInteractionMode();
         gameObject.SetActive(true);
+        ConfigureWorkDropdown();
         ApplyFlagToPanel(tenantId);
         ApplyWorkToPanel(tenantId);
         PositionAt(screenPoint, false);
@@ -377,13 +379,65 @@ public class TenantInfoPanel : MonoBehaviour,
         if (workDropdown == null)
             return;
 
+        _visibleJobIds.Clear();
         var options = new List<TMP_Dropdown.OptionData>
         {
             new("未安排")
         };
+
+        HashSet<TenantAbility> ownedAbilities = null;
+        SettlementBridge bridge = SettlementBridge.Instance;
+        if (bridge != null && bridge.RunState != null)
+        {
+            TenantReviewCoordinator coordinator = TenantReviewCoordinator.Instance;
+            if (coordinator == null)
+                coordinator = FindObjectOfType<TenantReviewCoordinator>(true);
+            IReadOnlyList<TenantReviewCandidateSO> candidates = coordinator != null ? coordinator.candidates : null;
+            ownedAbilities = TenantAbilityResolver.GetOwnedAbilities(bridge.RunState, candidates);
+        }
+
         IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
         for (int i = 0; i < jobs.Count; i++)
-            options.Add(new TMP_Dropdown.OptionData(jobs[i].DisplayName));
+        {
+            JobDefinition job = jobs[i];
+            if (job == null)
+                continue;
+
+            bool isVisible = false;
+            switch (job.Id)
+            {
+                case JobCatalog.Cooking:
+                case JobCatalog.Farming:
+                case JobCatalog.NightWatch:
+                case JobCatalog.Patrol:
+                case JobCatalog.Exploration:
+                case JobCatalog.Chores:
+                    isVisible = true;
+                    break;
+                case JobCatalog.Medical:
+                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Doctor);
+                    break;
+                case JobCatalog.Repair:
+                    isVisible = ownedAbilities != null && (ownedAbilities.Contains(TenantAbility.Engineer) || ownedAbilities.Contains(TenantAbility.Carpenter));
+                    break;
+                case JobCatalog.Trading:
+                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Merchant);
+                    break;
+                case JobCatalog.Organization:
+                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Teacher);
+                    break;
+                default:
+                    isVisible = false;
+                    break;
+            }
+
+            if (isVisible)
+            {
+                _visibleJobIds.Add(job.Id);
+                options.Add(new TMP_Dropdown.OptionData(job.DisplayName));
+            }
+        }
+
         workDropdown.options = options;
         workDropdown.RefreshShownValue();
     }
@@ -396,12 +450,12 @@ public class TenantInfoPanel : MonoBehaviour,
         int selectedIndex = 0;
         SettlementBridge bridge = SettlementBridge.Instance;
         if (bridge != null && bridge.RunState != null
-            && bridge.RunState.Tenants.TryGetValue(tenantId, out TenantRunState tenant))
+            && bridge.RunState.Tenants.TryGetValue(tenantId, out TenantRunState tenant)
+            && !string.IsNullOrEmpty(tenant.JobId))
         {
-            IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
-            for (int i = 0; i < jobs.Count; i++)
+            for (int i = 0; i < _visibleJobIds.Count; i++)
             {
-                if (jobs[i].Id == tenant.JobId)
+                if (string.Equals(_visibleJobIds[i], tenant.JobId, System.StringComparison.Ordinal))
                 {
                     selectedIndex = i + 1;
                     break;
@@ -423,9 +477,8 @@ public class TenantInfoPanel : MonoBehaviour,
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayUISound(UISoundType.Click);
 
-        IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
-        string jobId = value > 0 && value <= jobs.Count
-            ? jobs[value - 1].Id
+        string jobId = value > 0 && value <= _visibleJobIds.Count
+            ? _visibleJobIds[value - 1]
             : string.Empty;
 
         TenantAssignmentCoordinator coordinator = TenantAssignmentCoordinator.Instance;
