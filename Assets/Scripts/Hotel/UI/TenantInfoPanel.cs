@@ -385,17 +385,6 @@ public class TenantInfoPanel : MonoBehaviour,
             new("未安排")
         };
 
-        HashSet<TenantAbility> ownedAbilities = null;
-        SettlementBridge bridge = SettlementBridge.Instance;
-        if (bridge != null && bridge.RunState != null)
-        {
-            TenantReviewCoordinator coordinator = TenantReviewCoordinator.Instance;
-            if (coordinator == null)
-                coordinator = FindObjectOfType<TenantReviewCoordinator>(true);
-            IReadOnlyList<TenantReviewCandidateSO> candidates = coordinator != null ? coordinator.candidates : null;
-            ownedAbilities = TenantAbilityResolver.GetOwnedAbilities(bridge.RunState, candidates);
-        }
-
         IReadOnlyList<JobDefinition> jobs = JobCatalog.All;
         for (int i = 0; i < jobs.Count; i++)
         {
@@ -407,24 +396,10 @@ public class TenantInfoPanel : MonoBehaviour,
             switch (job.Id)
             {
                 case JobCatalog.Cooking:
-                case JobCatalog.Farming:
                 case JobCatalog.NightWatch:
-                case JobCatalog.Patrol:
-                case JobCatalog.Exploration:
+                case JobCatalog.Farming:
                 case JobCatalog.Chores:
                     isVisible = true;
-                    break;
-                case JobCatalog.Medical:
-                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Doctor);
-                    break;
-                case JobCatalog.Repair:
-                    isVisible = ownedAbilities != null && (ownedAbilities.Contains(TenantAbility.Engineer) || ownedAbilities.Contains(TenantAbility.Carpenter));
-                    break;
-                case JobCatalog.Trading:
-                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Merchant);
-                    break;
-                case JobCatalog.Organization:
-                    isVisible = ownedAbilities != null && ownedAbilities.Contains(TenantAbility.Teacher);
                     break;
                 default:
                     isVisible = false;

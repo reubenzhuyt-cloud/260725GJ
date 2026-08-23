@@ -263,7 +263,9 @@ public static class ChainManager
             int firstTriggerDay = ComputeFirstTriggerDay(state, chainId, tenantId, day);
             var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "StartChain");
             set.Add(new StartChainChange(chainId, tenantId, day, firstTriggerDay, firstTriggerDay));
-            reducer.TryCommit(state, set);
+            CommitResult result = reducer.TryCommit(state, set);
+            if (!result.Succeeded)
+                Debug.LogWarning($"[ChainManager] StartChain commit failed for chain '{chainId}'.");
         }
     }
 
@@ -315,7 +317,9 @@ public static class ChainManager
                 nextDueDay = firstTriggerDay;
             var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "MigrateChainSchedule");
             set.Add(new SetChainScheduleChange(chainId, firstTriggerDay, nextDueDay));
-            reducer.TryCommit(state, set);
+            CommitResult result = reducer.TryCommit(state, set);
+            if (!result.Succeeded)
+                Debug.LogWarning($"[ChainManager] SetChainSchedule commit failed for chain '{chainId}'.");
         }
     }
 
@@ -427,7 +431,9 @@ public static class ChainManager
     {
         var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "FailChain");
         set.Add(new FailChainChange(chainId));
-        reducer.TryCommit(state, set);
+        CommitResult result = reducer.TryCommit(state, set);
+        if (!result.Succeeded)
+            Debug.LogWarning($"[ChainManager] FailChain commit failed for chain '{chainId}'.");
     }
 
     private static void Notify(string text)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hotel.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,15 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     [SerializeField] private Transform positionAnchor;
     [SerializeField, Min(1f)] private float screenSize = 120f;
     [SerializeField] private int occupantIndex;
+    [SerializeField] private RedDotIndicator redDotIndicatorPrefab;
+
+    private static RedDotIndicator s_sharedRedDotPrefab;
+
+    public static RedDotIndicator SharedRedDotPrefab
+    {
+        get => s_sharedRedDotPrefab;
+        set => s_sharedRedDotPrefab = value;
+    }
 
     private static readonly List<RoomTenantAvatarSlot> AllSlots = new List<RoomTenantAvatarSlot>();
 
@@ -18,11 +28,14 @@ public class RoomTenantAvatarSlot : MonoBehaviour
     private static void ResetStatics()
     {
         AllSlots.Clear();
+        s_sharedRedDotPrefab = null;
     }
 
     private bool _isDragVisual;
     private Sprite _placeholderSprite;
     private RoomAvatarSlotLayoutController _parentLayoutController;
+    private TenantAssignmentCoordinator _cachedCoordinator;
+    private RedDotIndicator _instantiatedRedDot;
 
     public string RoomId => roomId;
 
@@ -47,6 +60,35 @@ public class RoomTenantAvatarSlot : MonoBehaviour
         _parentLayoutController = transform.parent != null
             ? transform.parent.GetComponentInParent<RoomAvatarSlotLayoutController>()
             : null;
+
+        InitializeRedDotIndicator();
+    }
+
+    private void InitializeRedDotIndicator()
+    {
+        RedDotIndicator prefabToUse = redDotIndicatorPrefab != null ? redDotIndicatorPrefab : s_sharedRedDotPrefab;
+        if (prefabToUse == null)
+        {
+            prefabToUse = Resources.Load<RedDotIndicator>("UI/RedDotIndicator");
+        }
+
+        if (prefabToUse != null)
+        {
+            if (s_sharedRedDotPrefab == null)
+                s_sharedRedDotPrefab = prefabToUse;
+
+            _instantiatedRedDot = Instantiate(prefabToUse, transform, false);
+            RectTransform rect = _instantiatedRedDot.transform as RectTransform;
+            if (rect != null)
+            {
+                rect.anchorMin = new Vector2(1f, 1f);
+                rect.anchorMax = new Vector2(1f, 1f);
+                rect.pivot = new Vector2(1f, 1f);
+                rect.anchoredPosition = new Vector2(-2f, -2f);
+            }
+            _instantiatedRedDot.transform.SetAsLastSibling();
+            _instantiatedRedDot.SetVisible(false);
+        }
     }
 
     private void OnEnable()
@@ -59,10 +101,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private void Start()
     {
-        // If OnEnable ran before TenantAssignmentCoordinator.Awake,
-        // re-subscribe so AssignmentChanged is still received.
-        Subscribe();
-        Refresh();
+        if (Subscribe())
+            Refresh();
     }
 
     private void OnDisable()
@@ -71,25 +111,38 @@ public class RoomTenantAvatarSlot : MonoBehaviour
         Unsubscribe();
     }
 
+    private void OnDestroy()
+    {
+        Unsubscribe();
+    }
+
     private bool _subscribed;
 
-    private void Subscribe()
+    private bool Subscribe()
     {
         if (_subscribed)
-            return;
+            return false;
         if (TenantAssignmentCoordinator.Instance != null)
         {
-            TenantAssignmentCoordinator.Instance.AssignmentChanged += Refresh;
+            _cachedCoordinator = TenantAssignmentCoordinator.Instance;
+            _cachedCoordinator.AssignmentChanged += Refresh;
+            _cachedCoordinator.JobAssignmentChanged += Refresh;
             _subscribed = true;
+            return true;
         }
+        return false;
     }
 
     private void Unsubscribe()
     {
         if (!_subscribed)
             return;
-        if (TenantAssignmentCoordinator.Instance != null)
-            TenantAssignmentCoordinator.Instance.AssignmentChanged -= Refresh;
+        if (_cachedCoordinator != null)
+        {
+            _cachedCoordinator.AssignmentChanged -= Refresh;
+            _cachedCoordinator.JobAssignmentChanged -= Refresh;
+            _cachedCoordinator = null;
+        }
         _subscribed = false;
     }
 
@@ -150,6 +203,29 @@ public class RoomTenantAvatarSlot : MonoBehaviour
             dragColor.a *= 0.4f;
             avatarImage.color = dragColor;
         }
+
+        UpdateRedDotVisibility(occupantId);
+    }
+
+    private void UpdateRedDotVisibility(string occupantId)
+    {
+        if (_instantiatedRedDot == null)
+            return;
+
+        bool show = false;
+        if (!string.IsNullOrEmpty(occupantId))
+        {
+            SettlementBridge bridge = SettlementBridge.Instance;
+            if (bridge != null && bridge.RunState != null && bridge.RunState.Tenants != null && bridge.RunState.Tenants.TryGetValue(occupantId, out var tenant))
+            {
+                if (tenant != null && !string.IsNullOrEmpty(tenant.RoomId) && tenant.RoomId == roomId && string.IsNullOrEmpty(tenant.JobId))
+                {
+                    show = true;
+                }
+            }
+        }
+
+        _instantiatedRedDot.SetVisible(show);
     }
 
     public void SetDragVisual(bool active)

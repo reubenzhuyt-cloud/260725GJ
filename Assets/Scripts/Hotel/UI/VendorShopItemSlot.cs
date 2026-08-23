@@ -1,9 +1,10 @@
 using Hotel.Authoring.Items;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class VendorShopItemSlot : MonoBehaviour
+public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public Image iconImage;
     public TextMeshProUGUI nameText;
@@ -11,11 +12,23 @@ public class VendorShopItemSlot : MonoBehaviour
     public Button buyButton;
     public GameObject soldOutOverlay;
 
+    [SerializeField] private float hoverStillDelay = 0.3f;
+    [SerializeField] private float moveThreshold = 2f;
+
     private ItemDefinition _definition;
     private bool _sold;
+    private bool _hovered;
+    private Vector2 _lastMousePosition;
+    private float _hoverStillTime;
+    private RectTransform _rectTransform;
 
     public ItemDefinition Definition => _definition;
     public bool IsSold => _sold;
+
+    private void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+    }
 
     public void Bind(ItemDefinition definition)
     {
@@ -45,5 +58,69 @@ public class VendorShopItemSlot : MonoBehaviour
             soldOutOverlay.SetActive(sold);
         if (buyButton != null)
             buyButton.interactable = !sold;
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        _hovered = true;
+        _lastMousePosition = Input.mousePosition;
+        _hoverStillTime = 0f;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_rectTransform == null)
+            _rectTransform = GetComponent<RectTransform>();
+
+        if (_rectTransform != null && eventData != null)
+        {
+            Camera cam = eventData.pressEventCamera ?? eventData.enterEventCamera;
+            if (RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, eventData.position, cam))
+                return;
+        }
+
+        _hovered = false;
+        ItemInfoPanel panel = GetInfoPanel();
+        if (panel != null)
+            panel.Hide();
+    }
+
+    private void OnDisable()
+    {
+        _hovered = false;
+        ItemInfoPanel panel = GetInfoPanel();
+        if (panel != null)
+            panel.Hide();
+    }
+
+    private void Update()
+    {
+        if (!_hovered || _definition == null)
+            return;
+
+        Vector2 mousePosition = Input.mousePosition;
+        if (Vector2.Distance(mousePosition, _lastMousePosition) > moveThreshold)
+        {
+            ItemInfoPanel panel = GetInfoPanel();
+            if (panel != null)
+                panel.Hide();
+            _lastMousePosition = mousePosition;
+            _hoverStillTime = 0f;
+            return;
+        }
+
+        _hoverStillTime += Time.unscaledDeltaTime;
+        if (_hoverStillTime < hoverStillDelay)
+            return;
+
+        ItemInfoPanel hoverPanel = GetInfoPanel();
+        if (hoverPanel != null && !hoverPanel.IsShowing)
+            hoverPanel.Show(_definition, mousePosition);
+    }
+
+    private static ItemInfoPanel GetInfoPanel()
+    {
+        ItemUseManager manager = ItemUseManager.Instance;
+        return manager != null ? manager.infoPanel : null;
     }
 }

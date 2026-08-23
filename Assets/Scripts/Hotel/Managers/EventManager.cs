@@ -44,9 +44,17 @@ public class EventManager : MonoBehaviour
     private int _plannedDay = -1;
     private int _settleRetryCount;
     private bool _settlementBlocked;
+    private string _abandonedCleanupEventId;
     private int _triggerDay;
     private GamePhase _triggerPhase;
     private const int MaxSettleRetries = 5;
+
+    private enum EventTriggerResult
+    {
+        Triggered,
+        Deferred,
+        Skipped
+    }
 
     private readonly Dictionary<GamePhase, List<EventConfig>> preGeneratedEvents =
         new Dictionary<GamePhase, List<EventConfig>>();
@@ -112,6 +120,7 @@ public class EventManager : MonoBehaviour
         eventQueue.Clear();
         _settleRetryCount = 0;
         _settlementBlocked = false;
+        _abandonedCleanupEventId = null;
         if (_pendingPayload != null)
         {
             EventSettleResult pendingResult = EventSettleResult.Pending;
@@ -394,44 +403,52 @@ public class EventManager : MonoBehaviour
             }
 
             EventConfig config = eventQueue.Dequeue();
-            bool triggered = TriggerEvent(config);
-            if (!triggered)
+            EventTriggerResult triggerResult = TriggerEvent(config);
+            if (triggerResult == EventTriggerResult.Deferred)
+            {
+                RequeueEvent(config);
+                return;
+            }
+            if (triggerResult == EventTriggerResult.Triggered)
             {
                 return;
             }
-            return;
         }
         NotifyQueueEmpty();
     }
 
-    private bool TriggerEvent(EventConfig config)
+    private EventTriggerResult TriggerEvent(EventConfig config)
     {
         if (onPopupEvent == null)
         {
             Debug.LogError("[EventManager] onPopupEvent is null; popup cannot be shown.");
-            return false;
+            return EventTriggerResult.Deferred;
         }
         if (_currentConfig != null)
         {
             Debug.LogError($"[EventManager] Cannot trigger '{config.eventId}': popup '{_currentConfig.eventId}' is still active. Deferred; event stays queued.");
-            RequeueEvent(config);
-            return false;
+            return EventTriggerResult.Deferred;
         }
 
         var bridge = SettlementBridge.Instance;
         if (bridge == null || bridge.RunState == null || bridge.Reducer == null)
         {
             Debug.LogWarning($"[EventManager] Cannot trigger '{config.eventId}': SettlementBridge/RunState/Reducer is unavailable. Requeueing event.");
-            RequeueEvent(config);
-            return false;
+            return EventTriggerResult.Deferred;
         }
 
         if (!RecordEventPlanned(config))
         {
-            Debug.LogWarning($"[EventManager] RecordEventPlanned failed for '{config.eventId}'. Event not displayed.");
-            return false;
+            Debug.LogWarning($"[EventManager] RecordEventPlanned failed for '{config.eventId}'. Event skipped.");
+            return EventTriggerResult.Skipped;
         }
 
+        DisplayEventPopup(config, bridge);
+        return EventTriggerResult.Triggered;
+    }
+
+    private void DisplayEventPopup(EventConfig config, SettlementBridge bridge)
+    {
         _currentConfig = config;
         _triggerDay = _activeDay > 0 ? _activeDay : (bridge != null && bridge.RunState != null ? bridge.RunState.Day : 0);
         _triggerPhase = _activeDay > 0 ? _activePhase : ToGamePhase(bridge != null && bridge.RunState != null ? bridge.RunState.Phase.Current : HotelPhase.Day);
@@ -478,7 +495,6 @@ public class EventManager : MonoBehaviour
 
         onPopupEvent.Raise(data);
         Debug.Log($"[EventManager] Triggered: {config.eventTitle}");
-        return true;
     }
 
     /// <summary>
@@ -531,6 +547,12 @@ public class EventManager : MonoBehaviour
 
     private void OnEventProcessed(string eventId)
     {
+        if (!string.IsNullOrEmpty(_abandonedCleanupEventId))
+        {
+            Debug.LogWarning($"[EventManager] Ignoring processed event '{eventId}' while abandoned cleanup for '{_abandonedCleanupEventId}' is pending.");
+            return;
+        }
+
         if (_pendingPayload != null)
         {
             Debug.LogWarning($"[EventManager] Ignoring processed event '{eventId}' while settlement for '{_pendingPayload.eventId}' is pending.");
@@ -591,6 +613,27 @@ public class EventManager : MonoBehaviour
 
     private void Update()
     {
+        if (!string.IsNullOrEmpty(_abandonedCleanupEventId))
+        {
+            var bridge = SettlementBridge.Instance;
+            if (bridge != null && bridge.RunState != null && bridge.Reducer != null)
+            {
+                var set = AuthorizedChangeSet.Domain(bridge.RunState.RunId, bridge.RunState.StateVersion, "EventManager", "ResolveAbandonedEvent");
+                set.Add(new ResolveEventHistoryChange(_abandonedCleanupEventId, string.Empty));
+                CommitResult cleanupResult = bridge.Reducer.TryCommit(bridge.RunState, set);
+                if (cleanupResult.Succeeded)
+                {
+                    _abandonedCleanupEventId = null;
+                    _pendingPayload = null;
+                    ClearActiveEvent();
+                    AdvanceQueue();
+                    return;
+                }
+                Debug.LogWarning($"[EventManager] Retry resolving abandoned event history for '{_abandonedCleanupEventId}' failed; will retry next frame.");
+            }
+            return;
+        }
+
         if (_pendingPayload == null || _settlementBlocked)
             return;
 
@@ -598,9 +641,24 @@ public class EventManager : MonoBehaviour
         {
             _settlementBlocked = true;
             Debug.LogError($"[EventManager] Settlement of '{_pendingPayload.eventId}' failed after {MaxSettleRetries} attempts; abandoning retry. History record remains unresolved and is flagged for explicit cleanup.");
-            _pendingPayload = null;
-            ClearActiveEvent();
-            AdvanceQueue();
+
+            _abandonedCleanupEventId = _pendingPayload.eventId;
+            var bridge = SettlementBridge.Instance;
+            if (bridge != null && bridge.RunState != null && bridge.Reducer != null)
+            {
+                var set = AuthorizedChangeSet.Domain(bridge.RunState.RunId, bridge.RunState.StateVersion, "EventManager", "ResolveAbandonedEvent");
+                set.Add(new ResolveEventHistoryChange(_abandonedCleanupEventId, string.Empty));
+                CommitResult cleanupResult = bridge.Reducer.TryCommit(bridge.RunState, set);
+                if (cleanupResult.Succeeded)
+                {
+                    _abandonedCleanupEventId = null;
+                    _pendingPayload = null;
+                    ClearActiveEvent();
+                    AdvanceQueue();
+                    return;
+                }
+                Debug.LogWarning($"[EventManager] Initial cleanup commit failed for '{_abandonedCleanupEventId}'; will retry in subsequent frames.");
+            }
             return;
         }
 
@@ -792,10 +850,16 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        EventConfig config = _currentConfig;
-        _currentConfig = null;
-        _currentProtagonistTenantId = null;
-        TriggerEvent(config);
+        var bridge = SettlementBridge.Instance;
+        if (bridge == null || bridge.RunState == null || bridge.Reducer == null || onPopupEvent == null)
+        {
+            Debug.LogWarning($"[EventManager] Cannot reopen rejected event '{_currentConfig.eventId}': dependencies unavailable.");
+            ClearActiveEvent();
+            AdvanceQueue();
+            return;
+        }
+
+        DisplayEventPopup(_currentConfig, bridge);
     }
 
     private void RecordEventLog(GameRunState state, EventProcessedData payload)

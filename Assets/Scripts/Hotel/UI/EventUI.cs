@@ -97,7 +97,7 @@ public class EventUI : MonoBehaviour
             AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
 
         // Set shared content
-        if (eventImage != null && data.image != null)
+        if (eventImage != null)
             eventImage.sprite = data.image;
         if (eventTitle != null)
             eventTitle.text = data.title;
