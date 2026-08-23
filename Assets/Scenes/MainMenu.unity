@@ -132,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1001}
   - component: {fileID: 1002}
+  - component: {fileID: 1003}
   m_Layer: 0
   m_Name: MainMenuController
   m_TagString: Untagged
@@ -189,6 +190,19 @@ MonoBehaviour:
   confirmTitle: {fileID: 1975343498}
   confirmYesButton: {fileID: 650929220}
   confirmNoButton: {fileID: 1212144181}
+--- !u!114 &1003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa4c6dd6023448a478801801faf87f22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panel: {fileID: 1102645559}
 --- !u!1 &18599342
 GameObject:
   m_ObjectHideFlags: 0
@@ -566,10 +580,10 @@ RectTransform:
   - {fileID: 1130756943}
   m_Father: {fileID: 1124673291}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -0.0000038146973}
+  m_SizeDelta: {x: 1176.82, y: 764.475}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &38737031
 MonoBehaviour:
@@ -1396,10 +1410,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1102645559}
+      - m_Target: {fileID: 1003}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+        m_MethodName: Open
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -3325,6 +3339,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBgm: {fileID: 8300000, guid: 1b357f0a920b31f458b5fc8e8a09b388, type: 3}
+  creditsBgm: {fileID: 0}
   playSoundEffectEvent: {fileID: 11400000, guid: 70be55fc7efadb649a60c04ca9c24236, type: 2}
   uiClickClip: {fileID: 8300000, guid: 088730018f53f94408a2a9074b84b9ae, type: 3}
   uiPanelOpenClip: {fileID: 8300000, guid: 374325c8de0ea3a408d5a435ea3ed373, type: 3}
@@ -4677,8 +4692,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -188.318, y: -120.289}
-  m_SizeDelta: {x: 300, y: 90}
+  m_AnchoredPosition: {x: -188.318, y: -120.29}
+  m_SizeDelta: {x: 300, y: 89.999}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &650929220
 MonoBehaviour:
@@ -5387,10 +5402,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1102645559}
+      - m_Target: {fileID: 1003}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+        m_MethodName: Close
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
@@ -9001,7 +9016,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -5.798, y: 147.724}
+  m_AnchoredPosition: {x: -5.798, y: 122.78}
   m_SizeDelta: {x: 701.596, y: 245.563}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1316234188

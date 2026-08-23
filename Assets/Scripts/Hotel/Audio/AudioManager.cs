@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Hotel.Audio
@@ -11,12 +12,6 @@ namespace Hotel.Audio
         NextPhaseButtonSE
     }
 
-    /// <summary>
-    /// Scene-scoped audio manager. Owns exactly three AudioSource channels:
-    /// "BGM Audio" (looping background music), "SFX Audio" (one-shot effects),
-    /// and "UI Audio" (UI sound effects with deduplication and override).
-    /// Does not persist across scene loads.
-    /// </summary>
     public class AudioManager : MonoBehaviour
     {
         private static AudioManager instance;
@@ -24,6 +19,7 @@ namespace Hotel.Audio
         public static AudioManager Instance => instance;
 
         [SerializeField] private AudioClip defaultBgm;
+        [SerializeField] private AudioClip creditsBgm;
         [SerializeField] private SoundEffectEvent playSoundEffectEvent;
 
         [Header("UI Sound Clips")]
@@ -41,9 +37,17 @@ namespace Hotel.Audio
         [Range(-12f, 12f)] [SerializeField] private float uiEqHighGain = 0f;
 
         private AudioSource bgmSource;
+        private AudioSource bgmSecondarySource;
         private AudioSource sfxSource;
         private AudioSource uiSource;
         private UIEqualizerFilter uiEqFilter;
+
+        private Coroutine bgmFadeCoroutine;
+        private AudioClip savedBgmBeforeCredits;
+        private bool isCreditsBgmActive;
+
+        private const float DefaultBgmCrossFadeDuration = 1f;
+        private const float CreditsBgmCrossFadeDuration = 2f;
 
         private const float UiCooldownInterval = 0.05f;
         private readonly float[] lastUiPlayTimes = new float[Enum.GetValues(typeof(UISoundType)).Length];
@@ -56,6 +60,11 @@ namespace Hotel.Audio
             bgmSource.loop = true;
             bgmSource.playOnAwake = false;
             bgmSource.volume = bgmVolume;
+
+            bgmSecondarySource = GetOrCreateSource("BGM Audio Secondary");
+            bgmSecondarySource.loop = true;
+            bgmSecondarySource.playOnAwake = false;
+            bgmSecondarySource.volume = 0f;
 
             sfxSource = GetOrCreateSource("SFX Audio");
             sfxSource.loop = false;
@@ -97,6 +106,12 @@ namespace Hotel.Audio
 
         private void OnDestroy()
         {
+            if (bgmFadeCoroutine != null)
+            {
+                StopCoroutine(bgmFadeCoroutine);
+                bgmFadeCoroutine = null;
+            }
+
             if (instance == this)
                 instance = null;
         }
@@ -144,8 +159,13 @@ namespace Hotel.Audio
         public void SetBgmVolume(float volume)
         {
             bgmVolume = Mathf.Clamp01(volume);
-            if (bgmSource != null)
-                bgmSource.volume = bgmVolume;
+            if (bgmFadeCoroutine == null)
+            {
+                if (bgmSource != null)
+                    bgmSource.volume = bgmVolume;
+                if (bgmSecondarySource != null)
+                    bgmSecondarySource.volume = 0f;
+            }
         }
 
         public float BgmVolume => bgmVolume;
@@ -154,8 +174,6 @@ namespace Hotel.Audio
 
         public void SetSoundEffectVolume(float volume)
         {
-            // Applied as the volume scale of each new PlayOneShot call
-            // (AudioSource.volume does not affect PlayOneShot).
             soundEffectVolume = Mathf.Clamp01(volume);
             if (uiSource != null)
                 uiSource.volume = soundEffectVolume;
@@ -167,29 +185,148 @@ namespace Hotel.Audio
                 uiEqFilter.SetGains(uiEqLowGain, uiEqMidGain, uiEqHighGain);
         }
 
-        private void PlayBgm(AudioClip clip)
+        public void OpenCreditsBgm()
         {
-            if (clip == null)
-                clip = LoadFallbackBgm();
-
-            if (clip == null || bgmSource == null)
+            if (creditsBgm == null)
                 return;
 
-            if (bgmSource.clip == clip && bgmSource.isPlaying)
+            if (isCreditsBgmActive)
                 return;
 
-            bgmSource.clip = clip;
-            bgmSource.Play();
+            AudioClip currentClip = GetCurrentBgmClip();
+            if (currentClip == creditsBgm)
+                return;
+
+            savedBgmBeforeCredits = currentClip;
+            isCreditsBgmActive = true;
+            CrossFadeBgm(creditsBgm, CreditsBgmCrossFadeDuration);
         }
 
-        private static AudioClip LoadFallbackBgm()
+        public void CloseCreditsBgm()
         {
-            AudioClip[] clips = Resources.LoadAll<AudioClip>("BGM");
-            if (clips == null || clips.Length == 0)
-                return null;
+            if (!isCreditsBgmActive)
+                return;
 
-            Array.Sort(clips, (a, b) => string.CompareOrdinal(a.name, b.name));
-            return clips[0];
+            if (savedBgmBeforeCredits == null)
+                return;
+
+            AudioClip targetClip = savedBgmBeforeCredits;
+            savedBgmBeforeCredits = null;
+            isCreditsBgmActive = false;
+
+            if (GetCurrentBgmClip() == targetClip)
+                return;
+
+            CrossFadeBgm(targetClip, CreditsBgmCrossFadeDuration);
+        }
+
+        public void PlayBgm(AudioClip clip, float fadeDuration = DefaultBgmCrossFadeDuration)
+        {
+            if (clip == null)
+                return;
+
+            if (GetCurrentBgmClip() == clip && IsAnyBgmPlaying())
+                return;
+
+            CrossFadeBgm(clip, fadeDuration);
+        }
+
+        private AudioClip GetCurrentBgmClip()
+        {
+            if (bgmSource != null && bgmSource.isPlaying && bgmSource.clip != null)
+                return bgmSource.clip;
+
+            if (bgmSecondarySource != null && bgmSecondarySource.isPlaying && bgmSecondarySource.clip != null)
+                return bgmSecondarySource.clip;
+
+            return bgmSource != null ? bgmSource.clip : null;
+        }
+
+        private bool IsAnyBgmPlaying()
+        {
+            return (bgmSource != null && bgmSource.isPlaying) ||
+                   (bgmSecondarySource != null && bgmSecondarySource.isPlaying);
+        }
+
+        private void CrossFadeBgm(AudioClip newClip, float duration)
+        {
+            if (newClip == null)
+                return;
+
+            if (bgmFadeCoroutine != null)
+            {
+                StopCoroutine(bgmFadeCoroutine);
+                bgmFadeCoroutine = null;
+            }
+
+            if (duration <= 0f)
+            {
+                if (bgmSecondarySource != null)
+                {
+                    bgmSecondarySource.Stop();
+                    bgmSecondarySource.clip = null;
+                    bgmSecondarySource.volume = 0f;
+                }
+
+                if (bgmSource != null)
+                {
+                    bgmSource.clip = newClip;
+                    bgmSource.loop = true;
+                    bgmSource.volume = bgmVolume;
+                    bgmSource.Play();
+                }
+
+                return;
+            }
+
+            bgmFadeCoroutine = StartCoroutine(CrossFadeRoutine(newClip, duration));
+        }
+
+        private IEnumerator CrossFadeRoutine(AudioClip newClip, float duration)
+        {
+            AudioSource fadeOutSource = bgmSource;
+            AudioSource fadeInSource = bgmSecondarySource;
+
+            if (fadeOutSource == null || fadeInSource == null)
+                yield break;
+
+            fadeInSource.clip = newClip;
+            fadeInSource.loop = true;
+            fadeInSource.volume = 0f;
+            fadeInSource.Play();
+
+            float startFadeOutVolume = fadeOutSource.volume;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
+
+                if (fadeOutSource != null)
+                    fadeOutSource.volume = Mathf.Lerp(startFadeOutVolume, 0f, progress);
+
+                if (fadeInSource != null)
+                    fadeInSource.volume = Mathf.Lerp(0f, bgmVolume, progress);
+
+                yield return null;
+            }
+
+            if (fadeOutSource != null)
+            {
+                fadeOutSource.Stop();
+                fadeOutSource.clip = null;
+                fadeOutSource.volume = 0f;
+            }
+
+            if (fadeInSource != null)
+            {
+                fadeInSource.volume = bgmVolume;
+            }
+
+            bgmSource = fadeInSource;
+            bgmSecondarySource = fadeOutSource;
+            bgmFadeCoroutine = null;
         }
 
         private AudioSource GetOrCreateSource(string childName)
