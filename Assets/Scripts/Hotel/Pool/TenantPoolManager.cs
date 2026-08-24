@@ -71,11 +71,12 @@ public static class TenantPoolManager
         { "农民", TenantAbility.Farmer },
         { "司机", TenantAbility.Driver },
         { "教师", TenantAbility.Teacher },
+        { "木工", TenantAbility.Carpenter },
     };
 
     private static readonly string[] NormalJobKeys =
     {
-        "医生", "厨师", "守夜人", "工程师", "前员工", "商贩", "农民", "司机", "教师",
+        "医生", "厨师", "守夜人", "工程师", "前员工", "商贩", "农民", "司机", "教师", "木工",
     };
 
     private static readonly Dictionary<string, string> TierKey = new Dictionary<string, string>

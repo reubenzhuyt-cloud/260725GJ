@@ -297,6 +297,13 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             "AssignRoom");
         changeSet.Add(new AssignRoomChange(tenantId, roomId));
 
+        bool needsCheckIn = _runState.Tenants.TryGetValue(tenantId, out TenantRunState targetTenant)
+            && targetTenant != null && targetTenant.CheckInDay <= 0;
+        if (needsCheckIn)
+        {
+            changeSet.Add(new SetTenantCheckInChange(tenantId, _runState.Day));
+        }
+
         CommitResult result = _reducer.TryCommit(_runState, changeSet);
 
         if (result.Succeeded)
@@ -306,19 +313,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             TenantAssignmentPanel.RefreshAll();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
-
-            // First assignment marks the tenant's check-in day (used as the chain D1 anchor).
-            if (_runState.Tenants.TryGetValue(tenantId, out TenantRunState assignedTenant)
-                && assignedTenant != null && assignedTenant.CheckInDay <= 0)
-            {
-                var checkInSet = AuthorizedChangeSet.Domain(
-                    _runState.RunId,
-                    _runState.StateVersion,
-                    "TenantAssignmentCoordinator",
-                    "SetCheckInDay");
-                checkInSet.Add(new SetTenantCheckInChange(tenantId, _runState.Day));
-                _reducer.TryCommit(_runState, checkInSet);
-            }
 
             string displayName = tenantId;
             if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))

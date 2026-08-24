@@ -280,6 +280,10 @@ public class TenantReviewCoordinator : MonoBehaviour
     private bool HasRecruitmentCapacity()
     {
         if (_runState == null) return false;
+        if (TenantAssignmentCoordinator.Instance != null)
+        {
+            return TenantAssignmentCoordinator.Instance.AvailableCapacity > 0;
+        }
         return _runState.Tenants.Count < _runState.Rooms.Count;
     }
 
