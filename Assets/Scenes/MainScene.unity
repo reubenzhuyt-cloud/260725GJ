@@ -24080,9 +24080,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foodAmountText: {fileID: 68303660}
-  currencyAmountText: {fileID: 0}
+  currencyAmountText: {fileID: 848258287}
   foodIcon: {fileID: 185871836}
-  currencyIcon: {fileID: 0}
+  currencyIcon: {fileID: 769715911}
   onResourceAdjusted: {fileID: 11400000, guid: b4be3f8a941747d41b7994af0ab32c76, type: 2}
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
 --- !u!114 &1114996822
@@ -33324,7 +33324,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 734040415}
   m_HandleRect: {fileID: 734040414}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
