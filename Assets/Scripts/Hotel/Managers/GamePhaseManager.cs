@@ -62,12 +62,23 @@ public class GamePhaseManager : MonoBehaviour
         if (currentDay >= Hotel.Runtime.RunSettlementCalculator.FinalDay
             && currentPhase == GamePhase.Night)
         {
-            if (RunSettlementController.Instance == null)
+            RunSettlementController controller = RunSettlementController.Instance;
+            if (controller == null)
+            {
+                controller = Object.FindObjectOfType<RunSettlementController>(true);
+                if (controller == null)
+                {
+                    var go = new GameObject("RunSettlementController");
+                    controller = go.AddComponent<RunSettlementController>();
+                }
+            }
+
+            if (controller == null)
             {
                 Debug.LogError("[GamePhaseManager] Run settlement controller is unavailable.");
                 return false;
             }
-            return RunSettlementController.Instance.TryCompleteRun();
+            return controller.TryCompleteRun();
         }
 
         GamePhase nextPhase = GetNextPhase();
@@ -170,6 +181,11 @@ public class GamePhaseManager : MonoBehaviour
                 day = currentDay,
                 phase = currentPhase
             });
+        }
+
+        if (SettlementBridge.Instance != null && SettlementBridge.Instance.RunState != null)
+        {
+            Hotel.Audio.BaseAudioManager.Instance?.NotifyRunState(SettlementBridge.Instance.RunState);
         }
     }
 

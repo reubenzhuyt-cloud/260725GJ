@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: flashlight
   displayName: "\u624B\u7535\u7B52"
+  hoverDescription: 
   description: "\u591C\u95F4\u4E8B\u4EF6\u635F\u5931\u989D\u5916\u964D\u4F4E 10%\uFF0C\u672C\u5C40\u6301\u7EED\u3002"
-  icon: {fileID: 0}
+  readableContent: 
+  discoveryScene: 
+  icon: {fileID: 21300000, guid: 193a15ca6f5806343b4336c9a8d80cdf, type: 3}
   maxStack: 99
   acquisition: 0
   merchantPrice: 2

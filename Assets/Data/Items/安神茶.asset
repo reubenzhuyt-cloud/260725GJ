@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: calming_tea
   displayName: "\u5B89\u795E\u8336"
+  hoverDescription: 
   description: "\u5168\u697C\u623F\u5BA2\u4FB5\u8680\u5EA6\u964D\u4F4E 1 \u70B9\u3002"
-  icon: {fileID: 0}
+  readableContent: 
+  discoveryScene: 
+  icon: {fileID: 21300000, guid: cef4c8ac7b46e984cb47724edb1fe265, type: 3}
   maxStack: 99
   acquisition: 0
   merchantPrice: 5

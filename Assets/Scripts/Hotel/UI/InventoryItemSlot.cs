@@ -47,6 +47,16 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
             if (nameLabel != null)
                 nameLabel.text = item.displayName;
         }
+        else
+        {
+            if (iconImage != null)
+            {
+                iconImage.sprite = null;
+                iconImage.enabled = false;
+            }
+            if (nameLabel != null)
+                nameLabel.text = string.Empty;
+        }
         if (countLabel != null)
         {
             if (item != null && item.acquisition == ItemAcquisition.TruthChain)
@@ -64,6 +74,14 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
     }
 
     public void OnPointerExit(PointerEventData eventData)
+    {
+        _hovered = false;
+        ItemInfoPanel panel = GetInfoPanel();
+        if (panel != null)
+            panel.Hide();
+    }
+
+    private void OnDisable()
     {
         _hovered = false;
         ItemInfoPanel panel = GetInfoPanel();

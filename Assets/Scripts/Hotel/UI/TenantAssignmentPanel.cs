@@ -3,6 +3,14 @@ using UnityEngine;
 
 public class TenantAssignmentPanel : MonoBehaviour
 {
+    private static readonly List<TenantAssignmentPanel> AllPanels = new List<TenantAssignmentPanel>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        AllPanels.Clear();
+    }
+
     [SerializeField] private Transform listContainer;
     [SerializeField] private TenantAvatarListItem avatarItemPrefab;
 
@@ -10,12 +18,17 @@ public class TenantAssignmentPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!AllPanels.Contains(this))
+            AllPanels.Add(this);
+
         if (TenantAssignmentCoordinator.Instance != null)
             TenantAssignmentCoordinator.Instance.AssignmentChanged += Refresh;
     }
 
     private void OnDisable()
     {
+        AllPanels.Remove(this);
+
         if (TenantAssignmentCoordinator.Instance != null)
             TenantAssignmentCoordinator.Instance.AssignmentChanged -= Refresh;
     }
@@ -41,14 +54,14 @@ public class TenantAssignmentPanel : MonoBehaviour
             return;
 
         IReadOnlyList<TenantAssignmentItemView> tenants =
-            TenantAssignmentCoordinator.Instance.UnassignedTenants;
+            TenantAssignmentCoordinator.Instance.PanelTenants;
 
         for (int i = 0; i < tenants.Count; i++)
         {
             TenantAssignmentItemView data = tenants[i];
             TenantAvatarListItem item = Instantiate(avatarItemPrefab, listContainer);
             item.gameObject.SetActive(true);
-            item.Initialize(data.TenantId, data.DisplayName, data.Color, data.AvatarKey);
+            item.Initialize(data.TenantId, data.DisplayName, data.Color, data.AvatarKey, data.IsAssigned);
             _spawnedItems.Add(item.gameObject);
         }
     }
@@ -57,10 +70,11 @@ public class TenantAssignmentPanel : MonoBehaviour
     {
         if (TenantAssignmentCoordinator.Instance == null)
             return;
-        TenantAssignmentPanel[] all = FindObjectsOfType<TenantAssignmentPanel>(true);
-        for (int i = 0; i < all.Length; i++)
+
+        for (int i = 0; i < AllPanels.Count; i++)
         {
-            all[i].Refresh();
+            if (AllPanels[i] != null)
+                AllPanels[i].Refresh();
         }
     }
 }

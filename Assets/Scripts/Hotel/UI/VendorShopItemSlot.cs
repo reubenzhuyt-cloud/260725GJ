@@ -36,7 +36,18 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
         _sold = false;
 
         if (iconImage != null)
-            iconImage.sprite = definition != null ? definition.icon : null;
+        {
+            if (definition != null && definition.icon != null)
+            {
+                iconImage.sprite = definition.icon;
+                iconImage.enabled = true;
+            }
+            else
+            {
+                iconImage.sprite = null;
+                iconImage.enabled = false;
+            }
+        }
         if (nameText != null)
             nameText.text = definition != null ? definition.displayName : string.Empty;
         if (priceText != null)

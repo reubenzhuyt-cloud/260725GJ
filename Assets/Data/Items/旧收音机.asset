@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: old_radio
   displayName: "\u65E7\u6536\u97F3\u673A"
+  hoverDescription: 
   description: "\u89E3\u9501\u989D\u5916\u60C5\u62A5\u7EBF\u7D22\u3002"
-  icon: {fileID: 0}
+  readableContent: 
+  discoveryScene: 
+  icon: {fileID: 21300000, guid: d3f6475052fcfa24782fdacdfb08ed7c, type: 3}
   maxStack: 99
   acquisition: 0
   merchantPrice: 4

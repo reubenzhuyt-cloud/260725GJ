@@ -1,191 +1,118 @@
 using System;
-using System.Collections;
 using UnityEngine;
+using Hotel.Runtime;
 
 namespace Hotel.Audio
 {
-    public enum UISoundType
+    public class AudioManager : BaseAudioManager
     {
-        Click,
-        PanelOpen,
-        PanelClose,
-        NextPhaseButtonSE
-    }
+        public new static BaseAudioManager Instance => BaseAudioManager.Instance;
 
-    public class AudioManager : MonoBehaviour
-    {
-        private static AudioManager instance;
+        [Header("Erosion BGM Settings")]
+        [SerializeField] private AudioClip lowErosionBgm;
+        [SerializeField] private AudioClip highErosionBgm;
+        [SerializeField] private float erosionCrossFadeDuration = 1f;
 
-        public static AudioManager Instance => instance;
-
-        [SerializeField] private AudioClip defaultBgm;
+        [Header("Credits BGM")]
         [SerializeField] private AudioClip creditsBgm;
-        [SerializeField] private SoundEffectEvent playSoundEffectEvent;
 
-        [Header("UI Sound Clips")]
-        [SerializeField] private AudioClip uiClickClip;
-        [SerializeField] private AudioClip uiPanelOpenClip;
-        [SerializeField] private AudioClip uiPanelCloseClip;
-        [SerializeField] private AudioClip uiNextPhaseButtonSEClip;
-
-        [Range(0f, 1f)] [SerializeField] private float bgmVolume = 1f;
-        [Range(0f, 1f)] [SerializeField] private float soundEffectVolume = 1f;
-
-        [Header("UI Equalizer (dB)")]
-        [Range(-12f, 12f)] [SerializeField] private float uiEqLowGain = 0f;
-        [Range(-12f, 12f)] [SerializeField] private float uiEqMidGain = 0f;
-        [Range(-12f, 12f)] [SerializeField] private float uiEqHighGain = 0f;
-
-        private AudioSource bgmSource;
-        private AudioSource bgmSecondarySource;
-        private AudioSource sfxSource;
-        private AudioSource uiSource;
-        private UIEqualizerFilter uiEqFilter;
-
-        private Coroutine bgmFadeCoroutine;
         private AudioClip savedBgmBeforeCredits;
         private bool isCreditsBgmActive;
+        private bool isHighErosionBgmTriggered;
 
-        private const float DefaultBgmCrossFadeDuration = 1f;
         private const float CreditsBgmCrossFadeDuration = 2f;
 
-        private const float UiCooldownInterval = 0.05f;
-        private readonly float[] lastUiPlayTimes = new float[Enum.GetValues(typeof(UISoundType)).Length];
-
-        private void Awake()
+        protected override void Start()
         {
-            instance = this;
-
-            bgmSource = GetOrCreateSource("BGM Audio");
-            bgmSource.loop = true;
-            bgmSource.playOnAwake = false;
-            bgmSource.volume = bgmVolume;
-
-            bgmSecondarySource = GetOrCreateSource("BGM Audio Secondary");
-            bgmSecondarySource.loop = true;
-            bgmSecondarySource.playOnAwake = false;
-            bgmSecondarySource.volume = 0f;
-
-            sfxSource = GetOrCreateSource("SFX Audio");
-            sfxSource.loop = false;
-            sfxSource.playOnAwake = false;
-
-            uiSource = GetOrCreateSource("UI Audio");
-            uiSource.loop = false;
-            uiSource.playOnAwake = false;
-            uiSource.volume = soundEffectVolume;
-
-            uiEqFilter = uiSource.GetComponent<UIEqualizerFilter>();
-            if (uiEqFilter == null)
-                uiEqFilter = uiSource.gameObject.AddComponent<UIEqualizerFilter>();
-
-            UpdateUIEqualizerGains();
+            CheckAndEvaluateBgm(playDirectIfInitial: true);
         }
 
-        private void Update()
+        public override void NotifyRunState(GameRunState state)
         {
-            UpdateUIEqualizerGains();
-        }
-
-        private void Start()
-        {
-            PlayBgm(defaultBgm);
-        }
-
-        private void OnEnable()
-        {
-            if (playSoundEffectEvent != null)
-                playSoundEffectEvent.Register(PlaySoundEffect);
-        }
-
-        private void OnDisable()
-        {
-            if (playSoundEffectEvent != null)
-                playSoundEffectEvent.Unregister(PlaySoundEffect);
-        }
-
-        private void OnDestroy()
-        {
-            if (bgmFadeCoroutine != null)
+            if (state != null)
             {
-                StopCoroutine(bgmFadeCoroutine);
-                bgmFadeCoroutine = null;
+                EvaluateTriggerCondition(state);
             }
-
-            if (instance == this)
-                instance = null;
+            CheckAndEvaluateBgm();
         }
 
-        public void PlaySoundEffect(AudioClip clip)
+        public void UpdateGameState(int day, float averageErosion)
         {
-            if (clip == null || sfxSource == null)
+            if (!isHighErosionBgmTriggered && (averageErosion > 50f || day >= 15))
+            {
+                isHighErosionBgmTriggered = true;
+            }
+            CheckAndEvaluateBgm();
+        }
+
+        public void CheckAndEvaluateBgm(bool playDirectIfInitial = false)
+        {
+            AudioClip activeNormalBgm = GetDesiredNormalBgm();
+            if (activeNormalBgm == null)
                 return;
 
-            sfxSource.PlayOneShot(clip, soundEffectVolume);
-        }
-
-        public void PlayUISound(UISoundType type)
-        {
-            int index = (int)type;
-            float now = Time.unscaledTime;
-            if (index >= 0 && index < lastUiPlayTimes.Length)
-            {
-                if (now - lastUiPlayTimes[index] < UiCooldownInterval)
-                    return;
-                lastUiPlayTimes[index] = now;
-            }
-
-            AudioClip clip = GetUIClip(type);
-            if (clip == null || uiSource == null)
+            if (isCreditsBgmActive)
                 return;
 
-            uiSource.clip = clip;
-            uiSource.volume = soundEffectVolume;
-            uiSource.Play();
-        }
-
-        private AudioClip GetUIClip(UISoundType type)
-        {
-            return type switch
+            AudioClip currentClip = GetCurrentBgmClip();
+            if (playDirectIfInitial && currentClip == null)
             {
-                UISoundType.Click => uiClickClip,
-                UISoundType.PanelOpen => uiPanelOpenClip,
-                UISoundType.PanelClose => uiPanelCloseClip,
-                UISoundType.NextPhaseButtonSE => uiNextPhaseButtonSEClip,
-                _ => null
-            };
-        }
-
-        public void SetBgmVolume(float volume)
-        {
-            bgmVolume = Mathf.Clamp01(volume);
-            if (bgmFadeCoroutine == null)
+                PlayBgm(activeNormalBgm, 0f);
+            }
+            else if (currentClip != activeNormalBgm)
             {
-                if (bgmSource != null)
-                    bgmSource.volume = bgmVolume;
-                if (bgmSecondarySource != null)
-                    bgmSecondarySource.volume = 0f;
+                CrossFadeBgm(activeNormalBgm, erosionCrossFadeDuration);
             }
         }
 
-        public float BgmVolume => bgmVolume;
-
-        public float SfxVolume => soundEffectVolume;
-
-        public void SetSoundEffectVolume(float volume)
+        private void EvaluateTriggerCondition(GameRunState state)
         {
-            soundEffectVolume = Mathf.Clamp01(volume);
-            if (uiSource != null)
-                uiSource.volume = soundEffectVolume;
+            if (isHighErosionBgmTriggered)
+                return;
+
+            float avgErosion = CalculateAverageErosion(state);
+            if (avgErosion > 50f || state.Day >= 15)
+            {
+                isHighErosionBgmTriggered = true;
+            }
         }
 
-        private void UpdateUIEqualizerGains()
+        private float CalculateAverageErosion(GameRunState state)
         {
-            if (uiEqFilter != null)
-                uiEqFilter.SetGains(uiEqLowGain, uiEqMidGain, uiEqHighGain);
+            if (state == null || state.Tenants == null || state.Tenants.Count == 0)
+                return 0f;
+
+            float totalErosion = 0f;
+            int count = 0;
+
+            foreach (TenantRunState tenant in state.Tenants.Values)
+            {
+                if (tenant != null && !string.IsNullOrEmpty(tenant.RoomId))
+                {
+                    totalErosion += tenant.TrueErosion;
+                    count++;
+                }
+            }
+
+            return count > 0 ? totalErosion / count : 0f;
         }
 
-        public void OpenCreditsBgm()
+        private AudioClip GetDesiredNormalBgm()
+        {
+            if (isHighErosionBgmTriggered && highErosionBgm != null)
+            {
+                return highErosionBgm;
+            }
+
+            if (lowErosionBgm != null)
+            {
+                return lowErosionBgm;
+            }
+
+            return defaultBgm;
+        }
+
+        public override void OpenCreditsBgm()
         {
             if (creditsBgm == null)
                 return;
@@ -202,148 +129,22 @@ namespace Hotel.Audio
             CrossFadeBgm(creditsBgm, CreditsBgmCrossFadeDuration);
         }
 
-        public void CloseCreditsBgm()
+        public override void CloseCreditsBgm()
         {
             if (!isCreditsBgmActive)
                 return;
 
-            if (savedBgmBeforeCredits == null)
-                return;
-
-            AudioClip targetClip = savedBgmBeforeCredits;
-            savedBgmBeforeCredits = null;
             isCreditsBgmActive = false;
+            savedBgmBeforeCredits = null;
+
+            AudioClip targetClip = GetDesiredNormalBgm();
+            if (targetClip == null)
+                return;
 
             if (GetCurrentBgmClip() == targetClip)
                 return;
 
             CrossFadeBgm(targetClip, CreditsBgmCrossFadeDuration);
-        }
-
-        public void PlayBgm(AudioClip clip, float fadeDuration = DefaultBgmCrossFadeDuration)
-        {
-            if (clip == null)
-                return;
-
-            if (GetCurrentBgmClip() == clip && IsAnyBgmPlaying())
-                return;
-
-            CrossFadeBgm(clip, fadeDuration);
-        }
-
-        private AudioClip GetCurrentBgmClip()
-        {
-            if (bgmSource != null && bgmSource.isPlaying && bgmSource.clip != null)
-                return bgmSource.clip;
-
-            if (bgmSecondarySource != null && bgmSecondarySource.isPlaying && bgmSecondarySource.clip != null)
-                return bgmSecondarySource.clip;
-
-            return bgmSource != null ? bgmSource.clip : null;
-        }
-
-        private bool IsAnyBgmPlaying()
-        {
-            return (bgmSource != null && bgmSource.isPlaying) ||
-                   (bgmSecondarySource != null && bgmSecondarySource.isPlaying);
-        }
-
-        private void CrossFadeBgm(AudioClip newClip, float duration)
-        {
-            if (newClip == null)
-                return;
-
-            if (bgmFadeCoroutine != null)
-            {
-                StopCoroutine(bgmFadeCoroutine);
-                bgmFadeCoroutine = null;
-            }
-
-            if (duration <= 0f)
-            {
-                if (bgmSecondarySource != null)
-                {
-                    bgmSecondarySource.Stop();
-                    bgmSecondarySource.clip = null;
-                    bgmSecondarySource.volume = 0f;
-                }
-
-                if (bgmSource != null)
-                {
-                    bgmSource.clip = newClip;
-                    bgmSource.loop = true;
-                    bgmSource.volume = bgmVolume;
-                    bgmSource.Play();
-                }
-
-                return;
-            }
-
-            bgmFadeCoroutine = StartCoroutine(CrossFadeRoutine(newClip, duration));
-        }
-
-        private IEnumerator CrossFadeRoutine(AudioClip newClip, float duration)
-        {
-            AudioSource fadeOutSource = bgmSource;
-            AudioSource fadeInSource = bgmSecondarySource;
-
-            if (fadeOutSource == null || fadeInSource == null)
-                yield break;
-
-            fadeInSource.clip = newClip;
-            fadeInSource.loop = true;
-            fadeInSource.volume = 0f;
-            fadeInSource.Play();
-
-            float startFadeOutVolume = fadeOutSource.volume;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float progress = Mathf.Clamp01(elapsed / duration);
-
-                if (fadeOutSource != null)
-                    fadeOutSource.volume = Mathf.Lerp(startFadeOutVolume, 0f, progress);
-
-                if (fadeInSource != null)
-                    fadeInSource.volume = Mathf.Lerp(0f, bgmVolume, progress);
-
-                yield return null;
-            }
-
-            if (fadeOutSource != null)
-            {
-                fadeOutSource.Stop();
-                fadeOutSource.clip = null;
-                fadeOutSource.volume = 0f;
-            }
-
-            if (fadeInSource != null)
-            {
-                fadeInSource.volume = bgmVolume;
-            }
-
-            bgmSource = fadeInSource;
-            bgmSecondarySource = fadeOutSource;
-            bgmFadeCoroutine = null;
-        }
-
-        private AudioSource GetOrCreateSource(string childName)
-        {
-            Transform child = transform.Find(childName);
-            if (child == null)
-            {
-                GameObject go = new GameObject(childName);
-                go.transform.SetParent(transform, false);
-                child = go.transform;
-            }
-
-            AudioSource source = child.GetComponent<AudioSource>();
-            if (source == null)
-                source = child.gameObject.AddComponent<AudioSource>();
-
-            return source;
         }
     }
 }

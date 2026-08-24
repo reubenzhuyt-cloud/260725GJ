@@ -14,9 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: first_aid_kit
   displayName: "\u6025\u6551\u5305"
+  hoverDescription: 
   description: "\u6307\u5B9A\u4E00\u540D\u623F\u5BA2\uFF0C\u4FB5\u8680\u5EA6\u964D\u4F4E
     8 \u70B9\u3002"
-  icon: {fileID: 0}
+  readableContent: 
+  discoveryScene: 
+  icon: {fileID: 21300000, guid: b48efa75ccfc85245bc05f03231ae85b, type: 3}
   maxStack: 99
   acquisition: 0
   merchantPrice: 3

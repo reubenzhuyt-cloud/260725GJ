@@ -49,6 +49,27 @@ public sealed class RunSettlementPanel : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
+    public void SetupReferences(
+        TextMeshProUGUI title,
+        TextMeshProUGUI ending,
+        TextMeshProUGUI story,
+        TextMeshProUGUI stats,
+        TextMeshProUGUI hint,
+        Button menuBtn)
+    {
+        titleText = title;
+        endingText = ending;
+        storyText = story;
+        statisticsText = stats;
+        hintText = hint;
+        mainMenuButton = menuBtn;
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.onClick.RemoveListener(ReturnToMainMenu);
+            mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        }
+    }
+
     private bool ValidateReferences()
     {
         if (titleText != null
