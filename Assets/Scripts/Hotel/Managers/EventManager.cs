@@ -465,11 +465,7 @@ public class EventManager : MonoBehaviour
             eventKind = config.trigger != null ? config.trigger.kind : EventKind.Normal,
         };
 
-        if (config.eventType == GameEventType.Confirm)
-        {
-            data.confirmEffects = config.confirmEffects.ToArray();
-        }
-        else if (config.eventType == GameEventType.Choice && config.choices.Count > 0)
+        if (config.eventType == GameEventType.Choice && config.choices.Count > 0)
         {
             data.choiceTexts = new string[config.choices.Count];
             data.choiceResults = new string[config.choices.Count];
@@ -489,6 +485,13 @@ public class EventManager : MonoBehaviour
                     : new TenantAbility[0];
                 data.choiceEffects[i] = config.choices[i].choiceEffects.ToArray();
             }
+        }
+
+        ApplyTenantNamePlaceholders(ref data, bridge != null ? bridge.RunState : null, config.eventId);
+
+        if (config.eventType == GameEventType.Confirm)
+        {
+            data.confirmEffects = config.confirmEffects.ToArray();
         }
 
         MergeChainRuntimePatch(config, ref data);
@@ -938,6 +941,105 @@ public class EventManager : MonoBehaviour
         int seed = ComputeProtagonistSeed(state, eventId);
         int index = new System.Random(seed).Next(assigned.Count);
         return assigned[index];
+    }
+
+    private void ApplyTenantNamePlaceholders(ref PopupData data, GameRunState state, string eventId)
+    {
+        string firstDisplayName = null;
+        if (!string.IsNullOrEmpty(_currentProtagonistTenantId))
+        {
+            if (TenantAssignmentCoordinator.Instance != null &&
+                TenantAssignmentCoordinator.Instance.TryGetTenantDisplayName(_currentProtagonistTenantId, out string resolvedName))
+            {
+                firstDisplayName = resolvedName;
+            }
+            else
+            {
+                firstDisplayName = _currentProtagonistTenantId;
+            }
+        }
+
+        string secondDisplayName = null;
+        if (state != null && state.Tenants != null)
+        {
+            var candidates = new List<string>();
+            foreach (var pair in state.Tenants)
+            {
+                if (pair.Value == null || string.IsNullOrEmpty(pair.Key))
+                    continue;
+                if (string.IsNullOrEmpty(pair.Value.RoomId))
+                    continue;
+                if (!string.IsNullOrEmpty(_currentProtagonistTenantId) && pair.Key == _currentProtagonistTenantId)
+                    continue;
+                candidates.Add(pair.Key);
+            }
+
+            if (candidates.Count > 0)
+            {
+                candidates.Sort(System.StringComparer.Ordinal);
+                int seed = ComputeProtagonistSeed(state, eventId);
+                unchecked
+                {
+                    seed = seed * 31 + 1013;
+                }
+                int index = new System.Random(seed).Next(candidates.Count);
+                string secondTenantId = candidates[index];
+
+                if (TenantAssignmentCoordinator.Instance != null &&
+                    TenantAssignmentCoordinator.Instance.TryGetTenantDisplayName(secondTenantId, out string resolvedSecondName))
+                {
+                    secondDisplayName = resolvedSecondName;
+                }
+                else
+                {
+                    secondDisplayName = secondTenantId;
+                }
+            }
+        }
+
+        data.description = ReplacePlaceholdersSequentially(data.description, firstDisplayName, secondDisplayName);
+
+        if (data.choiceResults != null)
+        {
+            for (int i = 0; i < data.choiceResults.Length; i++)
+            {
+                data.choiceResults[i] = ReplacePlaceholdersSequentially(data.choiceResults[i], firstDisplayName, secondDisplayName);
+            }
+        }
+    }
+
+    private static string ReplacePlaceholdersSequentially(string text, string first, string second)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        const string placeholder = "XXX";
+        int firstIndex = text.IndexOf(placeholder, StringComparison.Ordinal);
+        if (firstIndex < 0)
+            return text;
+
+        if (string.IsNullOrEmpty(first))
+            return text;
+
+        var sb = new System.Text.StringBuilder(text.Length + 32);
+        sb.Append(text, 0, firstIndex);
+        sb.Append(first);
+
+        int searchStart = firstIndex + placeholder.Length;
+        int secondIndex = text.IndexOf(placeholder, searchStart, StringComparison.Ordinal);
+
+        if (secondIndex >= 0 && !string.IsNullOrEmpty(second))
+        {
+            sb.Append(text, searchStart, secondIndex - searchStart);
+            sb.Append(second);
+            sb.Append(text, secondIndex + placeholder.Length, text.Length - (secondIndex + placeholder.Length));
+        }
+        else
+        {
+            sb.Append(text, searchStart, text.Length - searchStart);
+        }
+
+        return sb.ToString();
     }
 
     private static int ComputeProtagonistSeed(GameRunState state, string eventId)
