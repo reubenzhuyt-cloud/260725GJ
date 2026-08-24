@@ -9,14 +9,22 @@ public class UIManager : MonoBehaviour
     [SerializeField] private MonoBehaviour[] managedPanels;
     [SerializeField] private GameObject pauseOverlay;
     [SerializeField] private GameObject inventoryPanel;
+    [SerializeField] private GameObject guidePanel;
+    [SerializeField] private GuidePanelController guidePanelController;
     [SerializeField] private GameSettingController gameSettingController;
     [SerializeField] private NoticePanel noticePanelTemplate;
 
+    private UnityEngine.UI.Button _guideButton;
     private readonly Queue<string> _noticeQueue = new Queue<string>();
     private readonly List<NoticePanel> _activeNotices = new List<NoticePanel>();
     private bool _noticeConsuming;
 
     public bool IsPauseOverlayVisible => pauseOverlay != null && pauseOverlay.activeSelf;
+
+    private void Awake()
+    {
+        AutoBindGuideUI();
+    }
 
     private void Start()
     {
@@ -27,6 +35,57 @@ public class UIManager : MonoBehaviour
                 panel.gameObject.SetActive(true);
                 panel.enabled = true;
             }
+        }
+    }
+
+    private void AutoBindGuideUI()
+    {
+        if (guidePanel == null)
+        {
+            GameObject found = GameObject.Find("GuidePanel");
+            if (found != null)
+            {
+                guidePanel = found;
+            }
+        }
+
+        if (guidePanelController == null && guidePanel != null)
+        {
+            guidePanelController = guidePanel.GetComponent<GuidePanelController>();
+            if (guidePanelController == null)
+            {
+                guidePanelController = guidePanel.GetComponentInChildren<GuidePanelController>(true);
+            }
+        }
+
+        if (guidePanelController == null)
+        {
+            guidePanelController = FindObjectOfType<GuidePanelController>(true);
+            if (guidePanelController != null && guidePanel == null)
+            {
+                guidePanel = guidePanelController.gameObject;
+            }
+        }
+
+        if (guidePanel != null && guidePanelController == null)
+        {
+            guidePanelController = guidePanel.AddComponent<GuidePanelController>();
+        }
+
+        GameObject guideBtnObj = GameObject.Find("GuideButton");
+        if (guideBtnObj != null)
+        {
+            _guideButton = guideBtnObj.GetComponent<UnityEngine.UI.Button>();
+            if (_guideButton != null)
+            {
+                _guideButton.onClick.RemoveListener(ToggleGuidePanel);
+                _guideButton.onClick.AddListener(ToggleGuidePanel);
+            }
+        }
+
+        if (guidePanel != null && guidePanel.activeSelf)
+        {
+            guidePanel.SetActive(false);
         }
     }
 
@@ -52,6 +111,50 @@ public class UIManager : MonoBehaviour
     {
         if (inventoryPanel != null)
             inventoryPanel.SetActive(visible);
+    }
+
+    public void OpenGuidePanel()
+    {
+        if (guidePanelController != null)
+        {
+            guidePanelController.Open();
+        }
+        else if (guidePanel != null)
+        {
+            guidePanel.SetActive(true);
+        }
+    }
+
+    public void CloseGuidePanel()
+    {
+        if (guidePanelController != null)
+        {
+            guidePanelController.Close();
+        }
+        else if (guidePanel != null)
+        {
+            guidePanel.SetActive(false);
+        }
+    }
+
+    public void ToggleGuidePanel()
+    {
+        if (guidePanelController != null)
+        {
+            guidePanelController.Toggle();
+        }
+        else if (guidePanel != null)
+        {
+            guidePanel.SetActive(!guidePanel.activeSelf);
+        }
+    }
+
+    public void SetGuidePanelVisible(bool visible)
+    {
+        if (visible)
+            OpenGuidePanel();
+        else
+            CloseGuidePanel();
     }
 
     public void TogglePauseMenu()
@@ -145,6 +248,11 @@ public class UIManager : MonoBehaviour
 
     private void OnDisable()
     {
+        if (_guideButton != null)
+        {
+            _guideButton.onClick.RemoveListener(ToggleGuidePanel);
+        }
+
         StopAllCoroutines();
         _noticeConsuming = false;
         _noticeQueue.Clear();
