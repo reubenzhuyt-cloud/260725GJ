@@ -43301,6 +43301,32 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d800000028, type: 2}
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d800000029, type: 2}
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d80000002a, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000132, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000133, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000134, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000135, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000136, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012d, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012e, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012f, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000130, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000131, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013b, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013c, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013d, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013e, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013f, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000140, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000141, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000137, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000138, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000139, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013a, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000142, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000143, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000144, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000145, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000146, type: 2}
   specialVisitorConfigs:
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d80000001e, type: 2}
   testForceDay1Merchant: 1
