@@ -254,7 +254,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2696,7 +2696,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9588,7 +9588,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX"
+  m_text: "\u5236\u4F5C\u4EBA\u5458\u540D\u5355\n\u573A\u666F\u3001\u4EBA\u7269\u3001\u4E8B\u4EF6\u4E0E\u7ED3\u7B97\u63D2\u56FE\u2014\u2014shub\nUI\u3001\u9053\u5177\u2014\u2014\u4E5D\u6E29\n\u97F3\u4E50\u97F3\u6548\u2014\u2014Sungdung"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aabd41ca498216544836c099c960db34, type: 2}
   m_sharedMaterial: {fileID: 7358990104510936564, guid: aabd41ca498216544836c099c960db34, type: 2}
@@ -10120,7 +10120,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX\u5236\u4F5C\u4EBA\u5458\u540D\u5355\nXXXXXXXXXXXXX"
+  m_text: "\u5236\u4F5C\u4EBA\u5458\u540D\u5355\n\u7B56\u5212\u2014\u2014\u9B3C\u673D\u5FD8\u4ED9\n\u7A0B\u5E8F\u2014\u2014\u5C0F\u732A\n\u7A0B\u5E8F\u2014\u2014\u7231\u4E3D\u4E1D"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aabd41ca498216544836c099c960db34, type: 2}
   m_sharedMaterial: {fileID: 7358990104510936564, guid: aabd41ca498216544836c099c960db34, type: 2}
