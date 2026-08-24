@@ -75,7 +75,11 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        if (eventData != null && eventData.pointerEnter != null && eventData.pointerEnter.transform.IsChildOf(transform))
+            return;
+
         _hovered = false;
+        _hoverStillTime = 0f;
         ItemInfoPanel panel = GetInfoPanel();
         if (panel != null)
             panel.Hide();
@@ -110,7 +114,7 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
             return;
 
         ItemInfoPanel hoverPanel = GetInfoPanel();
-        if (hoverPanel != null && !hoverPanel.IsShowing)
+        if (hoverPanel != null)
             hoverPanel.Show(_item, mousePosition);
     }
 

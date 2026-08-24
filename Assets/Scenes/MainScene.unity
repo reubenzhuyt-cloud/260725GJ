@@ -1680,8 +1680,10 @@ MonoBehaviour:
   uiEqLowGain: 7.7
   uiEqMidGain: 6.8
   uiEqHighGain: -6.9
-  lowErosionBgm: {fileID: 0}
-  highErosionBgm: {fileID: 0}
+  isMainMenu: 0
+  mainMenuBgmStartTime: 30
+  lowErosionBgm: {fileID: 8300000, guid: 245c4ac3ec3aafa40b25cf4325a9514f, type: 3}
+  highErosionBgm: {fileID: 8300000, guid: 1e8531476f3d706428ed2585178d0ef1, type: 3}
   erosionCrossFadeDuration: 1
   creditsBgm: {fileID: 0}
 --- !u!4 &56955272
@@ -11754,7 +11756,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2a6418475512aa6469b053d1f3c4afdd, type: 2}
   - {fileID: 11400000, guid: 9f9883fa0c86aee429b2a92cb358d56f, type: 2}
   - {fileID: 11400000, guid: e010d2b7cae4ea94f98b437013bc31a3, type: 2}
-  debugStartDay: 27
+  debugStartDay: 1
   debugInventoryItems: []
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
   onFoodShortage: {fileID: 11400000, guid: 5ae9f7bc5f2422c4eaf99f5867e72d55, type: 2}
@@ -24513,7 +24515,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -34558,7 +34560,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

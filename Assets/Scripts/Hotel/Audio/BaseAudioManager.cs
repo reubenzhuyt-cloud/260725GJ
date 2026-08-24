@@ -204,7 +204,7 @@ namespace Hotel.Audio
                 uiEqFilter.SetGains(uiEqLowGain, uiEqMidGain, uiEqHighGain);
         }
 
-        public virtual void PlayBgm(AudioClip clip, float fadeDuration = DefaultBgmCrossFadeDuration)
+        public virtual void PlayBgm(AudioClip clip, float fadeDuration = DefaultBgmCrossFadeDuration, float startTime = 0f)
         {
             if (clip == null)
                 return;
@@ -212,11 +212,14 @@ namespace Hotel.Audio
             if (GetCurrentBgmClip() == clip && IsAnyBgmPlaying())
                 return;
 
-            CrossFadeBgm(clip, fadeDuration);
+            CrossFadeBgm(clip, fadeDuration, startTime);
         }
 
         public AudioClip GetCurrentBgmClip()
         {
+            if (bgmFadeCoroutine != null && bgmSecondarySource != null && bgmSecondarySource.isPlaying && bgmSecondarySource.clip != null)
+                return bgmSecondarySource.clip;
+
             if (bgmSource != null && bgmSource.isPlaying && bgmSource.clip != null)
                 return bgmSource.clip;
 
@@ -232,7 +235,7 @@ namespace Hotel.Audio
                    (bgmSecondarySource != null && bgmSecondarySource.isPlaying);
         }
 
-        public void CrossFadeBgm(AudioClip newClip, float duration)
+        public void CrossFadeBgm(AudioClip newClip, float duration, float startTime = 0f)
         {
             if (newClip == null)
                 return;
@@ -259,6 +262,8 @@ namespace Hotel.Audio
                 }
             }
 
+            float validStartTime = (startTime > 0f && startTime < newClip.length) ? startTime : 0f;
+
             if (duration <= 0f)
             {
                 if (bgmSecondarySource != null)
@@ -272,6 +277,7 @@ namespace Hotel.Audio
                 {
                     bgmSource.clip = newClip;
                     bgmSource.loop = true;
+                    bgmSource.time = validStartTime;
                     bgmSource.volume = bgmVolume;
                     bgmSource.Play();
                 }
@@ -279,10 +285,10 @@ namespace Hotel.Audio
                 return;
             }
 
-            bgmFadeCoroutine = StartCoroutine(CrossFadeRoutine(newClip, duration));
+            bgmFadeCoroutine = StartCoroutine(CrossFadeRoutine(newClip, duration, validStartTime));
         }
 
-        protected IEnumerator CrossFadeRoutine(AudioClip newClip, float duration)
+        protected IEnumerator CrossFadeRoutine(AudioClip newClip, float duration, float startTime = 0f)
         {
             AudioSource fadeOutSource = bgmSource;
             AudioSource fadeInSource = bgmSecondarySource;
@@ -292,6 +298,7 @@ namespace Hotel.Audio
 
             fadeInSource.clip = newClip;
             fadeInSource.loop = true;
+            fadeInSource.time = startTime;
             fadeInSource.volume = 0f;
             fadeInSource.Play();
 

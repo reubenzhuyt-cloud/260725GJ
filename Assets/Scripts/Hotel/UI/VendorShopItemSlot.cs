@@ -80,17 +80,11 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (_rectTransform == null)
-            _rectTransform = GetComponent<RectTransform>();
-
-        if (_rectTransform != null && eventData != null)
-        {
-            Camera cam = eventData.pressEventCamera ?? eventData.enterEventCamera;
-            if (RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, eventData.position, cam))
-                return;
-        }
+        if (eventData != null && eventData.pointerEnter != null && eventData.pointerEnter.transform.IsChildOf(transform))
+            return;
 
         _hovered = false;
+        _hoverStillTime = 0f;
         ItemInfoPanel panel = GetInfoPanel();
         if (panel != null)
             panel.Hide();
@@ -125,7 +119,7 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
             return;
 
         ItemInfoPanel hoverPanel = GetInfoPanel();
-        if (hoverPanel != null && !hoverPanel.IsShowing)
+        if (hoverPanel != null)
             hoverPanel.Show(_definition, mousePosition);
     }
 

@@ -15,6 +15,7 @@ public class ItemInfoPanel : MonoBehaviour
 
     private Canvas _canvas;
     private RectTransform _selfRect;
+    private ItemDefinition _currentItem;
 
     public void Show(ItemDefinition item, Vector2 screenPoint)
     {
@@ -24,29 +25,43 @@ public class ItemInfoPanel : MonoBehaviour
             return;
         }
 
-        gameObject.SetActive(true);
         EnsureInitialized();
 
-        if (nameText != null)
-            nameText.text = item.displayName;
-        if (descriptionText != null)
+        bool needsRefresh = !gameObject.activeSelf || _currentItem != item;
+        if (needsRefresh)
         {
-            string desc = !string.IsNullOrEmpty(item.hoverDescription) ? item.hoverDescription : item.description;
-            descriptionText.text = desc;
+            _currentItem = item;
+            gameObject.SetActive(true);
+
+            if (nameText != null)
+                nameText.text = item.displayName;
+            if (descriptionText != null)
+            {
+                string desc = !string.IsNullOrEmpty(item.hoverDescription) ? item.hoverDescription : item.description;
+                descriptionText.text = desc;
+            }
+            if (priceText != null)
+                priceText.text = BuildPriceText(item);
+            if (effectText != null)
+                effectText.text = BuildEffectText(item);
+            if (acquisitionText != null)
+                acquisitionText.text = BuildAcquisitionText(item);
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_selfRect);
         }
-        if (priceText != null)
-            priceText.text = BuildPriceText(item);
-        if (effectText != null)
-            effectText.text = BuildEffectText(item);
-        if (acquisitionText != null)
-            acquisitionText.text = BuildAcquisitionText(item);
 
         PositionAt(screenPoint);
     }
 
     public void Hide()
     {
+        _currentItem = null;
         gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        _currentItem = null;
     }
 
     private void EnsureInitialized()
@@ -71,7 +86,6 @@ public class ItemInfoPanel : MonoBehaviour
                 canvasRect, screenPoint, _canvas.worldCamera, out local))
             return;
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(_selfRect);
         Rect panelRect = _selfRect.rect;
         Vector2 size = new Vector2(panelRect.width, panelRect.height);
         if (size.x <= 0f || size.y <= 0f)

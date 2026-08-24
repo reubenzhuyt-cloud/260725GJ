@@ -1,12 +1,17 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Hotel.Runtime;
 
 namespace Hotel.Audio
 {
     public class AudioManager : BaseAudioManager
     {
-        public new static BaseAudioManager Instance => BaseAudioManager.Instance;
+        public new static AudioManager Instance => BaseAudioManager.Instance as AudioManager;
+
+        [Header("Main Menu Settings")]
+        [SerializeField] private bool isMainMenu = false;
+        [SerializeField] private float mainMenuBgmStartTime = 30f;
 
         [Header("Erosion BGM Settings")]
         [SerializeField] private AudioClip lowErosionBgm;
@@ -16,19 +21,33 @@ namespace Hotel.Audio
         [Header("Credits BGM")]
         [SerializeField] private AudioClip creditsBgm;
 
-        private AudioClip savedBgmBeforeCredits;
         private bool isCreditsBgmActive;
         private bool isHighErosionBgmTriggered;
+        private AudioClip savedBgmBeforeCredits;
 
         private const float CreditsBgmCrossFadeDuration = 2f;
 
+        private bool IsMainMenuMode => isMainMenu || SceneManager.GetActiveScene().name == "MainMenu";
+
         protected override void Start()
         {
+            if (IsMainMenuMode)
+            {
+                if (defaultBgm != null)
+                {
+                    PlayBgm(defaultBgm, 0f, mainMenuBgmStartTime);
+                }
+                return;
+            }
+
             CheckAndEvaluateBgm(playDirectIfInitial: true);
         }
 
         public override void NotifyRunState(GameRunState state)
         {
+            if (IsMainMenuMode)
+                return;
+
             if (state != null)
             {
                 EvaluateTriggerCondition(state);
@@ -38,6 +57,9 @@ namespace Hotel.Audio
 
         public void UpdateGameState(int day, float averageErosion)
         {
+            if (IsMainMenuMode)
+                return;
+
             if (!isHighErosionBgmTriggered && (averageErosion > 50f || day >= 15))
             {
                 isHighErosionBgmTriggered = true;
@@ -47,6 +69,9 @@ namespace Hotel.Audio
 
         public void CheckAndEvaluateBgm(bool playDirectIfInitial = false)
         {
+            if (IsMainMenuMode)
+                return;
+
             AudioClip activeNormalBgm = GetDesiredNormalBgm();
             if (activeNormalBgm == null)
                 return;
@@ -114,10 +139,7 @@ namespace Hotel.Audio
 
         public override void OpenCreditsBgm()
         {
-            if (creditsBgm == null)
-                return;
-
-            if (isCreditsBgmActive)
+            if (creditsBgm == null || isCreditsBgmActive)
                 return;
 
             AudioClip currentClip = GetCurrentBgmClip();
@@ -135,13 +157,11 @@ namespace Hotel.Audio
                 return;
 
             isCreditsBgmActive = false;
+
+            AudioClip targetClip = GetDesiredNormalBgm() ?? savedBgmBeforeCredits;
             savedBgmBeforeCredits = null;
 
-            AudioClip targetClip = GetDesiredNormalBgm();
             if (targetClip == null)
-                return;
-
-            if (GetCurrentBgmClip() == targetClip)
                 return;
 
             CrossFadeBgm(targetClip, CreditsBgmCrossFadeDuration);
