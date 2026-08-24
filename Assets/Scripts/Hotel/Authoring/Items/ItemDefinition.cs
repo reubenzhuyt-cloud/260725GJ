@@ -46,5 +46,7 @@ namespace Hotel.Authoring.Items
         public ItemEffectType effectType = ItemEffectType.None;
         public float effectValue;
         public string effectFlag;
+
+        public bool IsTruthItem => effectType == ItemEffectType.TruthClue || acquisition == ItemAcquisition.TruthChain;
     }
 }

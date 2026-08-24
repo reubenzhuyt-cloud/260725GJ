@@ -111,7 +111,7 @@ public class ItemUseManager : MonoBehaviour
             return false;
         }
 
-        if (definition.effectType == ItemEffectType.TruthClue || definition.acquisition == ItemAcquisition.TruthChain)
+        if (definition.IsTruthItem)
         {
             return false;
         }
@@ -214,7 +214,7 @@ public class ItemUseManager : MonoBehaviour
     {
         if (definition == null)
             return false;
-        if (definition.effectType == ItemEffectType.TruthClue || definition.acquisition == ItemAcquisition.TruthChain || definition.effectType == ItemEffectType.None)
+        if (definition.IsTruthItem || definition.effectType == ItemEffectType.None)
             return false;
         GameRunState state = GetRunState();
         if (state == null)
