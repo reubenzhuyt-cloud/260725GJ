@@ -23,6 +23,8 @@ public class TenantAssignmentPanel : MonoBehaviour
 
         if (TenantAssignmentCoordinator.Instance != null)
             TenantAssignmentCoordinator.Instance.AssignmentChanged += Refresh;
+
+        Refresh();
     }
 
     private void OnDisable()
@@ -31,11 +33,6 @@ public class TenantAssignmentPanel : MonoBehaviour
 
         if (TenantAssignmentCoordinator.Instance != null)
             TenantAssignmentCoordinator.Instance.AssignmentChanged -= Refresh;
-    }
-
-    private void Start()
-    {
-        Refresh();
     }
 
     public void Refresh()
@@ -68,9 +65,6 @@ public class TenantAssignmentPanel : MonoBehaviour
 
     public static void RefreshAll()
     {
-        if (TenantAssignmentCoordinator.Instance == null)
-            return;
-
         for (int i = 0; i < AllPanels.Count; i++)
         {
             if (AllPanels[i] != null)

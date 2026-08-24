@@ -296,9 +296,13 @@ public class VendorShopPanel : MonoBehaviour
         ItemUseManager.NotifyInventoryChanged();
 
         int newCurrency = GetCurrency(state);
-        if (onResourceAdjusted != null)
+        ResourceAdjustedEvent eventChannel = onResourceAdjusted;
+        if (eventChannel == null && SettlementBridge.Instance != null)
+            eventChannel = SettlementBridge.Instance.onResourceAdjusted;
+
+        if (eventChannel != null)
         {
-            onResourceAdjusted.Raise(new ResourceAdjustedData
+            eventChannel.Raise(new ResourceAdjustedData
             {
                 resourceId = "currency",
                 delta = -definition.merchantPrice,

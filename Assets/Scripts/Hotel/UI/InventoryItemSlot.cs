@@ -36,6 +36,7 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
                 if (item.icon != null)
                 {
                     iconImage.sprite = item.icon;
+                    iconImage.preserveAspect = true;
                     iconImage.enabled = true;
                 }
                 else

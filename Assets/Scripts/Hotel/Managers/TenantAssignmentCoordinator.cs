@@ -207,6 +207,11 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     {
         if (_displayLookup.ContainsKey(tenantId)) return;
 
+        if (_runState == null)
+        {
+            TryBindRuntimeState();
+        }
+
         if (_runState != null && !_runState.Tenants.ContainsKey(tenantId))
         {
             _runState.Tenants[tenantId] = new TenantRunState
@@ -219,8 +224,10 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
         _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color, avatarKey);
         _tenantOrder.Add(tenantId);
+        _tenantOrder.Sort(StringComparer.Ordinal);
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
     }
 
@@ -296,6 +303,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         {
             AudioManager.Instance?.PlayUISound(UISoundType.Click);
             RebuildUnassigned();
+            TenantAssignmentPanel.RefreshAll();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
 
@@ -373,6 +381,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         {
             AudioManager.Instance?.PlayUISound(UISoundType.Click);
             RebuildUnassigned();
+            TenantAssignmentPanel.RefreshAll();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
 
@@ -481,6 +490,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         _tenantOrder.Remove(tenantId);
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
+        TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
 
         PlayerLogManager.Record(_runState, new PlayerLogWriteDto(

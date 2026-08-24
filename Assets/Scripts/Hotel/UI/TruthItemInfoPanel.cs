@@ -54,6 +54,7 @@ public class TruthItemInfoPanel : MonoBehaviour
             if (item.icon != null)
             {
                 itemImage.sprite = item.icon;
+                itemImage.preserveAspect = true;
                 itemImage.enabled = true;
             }
             else
