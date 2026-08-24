@@ -25,6 +25,13 @@ MonoBehaviour:
     requiresTenant: {fileID: 0}
     chainId: 
     chainStep: 0
+    conditions:
+    - condition: 16
+      intValue: 2
+      floatValue: 0
+      stringValue: food
+    requireAll: 1
+    weightScale: 0
     baseWeight: 8
     category: day_management
   eventTitle: "生日发现"

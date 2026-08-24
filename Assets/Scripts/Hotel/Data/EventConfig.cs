@@ -58,7 +58,8 @@ public enum ConditionType
     SpecificTenantPresent = 12,
     VulnerableTenantExists = 13,
     HotelHasMirror = 14,
-    IsStorm = 15
+    IsStorm = 15,
+    ResourceAtLeast = 16
 }
 
 /// <summary>
@@ -252,6 +253,12 @@ public class EventConfig : ScriptableObject
                     Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] FoodOrCurrencyAbove requires floatValue > 0 (found {c.floatValue}); with a zero or negative threshold the condition is trivially true.", this);
                 }
 
+                if (c.condition == ConditionType.ResourceAtLeast &&
+                    (string.IsNullOrEmpty(c.stringValue) || c.intValue <= 0))
+                {
+                    Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] ResourceAtLeast requires a resource id and intValue >= 1.", this);
+                }
+
                 if ((c.condition == ConditionType.TenantErosionAbove || c.condition == ConditionType.TenantErosionBelow) && c.floatValue <= 0f)
                 {
                     Debug.LogWarning($"[EventConfig:{name}] Condition[{i}] {c.condition} requires a positive erosion threshold (found {c.floatValue}); zero or negative is outside the valid [0,100] erosion range.", this);
@@ -314,7 +321,7 @@ public class EventConfig : ScriptableObject
             Debug.LogWarning($"[EventConfig:{name}] eventId is empty; event cannot be uniquely tracked.", this);
         }
 
-        if (eventType == GameEventType.Choice && choices.Count == 0)
+        if (eventType == GameEventType.Choice && (choices == null || choices.Count == 0))
         {
             Debug.LogError($"[EventConfig:{name}] Choice event has no choices.", this);
         }

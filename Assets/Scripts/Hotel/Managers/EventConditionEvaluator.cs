@@ -148,6 +148,9 @@ public static class EventConditionEvaluator
             case ConditionType.IsStorm:
                 return state.IsStorm;
 
+            case ConditionType.ResourceAtLeast:
+                return ResourceAtLeast(state, c.stringValue, c.intValue);
+
             default:
                 Debug.LogWarning($"[EventConditionEvaluator] Unhandled ConditionType '{c.condition}' ({(int)c.condition}); treating the condition as not matched.");
                 return false;
@@ -209,6 +212,15 @@ public static class EventConditionEvaluator
             return state.Resources.TryGetValue(id, out ResourceRunState r) && r.Amount >= threshold;
         }
         return Above("food") || Above("currency");
+    }
+
+    private static bool ResourceAtLeast(GameRunState state, string resourceId, int amount)
+    {
+        if (string.IsNullOrEmpty(resourceId) || amount <= 0 || state.Resources == null)
+            return false;
+        return state.Resources.TryGetValue(resourceId, out ResourceRunState resource)
+            && resource != null
+            && resource.Amount >= amount;
     }
 
     private static bool AnyTenantWithAbility(

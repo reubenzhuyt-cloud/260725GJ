@@ -24080,9 +24080,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foodAmountText: {fileID: 68303660}
-  currencyAmountText: {fileID: 0}
+  currencyAmountText: {fileID: 848258287}
   foodIcon: {fileID: 185871836}
-  currencyIcon: {fileID: 0}
+  currencyIcon: {fileID: 769715911}
   onResourceAdjusted: {fileID: 11400000, guid: b4be3f8a941747d41b7994af0ab32c76, type: 2}
   onPhaseEntered: {fileID: 11400000, guid: cb56d0eb6bffd7f4fa67bee60451ce51, type: 2}
 --- !u!114 &1114996822
@@ -33324,7 +33324,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 734040415}
   m_HandleRect: {fileID: 734040414}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -43301,6 +43301,32 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d800000028, type: 2}
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d800000029, type: 2}
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d80000002a, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000132, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000133, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000134, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000135, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000136, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012d, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012e, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000012f, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000130, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000131, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013b, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013c, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013d, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013e, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013f, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000140, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000141, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000137, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000138, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000139, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de000000000000013a, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000142, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000143, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000144, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000145, type: 2}
+  - {fileID: 11400000, guid: a91ce01a0000c0de0000000000000146, type: 2}
   specialVisitorConfigs:
   - {fileID: 11400000, guid: 7e1d9f4a2c6b8e30a5b6c7d80000001e, type: 2}
   testForceDay1Merchant: 1
