@@ -15,24 +15,49 @@ public class TenantAssignmentPanel : MonoBehaviour
     [SerializeField] private TenantAvatarListItem avatarItemPrefab;
 
     private readonly List<GameObject> _spawnedItems = new List<GameObject>();
+    private TenantAssignmentCoordinator _subscribedCoordinator;
 
     private void OnEnable()
     {
         if (!AllPanels.Contains(this))
             AllPanels.Add(this);
 
-        if (TenantAssignmentCoordinator.Instance != null)
-            TenantAssignmentCoordinator.Instance.AssignmentChanged += Refresh;
-
+        SubscribeToCoordinator();
         Refresh();
     }
 
     private void OnDisable()
     {
         AllPanels.Remove(this);
+        UnsubscribeFromCoordinator();
+    }
 
-        if (TenantAssignmentCoordinator.Instance != null)
-            TenantAssignmentCoordinator.Instance.AssignmentChanged -= Refresh;
+    private void Start()
+    {
+        // OnEnable can run before TenantAssignmentCoordinator.Awake. Retry here
+        // after every scene object's Awake has completed, then sync current data.
+        SubscribeToCoordinator();
+        Refresh();
+    }
+
+    private void SubscribeToCoordinator()
+    {
+        TenantAssignmentCoordinator coordinator = TenantAssignmentCoordinator.Instance;
+        if (coordinator == null || coordinator == _subscribedCoordinator)
+            return;
+
+        UnsubscribeFromCoordinator();
+        coordinator.AssignmentChanged += Refresh;
+        _subscribedCoordinator = coordinator;
+    }
+
+    private void UnsubscribeFromCoordinator()
+    {
+        if (_subscribedCoordinator == null)
+            return;
+
+        _subscribedCoordinator.AssignmentChanged -= Refresh;
+        _subscribedCoordinator = null;
     }
 
     public void Refresh()
@@ -65,6 +90,9 @@ public class TenantAssignmentPanel : MonoBehaviour
 
     public static void RefreshAll()
     {
+        if (TenantAssignmentCoordinator.Instance == null)
+            return;
+
         for (int i = 0; i < AllPanels.Count; i++)
         {
             if (AllPanels[i] != null)
