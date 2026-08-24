@@ -28,6 +28,7 @@ public class ItemUseManager : MonoBehaviour
     [Header("UI")]
     public ItemUseConfirmPanel confirmPanel;
     public ItemInfoPanel infoPanel;
+    public TruthItemInfoPanel truthInfoPanel;
     public UIManager uiManager;
 
     public ItemUseState State => _state;
@@ -107,6 +108,11 @@ public class ItemUseManager : MonoBehaviour
         if (definition == null)
         {
             ShowMessage($"未找到物品「{itemId}」的配置");
+            return false;
+        }
+
+        if (definition.IsTruthItem)
+        {
             return false;
         }
 
@@ -208,6 +214,8 @@ public class ItemUseManager : MonoBehaviour
     {
         if (definition == null)
             return false;
+        if (definition.IsTruthItem || definition.effectType == ItemEffectType.None)
+            return false;
         GameRunState state = GetRunState();
         if (state == null)
             return false;
@@ -229,6 +237,17 @@ public class ItemUseManager : MonoBehaviour
             if (definition != null && definition.itemId == itemId)
                 return definition;
         }
+
+#if UNITY_EDITOR
+        ItemDefinition editorItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemDefinition>($"Assets/Data/Items/{itemId}.asset");
+        if (editorItem != null)
+            return editorItem;
+#endif
+
+        ItemDefinition resItem = Resources.Load<ItemDefinition>($"Items/{itemId}");
+        if (resItem != null)
+            return resItem;
+
         return null;
     }
 

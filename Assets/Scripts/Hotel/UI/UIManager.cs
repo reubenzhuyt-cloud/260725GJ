@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager Instance { get; private set; }
+
     private const float NoticeStartInterval = 0.75f;
 
     [SerializeField] private MonoBehaviour[] managedPanels;
@@ -23,7 +25,20 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         AutoBindGuideUI();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     private void Start()
@@ -89,6 +104,64 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public bool IsBlockingModalActive()
+    {
+        if (IsPauseOverlayVisible)
+            return true;
+
+        if (EventUI.Instance != null && EventUI.Instance.IsEventActive)
+            return true;
+
+        if (TenantReviewCoordinator.Instance != null && TenantReviewCoordinator.Instance.IsReviewActive)
+            return true;
+
+        if (RunSettlementController.Instance != null && RunSettlementController.Instance.IsSettlementActive)
+            return true;
+
+        return false;
+    }
+
+    public bool CanOpenButtonPanel()
+    {
+        return !IsBlockingModalActive();
+    }
+
+    public void CloseOtherButtonPanels(GameObject exceptPanel = null)
+    {
+        CloseAllButtonPanels(exceptPanel);
+    }
+
+    public void CloseAllButtonPanels(GameObject exceptPanel = null)
+    {
+        if (guidePanel != null && guidePanel != exceptPanel)
+        {
+            CloseGuidePanel();
+        }
+
+        if (inventoryPanel != null && inventoryPanel != exceptPanel)
+        {
+            SetInventoryPanelVisible(false);
+        }
+
+        PlayerLogOverlayController[] logControllers = FindObjectsOfType<PlayerLogOverlayController>(true);
+        for (int i = 0; i < logControllers.Length; i++)
+        {
+            if (logControllers[i] != null && logControllers[i].gameObject != exceptPanel)
+            {
+                logControllers[i].Close();
+            }
+        }
+
+        Hotel.UI.DeveloperPanelController[] devControllers = FindObjectsOfType<Hotel.UI.DeveloperPanelController>(true);
+        for (int i = 0; i < devControllers.Length; i++)
+        {
+            if (devControllers[i] != null && devControllers[i].gameObject != exceptPanel)
+            {
+                devControllers[i].Close();
+            }
+        }
+    }
+
     public void ShowPauseOverlay()
     {
         if (pauseOverlay != null)
@@ -103,18 +176,45 @@ public class UIManager : MonoBehaviour
 
     public void ToggleInventoryPanel()
     {
-        if (inventoryPanel != null)
-            inventoryPanel.SetActive(!inventoryPanel.activeSelf);
+        if (inventoryPanel == null)
+            return;
+
+        if (inventoryPanel.activeSelf)
+        {
+            SetInventoryPanelVisible(false);
+        }
+        else
+        {
+            SetInventoryPanelVisible(true);
+        }
     }
 
     public void SetInventoryPanelVisible(bool visible)
     {
-        if (inventoryPanel != null)
-            inventoryPanel.SetActive(visible);
+        if (inventoryPanel == null)
+            return;
+
+        if (visible)
+        {
+            if (!CanOpenButtonPanel())
+                return;
+
+            CloseOtherButtonPanels(inventoryPanel);
+            inventoryPanel.SetActive(true);
+        }
+        else
+        {
+            inventoryPanel.SetActive(false);
+        }
     }
 
     public void OpenGuidePanel()
     {
+        if (!CanOpenButtonPanel())
+            return;
+
+        CloseOtherButtonPanels(guidePanel);
+
         if (guidePanelController != null)
         {
             guidePanelController.Open();
@@ -139,13 +239,16 @@ public class UIManager : MonoBehaviour
 
     public void ToggleGuidePanel()
     {
-        if (guidePanelController != null)
+        bool isOpen = (guidePanelController != null && guidePanelController.IsOpen)
+            || (guidePanel != null && guidePanel.activeSelf);
+
+        if (isOpen)
         {
-            guidePanelController.Toggle();
+            CloseGuidePanel();
         }
-        else if (guidePanel != null)
+        else
         {
-            guidePanel.SetActive(!guidePanel.activeSelf);
+            OpenGuidePanel();
         }
     }
 

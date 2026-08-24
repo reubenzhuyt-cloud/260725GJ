@@ -30,7 +30,10 @@ public class ItemInfoPanel : MonoBehaviour
         if (nameText != null)
             nameText.text = item.displayName;
         if (descriptionText != null)
-            descriptionText.text = item.description;
+        {
+            string desc = !string.IsNullOrEmpty(item.hoverDescription) ? item.hoverDescription : item.description;
+            descriptionText.text = desc;
+        }
         if (priceText != null)
             priceText.text = BuildPriceText(item);
         if (effectText != null)
@@ -106,6 +109,8 @@ public class ItemInfoPanel : MonoBehaviour
 
     private static string BuildPriceText(ItemDefinition item)
     {
+        if (item.acquisition == ItemAcquisition.TruthChain)
+            return string.Empty;
         return item.merchantPrice > 0 ? $"{item.merchantPrice} 货币" : string.Empty;
     }
 
@@ -116,6 +121,7 @@ public class ItemInfoPanel : MonoBehaviour
             case ItemAcquisition.Merchant: return "商人购买";
             case ItemAcquisition.EngineerEvent: return "工程师事件获得";
             case ItemAcquisition.MerchantAndEngineerEvent: return "商人购买 / 工程师事件获得";
+            case ItemAcquisition.TruthChain: return "剧情探索获得";
             default: return string.Empty;
         }
     }
@@ -137,6 +143,8 @@ public class ItemInfoPanel : MonoBehaviour
                 return "解锁额外线索（本局持续）";
             case ItemEffectType.EngineerBoost:
                 return "工程师工作效率 +30%（仅下一次工作结算）";
+            case ItemEffectType.TruthClue:
+                return "真相线索道具（不可使用）";
             default:
                 return string.Empty;
         }

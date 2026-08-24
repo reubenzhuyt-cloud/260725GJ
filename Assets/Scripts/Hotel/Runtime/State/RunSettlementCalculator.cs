@@ -11,7 +11,7 @@ namespace Hotel.Runtime
     {
         public const int FinalDay = 30;
 
-        private static readonly string[] TruthItemIds = { "T01", "T02", "T07" };
+        private static readonly string[] TruthItemIds = { "T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08" };
 
         public static RunSummaryState Calculate(GameRunState state, bool requireCompletedChain = true)
         {

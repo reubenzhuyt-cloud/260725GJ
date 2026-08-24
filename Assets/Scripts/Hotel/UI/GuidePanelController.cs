@@ -435,6 +435,9 @@ public class GuidePanelController : MonoBehaviour
 
     public void Open()
     {
+        if (uiManager != null && !uiManager.CanOpenButtonPanel())
+            return;
+
         if (guidePanelRoot != null)
             guidePanelRoot.SetActive(true);
         else

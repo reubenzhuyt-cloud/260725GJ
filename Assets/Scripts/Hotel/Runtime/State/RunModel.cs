@@ -426,13 +426,15 @@ public bool HotelHasMirror = true;
 
         public static GameRunState New(RunId id, int seed = 1)
         {
-            return new GameRunState
+            var state = new GameRunState
             {
                 RunId = id,
                 Day = 1,
                 Seed = seed,
                 StateVersion = 0
             };
+
+            return state;
         }
     }
 }

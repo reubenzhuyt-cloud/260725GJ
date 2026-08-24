@@ -31,16 +31,29 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         if (item != null)
         {
-            if (iconImage != null && item.icon != null)
+            if (iconImage != null)
             {
-                iconImage.sprite = item.icon;
-                iconImage.enabled = true;
+                if (item.icon != null)
+                {
+                    iconImage.sprite = item.icon;
+                    iconImage.enabled = true;
+                }
+                else
+                {
+                    iconImage.sprite = null;
+                    iconImage.enabled = false;
+                }
             }
             if (nameLabel != null)
                 nameLabel.text = item.displayName;
         }
         if (countLabel != null)
-            countLabel.text = count.ToString();
+        {
+            if (item != null && item.acquisition == ItemAcquisition.TruthChain)
+                countLabel.text = "特殊剧情道具";
+            else
+                countLabel.text = count.ToString();
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -94,6 +107,15 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (now - _lastClickTime <= doubleClickInterval)
         {
             _lastClickTime = 0f;
+
+            if (_item.acquisition == ItemAcquisition.TruthChain)
+            {
+                TruthItemInfoPanel truthPanel = GetTruthInfoPanel();
+                if (truthPanel != null)
+                    truthPanel.Show(_item);
+                return;
+            }
+
             ItemUseManager manager = ItemUseManager.Instance;
             if (manager != null)
                 manager.TryBeginUse(_item.itemId);
@@ -108,5 +130,11 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
     {
         ItemUseManager manager = ItemUseManager.Instance;
         return manager != null ? manager.infoPanel : null;
+    }
+
+    private static TruthItemInfoPanel GetTruthInfoPanel()
+    {
+        ItemUseManager manager = ItemUseManager.Instance;
+        return manager != null ? manager.truthInfoPanel : null;
     }
 }

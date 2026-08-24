@@ -36,6 +36,7 @@ public class TenantAssignmentCoordinator : MonoBehaviour
 
     public IReadOnlyList<TenantAssignmentItemView> UnassignedTenants => _unassignedTenants;
     public int UnassignedCount => _unassignedTenants.Count;
+    public bool IsAssignmentActive => HasUnassignedTenants || IsDragging;
     public int AvailableCapacity
     {
         get
