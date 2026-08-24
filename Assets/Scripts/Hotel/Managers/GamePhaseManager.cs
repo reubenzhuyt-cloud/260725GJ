@@ -57,6 +57,19 @@ public class GamePhaseManager : MonoBehaviour
             return false;
         }
 
+        // Night 30 ends the run. Job output is settled first, then the final
+        // hotel state is frozen into the persisted result instead of entering Day 31.
+        if (currentDay >= Hotel.Runtime.RunSettlementCalculator.FinalDay
+            && currentPhase == GamePhase.Night)
+        {
+            if (RunSettlementController.Instance == null)
+            {
+                Debug.LogError("[GamePhaseManager] Run settlement controller is unavailable.");
+                return false;
+            }
+            return RunSettlementController.Instance.TryCompleteRun();
+        }
+
         GamePhase nextPhase = GetNextPhase();
         int targetDay = currentDay + (nextPhase == GamePhase.Dawn ? 1 : 0);
 
@@ -95,6 +108,11 @@ public class GamePhaseManager : MonoBehaviour
 
     public bool CanAdvancePhase()
     {
+        if (SettlementBridge.Instance != null
+            && SettlementBridge.Instance.RunState != null
+            && SettlementBridge.Instance.RunState.Summary != null
+            && SettlementBridge.Instance.RunState.Summary.IsComplete)
+            return false;
         if (TenantReviewCoordinator.Instance != null && TenantReviewCoordinator.Instance.IsReviewActive)
             return false;
         if (TenantAssignmentCoordinator.Instance != null && TenantAssignmentCoordinator.Instance.HasUnassignedTenants)

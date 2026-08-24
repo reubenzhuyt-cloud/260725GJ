@@ -469,7 +469,17 @@ public bool HotelHasMirror = true;
                 IsComplete = value.IsComplete,
                 CompletedDay = value.CompletedDay,
                 MisclassificationCount = value.MisclassificationCount,
-                FinalTenantCount = value.FinalTenantCount
+                ClassifiedTenantCount = value.ClassifiedTenantCount,
+                MisclassificationRate = value.MisclassificationRate,
+                FinalTenantCount = value.FinalTenantCount,
+                AverageErosion = value.AverageErosion,
+                HighestErosionTenantId = value.HighestErosionTenantId,
+                HighestErosion = value.HighestErosion,
+                LowestErosionTenantId = value.LowestErosionTenantId,
+                LowestErosion = value.LowestErosion,
+                TruthItemCount = value.TruthItemCount,
+                CompletedChainCount = value.CompletedChainCount,
+                Ending = value.Ending
             };
         }
 

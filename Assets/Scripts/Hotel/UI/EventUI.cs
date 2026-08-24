@@ -336,6 +336,23 @@ public class EventUI : MonoBehaviour
             ? data.choiceRequiredTags[index]
             : null;
 
+        // Resources or tenant availability can change while a popup is open.
+        // Recheck against authoritative state before closing the UI; rebuilding
+        // the choices immediately disables an option that has become invalid.
+        SettlementBridge bridge = SettlementBridge.Instance;
+        GameRunState runState = bridge != null ? bridge.RunState : null;
+        HashSet<TenantAbility> ownedAbilities = TenantAbilityResolver.GetOwnedAbilities(
+            runState,
+            TenantReviewCoordinator.Instance != null ? TenantReviewCoordinator.Instance.candidates : null);
+        bool stillAffordable = EventAffordability.CanAfford(effects, runState);
+        bool stillHasRequiredTags = TenantAbilityResolver.HasAllRequiredTags(requiredTags, ownedAbilities);
+        if (!stillAffordable || !stillHasRequiredTags)
+        {
+            Debug.Log($"[EventUI] Choice '{optionId}' became unavailable; refreshing the open event.");
+            ShowChoice(data);
+            return;
+        }
+
         string eventId = currentEventId;
         ResetPopupState();
         Close();
