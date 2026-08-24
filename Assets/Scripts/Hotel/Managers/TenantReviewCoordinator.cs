@@ -259,6 +259,7 @@ public class TenantReviewCoordinator : MonoBehaviour
         var candidate = _activeBatch[_activeBatchIndex];
         var canRecruit = HasRecruitmentCapacity();
         _panelActive = true;
+        UIManager.Instance?.CloseAllButtonPanels();
         // External activation control (Event popup pattern): the controller lives
         // outside the panel hierarchy and activates it before populating content.
         reviewPanel.gameObject.SetActive(true);

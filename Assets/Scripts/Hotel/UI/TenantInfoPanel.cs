@@ -295,6 +295,45 @@ public class TenantInfoPanel : MonoBehaviour,
         return false;
     }
 
+    private bool IsHitInExpandedDropdown(GameObject hitObject, TMP_Dropdown dropdown)
+    {
+        if (hitObject == null || dropdown == null || !dropdown.IsExpanded)
+            return false;
+        try
+        {
+            var dropdownField = typeof(TMP_Dropdown).GetField("m_Dropdown",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (dropdownField != null)
+            {
+                GameObject list = dropdownField.GetValue(dropdown) as GameObject;
+                if (list != null && hitObject.transform.IsChildOf(list.transform))
+                    return true;
+            }
+
+            var blockerField = typeof(TMP_Dropdown).GetField("m_Blocker",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (blockerField != null)
+            {
+                GameObject blocker = blockerField.GetValue(dropdown) as GameObject;
+                if (blocker != null && (hitObject == blocker || hitObject.transform.IsChildOf(blocker.transform)))
+                {
+                    EnsureInitialized();
+                    if (_selfRect != null && RectTransformUtility.RectangleContainsScreenPoint(
+                            _selfRect, Input.mousePosition, _canvas != null ? _canvas.worldCamera : null))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         IsPointerOver = true;
@@ -537,25 +576,6 @@ public class TenantInfoPanel : MonoBehaviour,
         if (colorIndex >= 0 && flagColors != null && colorIndex < flagColors.Length)
             target = flagColors[colorIndex];
         flagBackground.color = target;
-    }
-
-    private static bool IsHitInExpandedDropdown(GameObject hitObject, TMP_Dropdown dropdown)
-    {
-        if (hitObject == null || dropdown == null || !dropdown.IsExpanded)
-            return false;
-        try
-        {
-            var field = typeof(TMP_Dropdown).GetField("m_Dropdown",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field == null)
-                return false;
-            GameObject list = field.GetValue(dropdown) as GameObject;
-            return list != null && hitObject.transform.IsChildOf(list.transform);
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private static TenantReviewCandidateSO FindCandidate(string tenantId)

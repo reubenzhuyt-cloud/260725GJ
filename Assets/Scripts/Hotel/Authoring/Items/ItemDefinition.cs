@@ -6,7 +6,8 @@ namespace Hotel.Authoring.Items
     {
         Merchant,
         EngineerEvent,
-        MerchantAndEngineerEvent
+        MerchantAndEngineerEvent,
+        TruthChain
     }
 
     public enum ItemTargeting
@@ -23,7 +24,8 @@ namespace Hotel.Authoring.Items
         ErosionAll,
         NightLoss,
         ExtraClue,
-        EngineerBoost
+        EngineerBoost,
+        TruthClue
     }
 
     [CreateAssetMenu(menuName = "Hotel/Item Definition")]
@@ -31,7 +33,10 @@ namespace Hotel.Authoring.Items
     {
         public string itemId;
         public string displayName;
+        [TextArea(1, 3)] public string hoverDescription;
         [TextArea] public string description;
+        [TextArea(4, 12)] public string readableContent;
+        [TextArea(3, 8)] public string discoveryScene;
         public Sprite icon;
         public int maxStack = 1;
 

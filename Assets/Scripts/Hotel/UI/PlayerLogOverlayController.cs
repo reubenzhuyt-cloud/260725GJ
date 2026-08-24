@@ -60,10 +60,16 @@ public class PlayerLogOverlayController : MonoBehaviour
         return manager != null && manager.IsPauseOverlayVisible;
     }
 
-    private void Open()
+    public void Open()
     {
         if (_openedByController)
             return;
+        if (UIManager.Instance != null)
+        {
+            if (!UIManager.Instance.CanOpenButtonPanel())
+                return;
+            UIManager.Instance.CloseOtherButtonPanels(logOverlay);
+        }
         logOverlay.SetActive(true);
         _openedByController = true;
         _openLogOverlayCount++;
@@ -76,7 +82,7 @@ public class PlayerLogOverlayController : MonoBehaviour
             AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);
     }
 
-    private void Close()
+    public void Close()
     {
         if (!_openedByController)
             return;

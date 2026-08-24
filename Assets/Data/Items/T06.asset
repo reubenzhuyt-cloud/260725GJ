@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1da8b08f1e628844cb283f492550575f, type: 3}
+  m_Name: "T06"
+  m_EditorClassIdentifier: 
+  itemId: T06
+  displayName: "《侵蚀传播路径记录》"
+  hoverDescription: "标注扩散范围的手绘图"
+  description: "一份用铅笔手绘的地图，被仔细地折成四折，塞在一个金属铅笔盒里。铅笔盒生锈严重，打开时发出了刺耳的金属摩擦声。地图本身画在普通的横线笔记本纸上，纸面已经泛黄、变脆。地图描绘的是旅馆及其周边区域，但比例很奇怪——旅馆被画得非常巨大，占据了图纸的大半，而周边的山丘和道路被压缩到边缘。图纸上有大量用铅笔标注的数字和日期，还有一些箭头，指向不同的方向。"
+  readableContent: "地图中央标着“旅馆”两个字，周围画着许多同心圆——不是标准的圆形，而是不规则的波纹，像是手绘的，一边画一边改，有的重叠起来。每个同心圆附近都有日期标注，时间跨度大约在三年左右。最外层的波纹旁边有一行小字，是这份图纸上最好辨认的字迹：\n\n“我画了三年。每次它都会向外扩张一点点。每次扩张——都有人离开。”\n\n地图右上角有另一段文字，字迹明显不同，更小、更谨慎：\n\n“第一次画这张地图的时候，我觉得我在标记它的位置。现在我看着这张纸——我觉得我在标记我自己。”\n\n背面只有一行字，用非常粗的铅笔写的：\n\n“零号点并不在研究所。”"
+  discoveryScene: "XXX（前员工）在打开306房间的墙板后，从里面的空隙中抽出了一个扁平的金属盒。盒子里除了这份地图，还有几支已经干了的铅笔。在地图边缘有一些空白处，上面能隐约辨认出反复擦除又重写的痕迹——旧的铅笔印已经被橡皮擦得差不多了，但在特定角度下能看到凹陷的压痕，像是有人在写完之后又决定把它擦掉，但铅笔的笔尖留下了一道道极细的刻痕。"
+  icon: {fileID: 0}
+  maxStack: 1
+  acquisition: 3
+  merchantPrice: 0
+  targeting: 0
+  effectType: 6
+  effectValue: 0
+  effectFlag: 

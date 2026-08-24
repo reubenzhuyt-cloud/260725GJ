@@ -7,11 +7,15 @@ using TMPro;
 
 public class EventUI : MonoBehaviour
 {
+    public static EventUI Instance { get; private set; }
+
     [Header("Overlay")]
     public GameObject eventOverlay;
 
     [Header("Panel")]
     public GameObject eventPanel;
+
+    public bool IsEventActive => !string.IsNullOrEmpty(currentEventId) || (eventPanel != null && eventPanel.activeSelf) || (eventOverlay != null && eventOverlay.activeSelf);
 
     [Header("Shared Elements")]
     public Image eventImage;
@@ -94,6 +98,22 @@ public class EventUI : MonoBehaviour
         return fallbackSprites[index];
     }
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     private void OnEnable()
     {
         if (onPopupEvent != null)
@@ -139,6 +159,8 @@ public class EventUI : MonoBehaviour
 
         if (eventPanel != null)
             eventPanel.SetActive(true);
+
+        UIManager.Instance?.CloseAllButtonPanels();
 
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);

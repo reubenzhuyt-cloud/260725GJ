@@ -9,6 +9,13 @@ namespace Hotel.UI
 
         public void Open()
         {
+            if (UIManager.Instance != null)
+            {
+                if (!UIManager.Instance.CanOpenButtonPanel())
+                    return;
+                UIManager.Instance.CloseOtherButtonPanels(panel != null ? panel : gameObject);
+            }
+
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayUISound(UISoundType.PanelOpen);

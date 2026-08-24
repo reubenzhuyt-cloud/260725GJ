@@ -53,6 +53,15 @@ public static class ChainRuntimeCatalog
     public const string LargeSuppliesFood = "food";
     public const int LargeSuppliesAmount = 20;
 
+    public const string TruthT01 = "T01";
+    public const string TruthT02 = "T02";
+    public const string TruthT03 = "T03";
+    public const string TruthT04 = "T04";
+    public const string TruthT05 = "T05";
+    public const string TruthT06 = "T06";
+    public const string TruthT07 = "T07";
+    public const string TruthT08 = "T08";
+
     private static readonly string[] ChainOrder =
     {
         "silentdiary",
@@ -174,10 +183,10 @@ public static class ChainRuntimeCatalog
                 requireFlagsByChoice: new Dictionary<string, string[]> { { "A", new[] { SymbolClueItem } } },
                 choice: new Dictionary<string, List<EventEffect>>
                 {
-                    { "A", Fx(ChainFx.GrantItem("T04")) }
+                    { "A", Fx(ChainFx.GrantItem(TruthT04)) }
                 }),
             Step(5, 7,
-                confirm: Fx(ChainFx.GrantItem("T01"), ChainFx.LockErosion(60f)))
+                confirm: Fx(ChainFx.GrantItem(TruthT01), ChainFx.LockErosion(60f)))
         };
 
         // 地下室的神秘声音 (BasementSound) offsets: 0,1,2,3,4
@@ -212,7 +221,7 @@ public static class ChainRuntimeCatalog
             Step(3, 2,
                 choice: new Dictionary<string, List<EventEffect>>
                 {
-                    { "A", Fx(ChainFx.GrantItem("T02")) }
+                    { "A", Fx(ChainFx.GrantItem(TruthT02)) }
                 })
         };
 
@@ -243,8 +252,8 @@ public static class ChainRuntimeCatalog
             Step(1, 0),
             Step(2, 1),
             Step(3, 2),
-            Step(4, 3),
-            Step(5, 4, confirm: Fx(ChainFx.GrantItem("T07"), ChainFx.RemoveOwnerTenant()))
+            Step(4, 3, confirm: Fx(ChainFx.GrantItem(TruthT07))),
+            Step(5, 4, confirm: Fx(ChainFx.GrantItem(TruthT06), ChainFx.RemoveOwnerTenant()))
         };
 
         return steps;

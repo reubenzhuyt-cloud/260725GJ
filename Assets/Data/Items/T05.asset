@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1da8b08f1e628844cb283f492550575f, type: 3}
+  m_Name: "T05"
+  m_EditorClassIdentifier: 
+  itemId: T05
+  displayName: "《错位的旧照片》"
+  hoverDescription: "跨越不同年代的合影"
+  description: "一张彩色照片，表面覆盖着一层泛黄的塑料膜。照片的边角有折痕，其中一角曾经被撕掉，又用透明胶带粘了回来。照片中是一群人在一家旅馆的门口合影——大约十几个人，穿着明显属于不同年代的衣服：前排有人穿着1970年代的格子衬衫，有人穿着1980年代的皮夹克，后排有人穿着更近期的深色卫衣。拍摄时间看起来不像是在同一年代。照片的构图不整齐，像是一张抓拍，所有人的视线都落在不同的方向，没有一个人在看你。"
+  readableContent: "照片本身没有文字，但照片背面有人用深色墨水笔写了几个字：\n\n“这家店——门口总是有人。但我每次来都看不到他们在里面。”\n\n字迹很小，像是随手写的，有些潦草。同一行字的旁边，还有一个更浅的铅笔字迹：\n\n“你说得对。因为它不是给人住的。”\n\n这两种笔迹看起来像是来自两个不同的时代——墨水的颜色不同，书写的工具不同。但没有日期。无法判断谁先谁后。"
+  discoveryScene: "老人没有留下姓名。他在旅馆住了一晚，第二天清晨，你敲他的门想叫他吃早饭时，房间已经空了。被子叠得整整齐齐，枕头上有一些银灰色的头发。照片就放在枕头上。照片边缘有一小块暗红色污渍，不像血迹，更像某种染料或陈年的墨水。门没有锁。走廊里没有人。你站在门口不知道该不该把照片收起来。最后你收了。"
+  icon: {fileID: 0}
+  maxStack: 1
+  acquisition: 3
+  merchantPrice: 0
+  targeting: 0
+  effectType: 6
+  effectValue: 0
+  effectFlag: 

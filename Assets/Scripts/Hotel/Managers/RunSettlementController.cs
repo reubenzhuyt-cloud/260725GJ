@@ -11,6 +11,8 @@ public sealed class RunSettlementController : MonoBehaviour
 
     [SerializeField] private RunSettlementPanel settlementPanel;
 
+    public bool IsSettlementActive => settlementPanel != null && settlementPanel.gameObject.activeSelf;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

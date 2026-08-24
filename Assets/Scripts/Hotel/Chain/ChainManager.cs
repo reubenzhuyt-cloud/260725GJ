@@ -18,26 +18,20 @@ public sealed class ChainRuntimePatch
 /// <summary>
 /// Deterministic per-run orchestrator for the continuous narrative chains.
 ///
-/// The manager is deliberately stateless: every piece of chain state lives in
-/// GameRunState (ChainRunState per chainId), so scheduling, binding, flags and
-/// completion all survive save/load and never depend on scene objects. All
-/// mutations go through AuthorizedChangeSet -> StateReducer.
+/// Narrative chains are strictly serialized (at most one active chain at a time).
 ///
 /// Scheduling rules:
-///  - A chain binds to a deterministically chosen assigned tenant on the first
-///    Day phase where that tenant is available (checked in on a previous day).
-///    Its first trigger day is persisted as FirstTriggerDay = tenant.CheckInDay
-///    + 2 or +3 (day 3/4 after check-in), chosen deterministically from the run
-///    seed plus the chain/target ids. The exact due day of every step
-///    (FirstTriggerDay + authored step offset) is persisted as NextDueDay and
-///    only advanced atomically with a successful settlement.
-///  - At most one chain event is injected per Day phase entry; EventManager also
-///    refuses a second chain event while one is pending, so chain steps never
-///    duplicate and never stack. A due event stays due until it settles.
-///  - When several chains are due at once the earliest persisted due day wins,
-///    with a seed-derived tie breaker (no static catalog starvation).
-///  - A step that was already presented (recorded in EventHistory, resolved or
-///    not) is never re-injected, which keeps event ids unique across save/load.
+///  - The very first chain starts deterministically on Day 3 (FirstTriggerDay = 3).
+///  - If no chain is active:
+///      * On Day 3 (or Day >= 3 if no chain has ever been started), pick and start a new chain.
+///      * When a chain completes or fails, a cool-down is calculated:
+///        NextChainAvailableDay = completedDay + Random(1, 3) (1 to 3 days interval, deterministic derived from run seed).
+///      * On subsequent days (Day >= NextChainAvailableDay), when no active chain exists,
+///        pick the next unstarted/uncompleted chain using tenant attribute matching / weighting,
+///        and start it with FirstTriggerDay = currentDay.
+///  - While a chain is active:
+///      * Its steps advance strictly according to ChainStepRuntimeSpec.DayOffsetAfterFirstEvent.
+///      * Only the currently active chain can inject steps.
 /// </summary>
 public static class ChainManager
 {
@@ -68,60 +62,37 @@ public static class ChainManager
         if (EventManager.Instance != null && EventManager.Instance.HasPendingChainEvent())
             return result;
 
-        var chainIds = new List<string>(state.Chains.Keys);
-        chainIds.Sort(StringComparer.Ordinal);
+        string activeChainId = GetActiveChainId(state);
+        if (string.IsNullOrEmpty(activeChainId))
+            return result;
 
-        string bestChainId = null;
-        int bestDueDay = int.MaxValue;
-        uint bestTieBreak = uint.MaxValue;
+        ChainRunState chain = state.Chains[activeChainId];
+        if (chain == null || chain.Completed || chain.Failed)
+            return result;
 
-        for (int i = 0; i < chainIds.Count; i++)
+        ChainStepRuntimeSpec spec = ChainRuntimeCatalog.GetStep(activeChainId, chain.NextStepToPresent);
+        if (spec == null)
+            return result;
+
+        if (string.IsNullOrEmpty(chain.TargetTenantId) || !state.Tenants.ContainsKey(chain.TargetTenantId))
         {
-            string chainId = chainIds[i];
-            ChainRunState chain = state.Chains[chainId];
-            if (chain == null || chain.Completed || chain.Failed)
-                continue;
-
-            ChainStepRuntimeSpec spec = ChainRuntimeCatalog.GetStep(chainId, chain.NextStepToPresent);
-            if (spec == null)
-                continue;
-
-            if (string.IsNullOrEmpty(chain.TargetTenantId) || !state.Tenants.ContainsKey(chain.TargetTenantId))
-            {
-                FailChain(state, reducer, chainId);
-                continue;
-            }
-
-            if (!AreFlagsPresent(chain, spec.RequireFlags))
-                continue;
-
-            if (chain.NextDueDay < 1 || chain.NextDueDay > day)
-                continue;
-
-            EventConfig config = ChainRuntimeCatalog.FindEvent(chainId, chain.NextStepToPresent, catalog);
-            if (config == null)
-                continue;
-            if (EventSelectionService.HasOccurred(state.EventHistory, config.eventId))
-                continue;
-
-            uint tieBreak = DeriveTieBreak(state.Seed, chainId);
-            if (chain.NextDueDay < bestDueDay
-                || (chain.NextDueDay == bestDueDay && tieBreak < bestTieBreak))
-            {
-                bestDueDay = chain.NextDueDay;
-                bestTieBreak = tieBreak;
-                bestChainId = chainId;
-            }
+            FailChain(state, reducer, activeChainId);
+            return result;
         }
 
-        if (bestChainId != null)
-        {
-            ChainRunState best = state.Chains[bestChainId];
-            EventConfig config = ChainRuntimeCatalog.FindEvent(bestChainId, best.NextStepToPresent, catalog);
-            if (config != null)
-                result.Add(config);
-        }
+        if (!AreFlagsPresent(chain, spec.RequireFlags))
+            return result;
 
+        if (chain.NextDueDay < 1 || chain.NextDueDay > day)
+            return result;
+
+        EventConfig config = ChainRuntimeCatalog.FindEvent(activeChainId, chain.NextStepToPresent, catalog);
+        if (config == null)
+            return result;
+        if (EventSelectionService.HasOccurred(state.EventHistory, config.eventId))
+            return result;
+
+        result.Add(config);
         return result;
     }
 
@@ -139,6 +110,22 @@ public static class ChainManager
         if (string.IsNullOrEmpty(chain.TargetTenantId) || !state.Tenants.ContainsKey(chain.TargetTenantId))
             return null;
         return chain.TargetTenantId;
+    }
+
+    /// <summary>Returns the chainId of the currently active (in-progress) chain, or null if none.</summary>
+    public static string GetActiveChainId(GameRunState state)
+    {
+        if (state == null || state.Chains == null || state.Chains.Count == 0)
+            return null;
+
+        foreach (var pair in state.Chains)
+        {
+            ChainRunState chain = pair.Value;
+            if (chain != null && !chain.Completed && !chain.Failed)
+                return pair.Key;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -251,37 +238,197 @@ public static class ChainManager
         int day,
         IReadOnlyList<TenantReviewCandidateSO> candidates)
     {
+        if (state == null || reducer == null)
+            return;
+
+        // 1. Strict Single Active Chain Guard
+        if (state.Chains != null)
+        {
+            foreach (var pair in state.Chains)
+            {
+                ChainRunState chain = pair.Value;
+                if (chain != null && !chain.Completed && !chain.Failed)
+                    return;
+            }
+        }
+
+        // Count ended chains and find the latest end day
+        int endedCount = 0;
+        int lastChainEndDay = 0;
+        bool hasAnyEndedChain = false;
+
+        if (state.Chains != null)
+        {
+            foreach (var pair in state.Chains)
+            {
+                ChainRunState chain = pair.Value;
+                if (chain != null && (chain.Completed || chain.Failed))
+                {
+                    endedCount++;
+                    hasAnyEndedChain = true;
+                    int endDay = GetChainEndDay(state, chain);
+                    if (endDay > lastChainEndDay)
+                        lastChainEndDay = endDay;
+                }
+            }
+        }
+
+        int targetFirstTriggerDay;
+        int targetNextDueDay;
+
+        if (!hasAnyEndedChain)
+        {
+            // 2. Fixed First Chain on Day 3
+            if (day < 3)
+                return;
+
+            targetFirstTriggerDay = 3;
+            targetNextDueDay = 3;
+        }
+        else
+        {
+            // 3. 1-3 Days Cooldown Between Chains
+            int cooldownDerived = EventSelectionService.DeriveSeed(state.Seed, StableHash("chain_cooldown_" + endedCount));
+            int cooldown = 1 + (int)(((uint)cooldownDerived & 0x7FFFFFFFu) % 3u);
+
+            if (day < lastChainEndDay + cooldown)
+                return;
+
+            targetFirstTriggerDay = day;
+            targetNextDueDay = day;
+        }
+
+        // 4. Ability-Weighted Chain & Tenant Selection
+        var candidatePairs = GetEligibleChainTenantPairs(state, day, candidates);
+        if (candidatePairs.Count == 0)
+            return;
+
+        int selectionSeed = EventSelectionService.DeriveSeed(state.Seed, StableHash("chain_select_day_" + day + "_ended_" + endedCount));
+        ChainCandidate selected = SelectBestChainCandidate(candidatePairs, selectionSeed);
+        if (selected == null || string.IsNullOrEmpty(selected.ChainId) || string.IsNullOrEmpty(selected.TenantId))
+            return;
+
+        // 5. State Reducer Safety via AuthorizedChangeSet.Coordinator("ChainManager", ...)
+        var set = AuthorizedChangeSet.Coordinator(state.RunId, state.StateVersion, "StartChain");
+        set.Add(new StartChainChange(selected.ChainId, selected.TenantId, day, targetFirstTriggerDay, targetNextDueDay));
+        CommitResult result = reducer.TryCommit(state, set);
+        if (!result.Succeeded)
+            Debug.LogWarning($"[ChainManager] StartChain commit failed for chain '{selected.ChainId}'.");
+    }
+
+    private sealed class ChainCandidate
+    {
+        public string ChainId;
+        public string TenantId;
+        public int Weight;
+    }
+
+    private static List<ChainCandidate> GetEligibleChainTenantPairs(
+        GameRunState state,
+        int day,
+        IReadOnlyList<TenantReviewCandidateSO> candidates)
+    {
+        var result = new List<ChainCandidate>();
+        if (state == null)
+            return result;
+
         IReadOnlyList<string> chainIds = ChainRuntimeCatalog.ChainIds;
+        if (chainIds == null || chainIds.Count == 0)
+            return result;
+
         for (int c = 0; c < chainIds.Count; c++)
         {
             string chainId = chainIds[c];
-            if (state.Chains.ContainsKey(chainId))
+            if (string.IsNullOrEmpty(chainId))
                 continue;
-            string tenantId = SelectTargetTenant(state, chainId, day, candidates);
-            if (tenantId == null)
+            if (state.Chains != null && state.Chains.ContainsKey(chainId))
                 continue;
-            int firstTriggerDay = ComputeFirstTriggerDay(state, chainId, tenantId, day);
-            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "StartChain");
-            set.Add(new StartChainChange(chainId, tenantId, day, firstTriggerDay, firstTriggerDay));
-            CommitResult result = reducer.TryCommit(state, set);
-            if (!result.Succeeded)
-                Debug.LogWarning($"[ChainManager] StartChain commit failed for chain '{chainId}'.");
+
+            string tenantId = SelectTargetTenant(state, chainId, day, candidates, out int matchWeight);
+            if (string.IsNullOrEmpty(tenantId))
+                continue;
+
+            result.Add(new ChainCandidate
+            {
+                ChainId = chainId,
+                TenantId = tenantId,
+                Weight = matchWeight
+            });
         }
+
+        return result;
     }
 
-    /// <summary>
-    /// Deterministic day-3/day-4 first trigger: tenant.CheckInDay + 2 or +3,
-    /// chosen from the run seed plus stable chain/target salts. Persisted in the
-    /// StartChain commit so it is never rerolled after a save/load.
-    /// </summary>
-    private static int ComputeFirstTriggerDay(GameRunState state, string chainId, string tenantId, int day)
+    private static ChainCandidate SelectBestChainCandidate(List<ChainCandidate> candidatePairs, int seed)
     {
-        int checkIn = day - 1;
-        if (state.Tenants.TryGetValue(tenantId, out TenantRunState tenant) && tenant.CheckInDay > 0)
-            checkIn = tenant.CheckInDay;
-        int derived = EventSelectionService.DeriveSeed(state.Seed, StableHash(chainId + "|" + tenantId + "|firsttrigger"));
-        int roll = (int)(((uint)derived & 0x7FFFFFFFu) % 2u);
-        return checkIn + 2 + roll;
+        if (candidatePairs == null || candidatePairs.Count == 0)
+            return null;
+        if (candidatePairs.Count == 1)
+            return candidatePairs[0];
+
+        // Sort candidates deterministically before weighted roll
+        candidatePairs.Sort((a, b) =>
+        {
+            int cmp = StringComparer.Ordinal.Compare(a.ChainId, b.ChainId);
+            if (cmp != 0) return cmp;
+            return StringComparer.Ordinal.Compare(a.TenantId, b.TenantId);
+        });
+
+        int totalWeight = 0;
+        for (int i = 0; i < candidatePairs.Count; i++)
+        {
+            int w = candidatePairs[i].Weight > 0 ? candidatePairs[i].Weight : 1;
+            totalWeight += w;
+        }
+
+        if (totalWeight <= 0)
+            totalWeight = candidatePairs.Count;
+
+        int roll = (int)(((uint)seed & 0x7FFFFFFFu) % (uint)totalWeight);
+        int accumulated = 0;
+        for (int i = 0; i < candidatePairs.Count; i++)
+        {
+            int w = candidatePairs[i].Weight > 0 ? candidatePairs[i].Weight : 1;
+            accumulated += w;
+            if (roll < accumulated)
+                return candidatePairs[i];
+        }
+
+        return candidatePairs[0];
+    }
+
+    private static int GetChainEndDay(GameRunState state, ChainRunState chain)
+    {
+        if (chain == null)
+            return 0;
+
+        int lastDay = 0;
+        if (state.EventHistory != null)
+        {
+            for (int i = 0; i < state.EventHistory.Count; i++)
+            {
+                EventHistoryRecord record = state.EventHistory[i];
+                if (record == null)
+                    continue;
+
+                if (ChainRuntimeCatalog.TryParseEvent(record.EventId, out string chainId, out _)
+                    && chainId == chain.ChainId)
+                {
+                    if (record.Day > lastDay)
+                        lastDay = record.Day;
+                }
+            }
+        }
+
+        if (lastDay > 0)
+            return lastDay;
+
+        if (chain.FirstTriggerDay > 0)
+            return chain.FirstTriggerDay;
+        if (chain.StartDay > 0)
+            return chain.StartDay;
+
+        return 0;
     }
 
     /// <summary>
@@ -315,7 +462,7 @@ public static class ChainManager
                 firstTriggerDay = day;
             if (nextDueDay < firstTriggerDay)
                 nextDueDay = firstTriggerDay;
-            var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "MigrateChainSchedule");
+            var set = AuthorizedChangeSet.Coordinator(state.RunId, state.StateVersion, "MigrateChainSchedule");
             set.Add(new SetChainScheduleChange(chainId, firstTriggerDay, nextDueDay));
             CommitResult result = reducer.TryCommit(state, set);
             if (!result.Succeeded)
@@ -329,14 +476,28 @@ public static class ChainManager
         int day,
         IReadOnlyList<TenantReviewCandidateSO> candidates)
     {
+        return SelectTargetTenant(state, chainId, day, candidates, out _);
+    }
+
+    private static string SelectTargetTenant(
+        GameRunState state,
+        string chainId,
+        int day,
+        IReadOnlyList<TenantReviewCandidateSO> candidates,
+        out int matchWeight)
+    {
+        matchWeight = 1;
         if (state.Tenants == null || state.Tenants.Count == 0)
             return null;
 
         var used = new HashSet<string>();
-        foreach (var pair in state.Chains)
+        if (state.Chains != null)
         {
-            if (pair.Value != null && !string.IsNullOrEmpty(pair.Value.TargetTenantId))
-                used.Add(pair.Value.TargetTenantId);
+            foreach (var pair in state.Chains)
+            {
+                if (pair.Value != null && !string.IsNullOrEmpty(pair.Value.TargetTenantId))
+                    used.Add(pair.Value.TargetTenantId);
+            }
         }
 
         var eligible = new List<string>();
@@ -372,12 +533,14 @@ public static class ChainManager
             if (preferredPool.Count > 0)
             {
                 preferredPool.Sort(StringComparer.Ordinal);
+                matchWeight = 10;
                 return preferredPool[PickIndex(seed, "preferred:" + chainId, preferredPool.Count)];
             }
         }
 
         var pool = fresh.Count > 0 ? fresh : eligible;
         pool.Sort(StringComparer.Ordinal);
+        matchWeight = 1;
         return pool[PickIndex(seed, chainId, pool.Count)];
     }
 
@@ -429,7 +592,7 @@ public static class ChainManager
 
     private static void FailChain(GameRunState state, StateReducer reducer, string chainId)
     {
-        var set = AuthorizedChangeSet.Domain(state.RunId, state.StateVersion, "ChainManager", "FailChain");
+        var set = AuthorizedChangeSet.Coordinator(state.RunId, state.StateVersion, "FailChain");
         set.Add(new FailChainChange(chainId));
         CommitResult result = reducer.TryCommit(state, set);
         if (!result.Succeeded)

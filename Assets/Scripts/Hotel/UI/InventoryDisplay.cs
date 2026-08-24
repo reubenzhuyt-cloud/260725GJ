@@ -8,17 +8,20 @@ public class InventoryDisplay : MonoBehaviour
 {
     [Header("Configuration")]
     public RectTransform slotContainer;
-    public GameObject slotTemplate;
+    public InventoryItemSlot slotPrefab;
     public List<ItemDefinition> itemDefinitions = new List<ItemDefinition>();
 
     [Header("Events")]
     public PhaseEnteredEvent onPhaseEntered;
 
-    private readonly List<InventoryItemSlot> _createdSlots = new List<InventoryItemSlot>();
-    private readonly List<GameObject> _createdRoots = new List<GameObject>();
+    private readonly List<InventoryItemSlot> _slotPool = new List<InventoryItemSlot>();
     private bool _runStateRestoredSubscribed;
     private bool _inventoryChangedSubscribed;
-    private bool _warnedMissingTemplate;
+    private bool _warnedMissingPrefab;
+    private bool _hasStarted;
+
+    private static readonly Dictionary<string, ItemDefinition> ResItemCache = new Dictionary<string, ItemDefinition>();
+    private static bool _resItemsLoaded;
 
     private void OnEnable()
     {
@@ -26,7 +29,8 @@ public class InventoryDisplay : MonoBehaviour
         SubscribeInventoryChanged();
         if (onPhaseEntered != null)
             onPhaseEntered.Register(OnPhaseEntered);
-        RefreshDisplay();
+        if (_hasStarted)
+            RefreshDisplay();
     }
 
     private void OnDisable()
@@ -39,30 +43,20 @@ public class InventoryDisplay : MonoBehaviour
 
     private void Start()
     {
+        _hasStarted = true;
         RefreshDisplay();
     }
 
     public void RefreshDisplay()
     {
-        ClearCreatedSlots();
+        DeactivateAllSlots();
 
-        if (slotContainer == null || slotTemplate == null)
+        if (slotContainer == null || slotPrefab == null)
         {
-            if (!_warnedMissingTemplate)
+            if (!_warnedMissingPrefab)
             {
-                _warnedMissingTemplate = true;
-                Debug.LogWarning("[InventoryDisplay] slotContainer or slotTemplate is not configured; inventory slots will not be shown.");
-            }
-            return;
-        }
-
-        Transform panelTemplate = slotTemplate.transform.Find("ItemPanel");
-        if (panelTemplate == null)
-        {
-            if (!_warnedMissingTemplate)
-            {
-                _warnedMissingTemplate = true;
-                Debug.LogWarning("[InventoryDisplay] slotTemplate has no 'ItemPanel' child; inventory slots will not be shown.");
+                _warnedMissingPrefab = true;
+                Debug.LogWarning("[InventoryDisplay] slotContainer or slotPrefab is not configured; inventory slots will not be shown.");
             }
             return;
         }
@@ -76,6 +70,7 @@ public class InventoryDisplay : MonoBehaviour
         var ownedIds = new List<string>(state.Inventory.Keys);
         ownedIds.Sort(StringComparer.Ordinal);
 
+        int activeCount = 0;
         for (int i = 0; i < ownedIds.Count; i++)
         {
             string itemId = ownedIds[i];
@@ -88,51 +83,106 @@ public class InventoryDisplay : MonoBehaviour
             if (definition == null)
                 continue;
 
-            GameObject instance = Instantiate(panelTemplate.gameObject, slotContainer);
-            if (instance == null)
-                continue;
-            instance.name = "ItemSlot_" + itemId;
-            instance.SetActive(true);
-
-            InventoryItemSlot slot = instance.GetComponent<InventoryItemSlot>();
+            InventoryItemSlot slot = GetOrCreateSlot(activeCount);
             if (slot == null)
-            {
-                slot = instance.AddComponent<InventoryItemSlot>();
-                Transform iconTf = instance.transform.Find("Icon");
-                Transform nameTf = instance.transform.Find("NameLabel");
-                Transform countTf = instance.transform.Find("CountLabel");
-                slot.iconImage = iconTf != null ? iconTf.GetComponent<UnityEngine.UI.Image>() : null;
-                slot.nameLabel = nameTf != null ? nameTf.GetComponent<TMPro.TextMeshProUGUI>() : null;
-                slot.countLabel = countTf != null ? countTf.GetComponent<TMPro.TextMeshProUGUI>() : null;
-            }
+                continue;
+
+            slot.name = "ItemSlot_" + itemId;
             slot.Bind(definition, count);
-            _createdSlots.Add(slot);
-            _createdRoots.Add(instance);
+            slot.gameObject.SetActive(true);
+            activeCount++;
+        }
+    }
+
+    private InventoryItemSlot GetOrCreateSlot(int index)
+    {
+        while (_slotPool.Count <= index)
+        {
+            InventoryItemSlot newSlot = Instantiate(slotPrefab, slotContainer);
+            if (newSlot == null)
+                return null;
+            newSlot.gameObject.SetActive(false);
+            _slotPool.Add(newSlot);
+        }
+
+        InventoryItemSlot slot = _slotPool[index];
+        if (slot == null)
+        {
+            slot = Instantiate(slotPrefab, slotContainer);
+            _slotPool[index] = slot;
+        }
+        return slot;
+    }
+
+    private void DeactivateAllSlots()
+    {
+        for (int i = 0; i < _slotPool.Count; i++)
+        {
+            InventoryItemSlot slot = _slotPool[i];
+            if (slot != null && slot.gameObject != null)
+                slot.gameObject.SetActive(false);
         }
     }
 
     private ItemDefinition FindDefinition(string itemId)
     {
+        if (string.IsNullOrEmpty(itemId))
+            return null;
+
         for (int i = 0; i < itemDefinitions.Count; i++)
         {
             ItemDefinition definition = itemDefinitions[i];
             if (definition != null && definition.itemId == itemId)
                 return definition;
         }
+
+        if (ItemUseManager.Instance != null)
+        {
+            ItemDefinition definition = ItemUseManager.Instance.FindDefinition(itemId);
+            if (definition != null)
+                return definition;
+        }
+
+#if UNITY_EDITOR
+        ItemDefinition editorItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemDefinition>($"Assets/Data/Items/{itemId}.asset");
+        if (editorItem != null)
+            return editorItem;
+#endif
+
+        EnsureResItemCacheLoaded();
+        if (ResItemCache.TryGetValue(itemId, out ItemDefinition cachedDef))
+            return cachedDef;
+
+        ItemDefinition resItem = Resources.Load<ItemDefinition>($"Items/{itemId}");
+        if (resItem != null)
+        {
+            ResItemCache[itemId] = resItem;
+            return resItem;
+        }
+
         return null;
     }
 
-    private void ClearCreatedSlots()
+    private static void EnsureResItemCacheLoaded()
     {
-        for (int i = 0; i < _createdRoots.Count; i++)
+        if (_resItemsLoaded)
+            return;
+
+        ItemDefinition[] allResItems = Resources.LoadAll<ItemDefinition>("Items");
+        if (allResItems != null)
         {
-            GameObject root = _createdRoots[i];
-            if (root != null)
-                Destroy(root);
+            for (int i = 0; i < allResItems.Length; i++)
+            {
+                ItemDefinition item = allResItems[i];
+                if (item != null && !string.IsNullOrEmpty(item.itemId))
+                {
+                    ResItemCache[item.itemId] = item;
+                }
+            }
         }
-        _createdSlots.Clear();
-        _createdRoots.Clear();
+        _resItemsLoaded = true;
     }
+
 
     private void OnPhaseEntered(PhaseEnterData data)
     {

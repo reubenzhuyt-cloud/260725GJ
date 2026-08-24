@@ -89,9 +89,16 @@ public sealed class GameSettingController : MonoBehaviour
         timeScaleBeforePause = Time.timeScale;
         isPauseMenuOpen = true;
         if (uiManager != null)
+        {
+            uiManager.CloseOtherButtonPanels(pauseOverlay);
             uiManager.ShowPauseOverlay();
+        }
         else
+        {
+            if (UIManager.Instance != null)
+                UIManager.Instance.CloseOtherButtonPanels(pauseOverlay);
             pauseOverlay.SetActive(true);
+        }
         Time.timeScale = 0f;
         RefreshUiFromRuntimeState();
 
