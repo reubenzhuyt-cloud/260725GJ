@@ -238,12 +238,6 @@ public class ItemUseManager : MonoBehaviour
                 return definition;
         }
 
-#if UNITY_EDITOR
-        ItemDefinition editorItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemDefinition>($"Assets/Data/Items/{itemId}.asset");
-        if (editorItem != null)
-            return editorItem;
-#endif
-
         ItemDefinition resItem = Resources.Load<ItemDefinition>($"Items/{itemId}");
         if (resItem != null)
             return resItem;

@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public class TenantAvatarListItem : MonoBehaviour
 {
+    private const float AssignedAlpha = 0.5f;
+
     [SerializeField] private Image avatarImage;
     [SerializeField] private TMPro.TextMeshProUGUI nameLabel;
     [SerializeField] private CanvasGroup canvasGroup;
@@ -24,11 +26,13 @@ public class TenantAvatarListItem : MonoBehaviour
             _placeholderSprite = avatarImage.sprite;
     }
 
-    public void Initialize(string tenantId, string displayName, Color color, string avatarKey)
+    public void Initialize(string tenantId, string displayName, Color color, string avatarKey, bool isAssigned = false)
     {
         _tenantId = tenantId;
         _itemColor = color;
-        _authoredAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+        _authoredAlpha = isAssigned ? AssignedAlpha : 1f;
+        if (canvasGroup != null)
+            canvasGroup.alpha = _authoredAlpha;
 
         if (hoverTrigger != null)
         {

@@ -34,7 +34,14 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     private readonly List<TenantAssignmentItemView> _unassignedTenants =
         new List<TenantAssignmentItemView>();
 
+    private readonly List<TenantAssignmentItemView> _panelTenants =
+        new List<TenantAssignmentItemView>();
+
+    private readonly List<TenantAssignmentItemView> _assignedBuffer =
+        new List<TenantAssignmentItemView>();
+
     public IReadOnlyList<TenantAssignmentItemView> UnassignedTenants => _unassignedTenants;
+    public IReadOnlyList<TenantAssignmentItemView> PanelTenants => _panelTenants;
     public int UnassignedCount => _unassignedTenants.Count;
     public bool IsAssignmentActive => HasUnassignedTenants || IsDragging;
     public int AvailableCapacity
@@ -106,7 +113,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         RebuildLoadedTenantViews();
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
-        TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
     }
 
@@ -139,7 +145,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         RebuildLoadedTenantViews();
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
-        TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
     }
 
@@ -201,23 +206,59 @@ public class TenantAssignmentCoordinator : MonoBehaviour
     public void RegisterTenant(string tenantId, string displayName, Color color, string avatarKey)
     {
         if (_displayLookup.ContainsKey(tenantId)) return;
+
+        if (_runState != null && !_runState.Tenants.ContainsKey(tenantId))
+        {
+            _runState.Tenants[tenantId] = new TenantRunState
+            {
+                TenantId = tenantId,
+                DefinitionId = tenantId,
+                AvatarKey = avatarKey
+            };
+        }
+
         _displayLookup[tenantId] = new TenantAssignmentItemView(tenantId, displayName, color, avatarKey);
         _tenantOrder.Add(tenantId);
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
-        TenantAssignmentPanel.RefreshAll();
+        AssignmentChanged?.Invoke();
     }
 
     private void RebuildUnassigned()
     {
         _unassignedTenants.Clear();
+        _panelTenants.Clear();
+        _assignedBuffer.Clear();
+
         for (int i = 0; i < _tenantOrder.Count; i++)
         {
             string id = _tenantOrder[i];
-            TenantRunState tenant = _runState.Tenants[id];
-            if (string.IsNullOrEmpty(tenant.RoomId))
-                _unassignedTenants.Add(_displayLookup[id]);
+            if (!_runState.Tenants.TryGetValue(id, out TenantRunState tenant) || tenant == null)
+                continue;
+
+            if (!_displayLookup.TryGetValue(id, out TenantAssignmentItemView baseView))
+                continue;
+
+            bool isAssigned = !string.IsNullOrEmpty(tenant.RoomId);
+            TenantAssignmentItemView view = new TenantAssignmentItemView(
+                baseView.TenantId,
+                baseView.DisplayName,
+                baseView.Color,
+                baseView.AvatarKey,
+                isAssigned);
+
+            if (isAssigned)
+            {
+                _assignedBuffer.Add(view);
+            }
+            else
+            {
+                _unassignedTenants.Add(view);
+                _panelTenants.Add(view);
+            }
         }
+
+        _panelTenants.AddRange(_assignedBuffer);
     }
 
     public void SetDragging(bool value)
@@ -257,7 +298,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             RebuildUnassigned();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
-            TenantAssignmentPanel.RefreshAll();
 
             // First assignment marks the tenant's check-in day (used as the chain D1 anchor).
             if (_runState.Tenants.TryGetValue(tenantId, out TenantRunState assignedTenant)
@@ -335,7 +375,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
             RebuildUnassigned();
             AssignmentChanged?.Invoke();
             RoomTenantAvatarSlot.RefreshAll();
-            TenantAssignmentPanel.RefreshAll();
 
             string displayName = tenantId;
             if (_displayLookup.TryGetValue(tenantId, out TenantAssignmentItemView view))
@@ -442,7 +481,6 @@ public class TenantAssignmentCoordinator : MonoBehaviour
         _tenantOrder.Remove(tenantId);
         RebuildUnassigned();
         RoomTenantAvatarSlot.RefreshAll();
-        TenantAssignmentPanel.RefreshAll();
         AssignmentChanged?.Invoke();
 
         PlayerLogManager.Record(_runState, new PlayerLogWriteDto(

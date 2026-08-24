@@ -143,12 +143,6 @@ public class InventoryDisplay : MonoBehaviour
                 return definition;
         }
 
-#if UNITY_EDITOR
-        ItemDefinition editorItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemDefinition>($"Assets/Data/Items/{itemId}.asset");
-        if (editorItem != null)
-            return editorItem;
-#endif
-
         EnsureResItemCacheLoaded();
         if (ResItemCache.TryGetValue(itemId, out ItemDefinition cachedDef))
             return cachedDef;

@@ -15,6 +15,10 @@ public class SettlementBridge : MonoBehaviour
     [Header("Resource Definitions")]
     public List<ResourceDefinition> resourceDefinitions = new List<ResourceDefinition>();
 
+    [Header("Debug")]
+    [SerializeField] private int debugStartDay = 0;
+    [SerializeField] private List<string> debugInventoryItems = new List<string>();
+
     [Header("Event Channels")]
     public PhaseEnteredEvent onPhaseEntered;
     public FoodShortageEvent onFoodShortage;
@@ -42,6 +46,26 @@ public class SettlementBridge : MonoBehaviour
         GameLaunchContext.TryConsume(out var loadedState, out _);
         _runState = loadedState ?? GameRunState.New(new RunId(Guid.NewGuid().ToString("N")), Environment.TickCount);
 
+        if (loadedState == null && debugStartDay > 0)
+        {
+            _runState.Day = Mathf.Clamp(debugStartDay, 1, RunSettlementCalculator.FinalDay);
+        }
+
+        if (loadedState == null && debugInventoryItems != null && debugInventoryItems.Count > 0)
+        {
+            if (_runState.Inventory == null)
+            {
+                _runState.Inventory = new Dictionary<string, int>();
+            }
+
+            foreach (var itemId in debugInventoryItems)
+            {
+                if (string.IsNullOrWhiteSpace(itemId)) continue;
+                string trimmed = itemId.Trim();
+                _runState.Inventory[trimmed] = 1;
+            }
+        }
+
         _lastSettlementDay = _runState.Day;
         _lastPhase = ToGamePhase(_runState.Phase.Current);
 
@@ -68,6 +92,7 @@ public class SettlementBridge : MonoBehaviour
         }
 
         StartCoroutine(DispatchRunStateRestored());
+        Hotel.Audio.BaseAudioManager.Instance?.NotifyRunState(_runState);
     }
 
     private IEnumerator DispatchRunStateRestored()
@@ -151,7 +176,7 @@ public class SettlementBridge : MonoBehaviour
         _lastPhase = data.phase;
 
         Dictionary<string, int> buffDeltas = null;
-        if (crossedNewDayBoundary)
+        if (crossedNewDayBoundary && RoomFloorRegistry.Instance != null)
             EventEffectManager.TickBuffs(_runState, _reducer, RoomFloorRegistry.Instance, out buffDeltas);
 
         bool shouldAutosave = data.phase == GamePhase.Dawn || completedNewDaySettlement;
@@ -159,6 +184,7 @@ public class SettlementBridge : MonoBehaviour
             Debug.LogError($"[SettlementBridge] Dawn autosave failed: {error}");
 
         PublishHalfDayNotice(previousPhase, foodDeltas, buffDeltas);
+        Hotel.Audio.BaseAudioManager.Instance?.NotifyRunState(_runState);
     }
 
     private bool ExecuteFoodSettlement(int day, HotelPhase phase, out Dictionary<string, int> settledDeltas)
@@ -239,11 +265,15 @@ public class SettlementBridge : MonoBehaviour
 
     public int GetResourceAmount(string resourceId)
     {
+        if (_runState == null || string.IsNullOrEmpty(resourceId))
+            return 0;
         return ResourceService.GetAmount(_runState, resourceId);
     }
 
     public bool TrySettleJobs(int day, GamePhase phase)
     {
+        if (_runState == null || _reducer == null)
+            return false;
         if (phase != GamePhase.Day && phase != GamePhase.Night)
             return true;
         IReadOnlyList<TenantReviewCandidateSO> candidates = TenantReviewCoordinator.Instance != null
