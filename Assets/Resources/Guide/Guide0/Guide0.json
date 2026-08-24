@@ -1,0 +1,18 @@
+{
+  "name": "欢迎来到LastHotel",
+  "imagecount": 2,
+  "pages": [
+    {
+      "image": "0-1",
+      "content": "欢迎来到LastHotel！"
+    },
+    {
+      "image": "0-2",
+      "content": "为了熟悉模拟经营复杂的操作UI系统"
+    },
+    {
+      "image": "0-3",
+      "content": "点击左侧列表切换模块介绍指引"
+    }
+  ]
+}

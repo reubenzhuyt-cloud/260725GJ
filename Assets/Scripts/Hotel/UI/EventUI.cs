@@ -47,6 +47,53 @@ public class EventUI : MonoBehaviour
     private EventEffect[] currentConfirmEffects;
     private string currentEventId;
 
+    private static Sprite[] fallbackSprites;
+    private static bool fallbackSpritesLoaded;
+
+    private static void EnsureFallbackSpritesLoaded()
+    {
+        if (fallbackSpritesLoaded) return;
+        fallbackSpritesLoaded = true;
+        Sprite[] loaded = Resources.LoadAll<Sprite>("EventImage/S1");
+        if (loaded != null && loaded.Length > 0)
+        {
+            System.Array.Sort(loaded, (a, b) => string.CompareOrdinal(a.name, b.name));
+            fallbackSprites = loaded;
+        }
+        else
+        {
+            fallbackSprites = null;
+        }
+    }
+
+    private static int ComputeDeterministicHash(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return 0;
+        unchecked
+        {
+            uint hash = 2166136261;
+            for (int i = 0; i < text.Length; i++)
+            {
+                hash = (hash ^ text[i]) * 16777619;
+            }
+            return (int)(hash & 0x7FFFFFFF);
+        }
+    }
+
+    private Sprite ResolveEventSprite(PopupData data)
+    {
+        if (data.image != null)
+            return data.image;
+
+        EnsureFallbackSpritesLoaded();
+        if (fallbackSprites == null || fallbackSprites.Length == 0)
+            return null;
+
+        int hash = ComputeDeterministicHash(data.eventId);
+        int index = hash % fallbackSprites.Length;
+        return fallbackSprites[index];
+    }
+
     private void OnEnable()
     {
         if (onPopupEvent != null)
@@ -98,7 +145,19 @@ public class EventUI : MonoBehaviour
 
         // Set shared content
         if (eventImage != null)
-            eventImage.sprite = data.image;
+        {
+            Sprite resolvedSprite = ResolveEventSprite(data);
+            if (resolvedSprite != null)
+            {
+                eventImage.gameObject.SetActive(true);
+                eventImage.sprite = resolvedSprite;
+            }
+            else
+            {
+                eventImage.sprite = null;
+                eventImage.gameObject.SetActive(false);
+            }
+        }
         if (eventTitle != null)
             eventTitle.text = data.title;
         if (eventDescription != null)

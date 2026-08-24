@@ -172,6 +172,10 @@ public class GuidePanelController : MonoBehaviour
             if (guideImage == null) guideImage = picturePanel != null ? picturePanel : pictureImage;
         }
 
+        if (picturePanel != null) picturePanel.preserveAspect = true;
+        if (pictureImage != null) pictureImage.preserveAspect = true;
+        if (guideImage != null) guideImage.preserveAspect = true;
+
         if (describeText == null && contentText == null)
         {
             Transform descTransform = transform.Find("RightPanel/DescribeText")
@@ -340,6 +344,14 @@ public class GuidePanelController : MonoBehaviour
         TextAsset[] guideAssets = Resources.LoadAll<TextAsset>("Guide");
         if (guideAssets != null)
         {
+            Array.Sort(guideAssets, (a, b) =>
+            {
+                if (a == null && b == null) return 0;
+                if (a == null) return -1;
+                if (b == null) return 1;
+                return string.Compare(a.name, b.name, StringComparison.OrdinalIgnoreCase);
+            });
+
             foreach (var asset in guideAssets)
             {
                 if (asset == null || string.IsNullOrEmpty(asset.text))
@@ -574,29 +586,14 @@ public class GuidePanelController : MonoBehaviour
             contentText.text = page.content ?? string.Empty;
 
         Sprite sprite = LoadPageSprite(guide, page);
-        if (picturePanel != null)
-        {
-            if (sprite != null)
-            {
-                picturePanel.sprite = sprite;
-                picturePanel.gameObject.SetActive(true);
-            }
-            else
-            {
-                picturePanel.gameObject.SetActive(false);
-            }
-        }
+        SetupGuideImage(picturePanel, sprite);
         if (guideImage != null && guideImage != picturePanel)
         {
-            if (sprite != null)
-            {
-                guideImage.sprite = sprite;
-                guideImage.gameObject.SetActive(true);
-            }
-            else
-            {
-                guideImage.gameObject.SetActive(false);
-            }
+            SetupGuideImage(guideImage, sprite);
+        }
+        if (pictureImage != null && pictureImage != picturePanel && pictureImage != guideImage)
+        {
+            SetupGuideImage(pictureImage, sprite);
         }
 
         if (pageIndicatorText != null)
@@ -614,6 +611,37 @@ public class GuidePanelController : MonoBehaviour
         SetButtonInteractable(nextPageBtn, hasNext);
         SetButtonInteractable(nextButton, hasNext);
         SetButtonInteractable(rightButton, hasNext);
+    }
+
+    private void SetupGuideImage(Image targetImage, Sprite sprite)
+    {
+        if (targetImage == null)
+            return;
+
+        if (sprite != null)
+        {
+            targetImage.sprite = sprite;
+            targetImage.type = Image.Type.Simple;
+            targetImage.preserveAspect = true;
+
+            AspectRatioFitter fitter = targetImage.GetComponent<AspectRatioFitter>();
+            if (fitter == null)
+            {
+                fitter = targetImage.gameObject.AddComponent<AspectRatioFitter>();
+            }
+
+            if (sprite.rect.height > 0)
+            {
+                fitter.aspectRatio = (float)sprite.rect.width / sprite.rect.height;
+                fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            }
+
+            targetImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            targetImage.gameObject.SetActive(false);
+        }
     }
 
     private void UpdateDots(int totalPages, int activeIndex)
@@ -679,20 +707,76 @@ public class GuidePanelController : MonoBehaviour
 
     private Sprite LoadPageSprite(GuideData guide, GuidePageData page)
     {
-        if (string.IsNullOrEmpty(page.image))
+        Sprite sprite = null;
+        string imageName = page != null ? page.image : null;
+
+        if (!string.IsNullOrEmpty(imageName))
+        {
+            sprite = TryLoadSprite(guide, imageName);
+            if (sprite != null) return sprite;
+        }
+
+        int pageNum = _currentPageIndex + 1;
+        string guideFolderName = !string.IsNullOrEmpty(guide.resourceFolderPath)
+            ? System.IO.Path.GetFileName(guide.resourceFolderPath)
+            : string.Empty;
+
+        string guideIndexStr = string.Empty;
+        if (!string.IsNullOrEmpty(guideFolderName) && guideFolderName.StartsWith("Guide", StringComparison.OrdinalIgnoreCase))
+        {
+            guideIndexStr = guideFolderName.Substring(5);
+        }
+
+        List<string> fallbackNames = new List<string>();
+        if (!string.IsNullOrEmpty(guideIndexStr))
+        {
+            fallbackNames.Add($"{guideIndexStr}-{pageNum}");
+        }
+        fallbackNames.Add($"0-{pageNum}");
+        fallbackNames.Add($"1-{pageNum}");
+        fallbackNames.Add($"{pageNum}");
+
+        foreach (var fallbackName in fallbackNames)
+        {
+            sprite = TryLoadSprite(guide, fallbackName);
+            if (sprite != null) return sprite;
+        }
+
+        return null;
+    }
+
+    private Sprite TryLoadSprite(GuideData guide, string imageName)
+    {
+        if (string.IsNullOrEmpty(imageName))
             return null;
 
-        Sprite sprite = Resources.Load<Sprite>($"{guide.resourceFolderPath}/Image/{page.image}");
-        if (sprite != null) return sprite;
+        string cleanName = imageName;
+        if (cleanName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            cleanName = cleanName.Substring(0, cleanName.Length - 4);
 
-        sprite = Resources.Load<Sprite>($"{guide.resourceFolderPath}/{page.image}");
-        if (sprite != null) return sprite;
+        string[] candidateNames = cleanName == imageName
+            ? new[] { cleanName }
+            : new[] { cleanName, imageName };
 
-        sprite = Resources.Load<Sprite>($"Guide/{page.image}");
-        if (sprite != null) return sprite;
+        foreach (var name in candidateNames)
+        {
+            if (!string.IsNullOrEmpty(guide.resourceFolderPath))
+            {
+                Sprite sprite = Resources.Load<Sprite>($"{guide.resourceFolderPath}/Image/{name}");
+                if (sprite != null) return sprite;
 
-        sprite = Resources.Load<Sprite>(page.image);
-        return sprite;
+                sprite = Resources.Load<Sprite>($"{guide.resourceFolderPath}/{name}");
+                if (sprite != null) return sprite;
+            }
+
+            Sprite directSprite = Resources.Load<Sprite>($"Guide/{name}");
+            if (directSprite != null) return directSprite;
+
+            directSprite = Resources.Load<Sprite>(name);
+            if (directSprite != null) return directSprite;
+        }
+
+        return null;
     }
 
     public void OnCloseButtonClicked()

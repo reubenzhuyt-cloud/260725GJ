@@ -32,7 +32,7 @@ MonoBehaviour:
     category: day_management
   eventTitle: "\u5546\u8D29\u5230\u8BBF"
   eventDescription: "\u4E00\u8F86\u7834\u65E7\u7684\u9762\u5305\u8F66\u505C\u5728\u65C5\u9986\u95E8\u53E3\u2014\u2014\u662F\u6D41\u6D6A\u5546\u4EBA\u3002"
-  eventImage: {fileID: 0}
+  eventImage: {fileID: 21300000, guid: e542b6cc91fdf274e9484b11e2c14085, type: 3}
   eventType: 1
   confirmEffects: []
   choices:
