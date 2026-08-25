@@ -56,6 +56,8 @@ public class RoomTenantAvatarSlot : MonoBehaviour
 
     private void InitializeRedDotIndicator()
     {
+        if (GetComponent<RoomAvatarSlotLayoutController>() != null) return;
+
         RedDotIndicator prefab = Resources.Load<RedDotIndicator>("UI/RedDotIndicator");
         if (prefab != null)
         {
