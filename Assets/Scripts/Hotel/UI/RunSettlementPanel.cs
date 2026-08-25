@@ -7,6 +7,9 @@ using UnityEngine.UI;
 /// <summary>Scene-authored result overlay. Settlement rules remain outside this presentation component.</summary>
 public sealed class RunSettlementPanel : MonoBehaviour
 {
+    [Header("Artwork")]
+    [SerializeField] private Image endingImage;
+
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private TextMeshProUGUI endingText;
@@ -36,6 +39,7 @@ public sealed class RunSettlementPanel : MonoBehaviour
 
         gameObject.SetActive(true);
         transform.SetAsLastSibling();
+        ApplyEndingImage(summary.Ending);
         titleText.text = "第三十天结束  /  DAY 30 COMPLETE";
         endingText.text = GetEndingTitle(summary.Ending);
         endingText.color = GetEndingColor(summary.Ending);
@@ -49,30 +53,36 @@ public sealed class RunSettlementPanel : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
-    public void SetupReferences(
-        TextMeshProUGUI title,
-        TextMeshProUGUI ending,
-        TextMeshProUGUI story,
-        TextMeshProUGUI stats,
-        TextMeshProUGUI hint,
-        Button menuBtn)
+    private void ApplyEndingImage(RunEnding ending)
     {
-        titleText = title;
-        endingText = ending;
-        storyText = story;
-        statisticsText = stats;
-        hintText = hint;
-        mainMenuButton = menuBtn;
-        if (mainMenuButton != null)
+        if (endingImage == null)
         {
-            mainMenuButton.onClick.RemoveListener(ReturnToMainMenu);
-            mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+            Debug.LogWarning("[RunSettlementPanel] No ending image is assigned; showing the text-only result screen.", this);
+            return;
         }
+
+        string resourceName = ending switch
+        {
+            RunEnding.Truth => "真",
+            RunEnding.Good => "好",
+            RunEnding.Normal => "普通",
+            _ => "坏"
+        };
+
+        Sprite sprite = Resources.Load<Sprite>($"Endings/{resourceName}");
+        if (sprite == null)
+        {
+            Debug.LogWarning($"[RunSettlementPanel] Ending artwork 'Resources/Endings/{resourceName}' was not found.", this);
+            return;
+        }
+
+        endingImage.sprite = sprite;
     }
 
     private bool ValidateReferences()
     {
-        if (titleText != null
+        if (endingImage != null
+            && titleText != null
             && endingText != null
             && storyText != null
             && statisticsText != null
