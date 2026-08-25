@@ -4,16 +4,17 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// UI-driven hover / pinned info trigger. Hover shows a small panel after
-/// hoverDelay seconds; right-click opens the pinned (large) panel.
-/// Works purely through UI pointer events - no world colliders or Physics2D.
+/// hovering still for hoverDelay seconds; right-click opens the pinned (large) panel.
+/// Works purely through UI pointer events and RectTransform boundary checks.
 /// </summary>
 public class TenantInfoHoverTrigger : MonoBehaviour,
     IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     public TenantInfoPanel hoverInfoPanel;
     public TenantInfoPanel pinnedInfoPanel;
-    public float hoverDelay = 0.5f;
+    public float hoverDelay = 0.3f;
     public float hideDelay = 0.15f;
+    public float moveThreshold = 2f;
     public bool preferLeftPlacement;
 
     /// <summary>When true, right-click opens the pinned panel (UI mode).</summary>
@@ -23,82 +24,111 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     public Func<string> tenantIdProvider;
 
-    private bool _hovering;
-    private float _hoverStart;
-    private float _hidePendingStart;
-    private string _shownHoverTenantId;
+    private bool _hovered;
+    private bool _shown;
+    private Vector2 _lastMousePosition;
+    private float _hoverStillTime;
+    private RectTransform _rectTransform;
+    private Canvas _canvas;
+
+    private void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+        _canvas = GetComponentInParent<Canvas>();
+    }
 
     private void Update()
     {
-        TryOpenHover();
-        UpdateHoverHide();
-    }
+        if (!_hovered)
+            return;
 
-    private void TryOpenHover()
-    {
-        if (!_hovering)
-            return;
-        if (hoverInfoPanel == null || pinnedInfoPanel == null)
-            return;
-        if (pinnedInfoPanel.IsShowing)
+        string tenantId = GetTenantId();
+        if (string.IsNullOrEmpty(tenantId))
         {
-            _hoverStart = Time.unscaledTime;
+            HideHoverPanel();
             return;
         }
+
+        if (_rectTransform == null)
+            _rectTransform = GetComponent<RectTransform>();
+
+        if (_rectTransform != null)
+        {
+            if (_canvas == null)
+                _canvas = GetComponentInParent<Canvas>();
+            Camera cam = (_canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay) ? _canvas.worldCamera : null;
+            if (!RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition, cam))
+            {
+                HideHoverPanel();
+                return;
+            }
+        }
+
+        if (pinnedInfoPanel != null && pinnedInfoPanel.IsShowing)
+        {
+            _hoverStillTime = 0f;
+            return;
+        }
+
         if (Input.GetMouseButton(0))
         {
-            // While the left button is held (drag/click in progress) never open hover.
-            _hoverStart = Time.unscaledTime;
+            // While left mouse button is held (drag in progress), don't open
+            _hoverStillTime = 0f;
             return;
         }
-        string tenantId = GetTenantId();
-        if (string.IsNullOrEmpty(tenantId))
+
+        if (_shown)
             return;
-        if (hoverInfoPanel.IsShowing && hoverInfoPanel.CurrentTenantId == tenantId)
+
+        Vector2 mousePosition = Input.mousePosition;
+        if (Vector2.Distance(mousePosition, _lastMousePosition) > moveThreshold)
+        {
+            _lastMousePosition = mousePosition;
+            _hoverStillTime = 0f;
             return;
-        if (Time.unscaledTime - _hoverStart < hoverDelay)
+        }
+
+        _hoverStillTime += Time.unscaledDeltaTime;
+        if (_hoverStillTime < hoverDelay)
             return;
-        hoverInfoPanel.ShowHover(tenantId, Input.mousePosition, preferLeftPlacement, source);
-        _shownHoverTenantId = tenantId;
+
+        _shown = true;
+        if (hoverInfoPanel != null)
+        {
+            hoverInfoPanel.ShowHover(tenantId, mousePosition, preferLeftPlacement, source);
+        }
     }
 
-    private void UpdateHoverHide()
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        if (hoverInfoPanel == null)
+        _hovered = true;
+        _shown = false;
+        _lastMousePosition = Input.mousePosition;
+        _hoverStillTime = 0f;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (eventData != null && eventData.pointerEnter != null && eventData.pointerEnter.transform.IsChildOf(transform))
             return;
-        if (!hoverInfoPanel.IsShowing || hoverInfoPanel.Mode != TenantInfoPanel.PanelMode.Hover)
+
+        HideHoverPanel();
+    }
+
+    public void HideHoverPanel()
+    {
+        _hovered = false;
+        _shown = false;
+        _hoverStillTime = 0f;
+
+        if (hoverInfoPanel != null && hoverInfoPanel.IsShowing && hoverInfoPanel.Mode == TenantInfoPanel.PanelMode.Hover)
         {
-            _hidePendingStart = 0f;
-            _shownHoverTenantId = null;
-            return;
-        }
-        string tenantId = GetTenantId();
-        if (string.IsNullOrEmpty(tenantId))
-        {
-            if (!string.IsNullOrEmpty(_shownHoverTenantId) && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
+            string tenantId = GetTenantId();
+            if (string.IsNullOrEmpty(tenantId) || hoverInfoPanel.CurrentTenantId == tenantId)
+            {
                 hoverInfoPanel.Hide();
-            _shownHoverTenantId = null;
-            _hidePendingStart = 0f;
-            return;
+            }
         }
-        if (tenantId != hoverInfoPanel.CurrentTenantId)
-        {
-            if (!string.IsNullOrEmpty(_shownHoverTenantId) && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
-                hoverInfoPanel.Hide();
-            _shownHoverTenantId = null;
-            _hidePendingStart = 0f;
-            return;
-        }
-        _shownHoverTenantId = tenantId;
-        if (_hovering)
-        {
-            _hidePendingStart = 0f;
-            return;
-        }
-        if (_hidePendingStart <= 0f)
-            _hidePendingStart = Time.unscaledTime;
-        else if (Time.unscaledTime - _hidePendingStart >= hideDelay)
-            hoverInfoPanel.Hide();
     }
 
     public void OpenPinned()
@@ -106,35 +136,15 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
         string tenantId = GetTenantId();
         if (pinnedInfoPanel == null || string.IsNullOrEmpty(tenantId))
             return;
-        _hovering = false;
-        _hidePendingStart = 0f;
-        if (hoverInfoPanel != null)
-            hoverInfoPanel.Hide();
-        pinnedInfoPanel.ShowPinned(tenantId, Input.mousePosition, source);
-    }
 
-    public void HideHoverPanel()
-    {
-        if (hoverInfoPanel != null)
-            hoverInfoPanel.Hide();
+        HideHoverPanel();
+        pinnedInfoPanel.ShowPinned(tenantId, Input.mousePosition, source);
     }
 
     public void ClosePinned()
     {
         if (pinnedInfoPanel != null)
             pinnedInfoPanel.Hide();
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        _hovering = true;
-        _hoverStart = Time.unscaledTime;
-        _hidePendingStart = 0f;
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        _hovering = false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -148,27 +158,12 @@ public class TenantInfoHoverTrigger : MonoBehaviour,
 
     private void OnDisable()
     {
-        TryHideOwnedHover();
+        HideHoverPanel();
     }
 
     private void OnDestroy()
     {
-        TryHideOwnedHover();
-    }
-
-    private void TryHideOwnedHover()
-    {
-        if (hoverInfoPanel == null)
-            return;
-        if (hoverInfoPanel.IsShowing
-            && hoverInfoPanel.Mode == TenantInfoPanel.PanelMode.Hover
-            && !string.IsNullOrEmpty(_shownHoverTenantId)
-            && hoverInfoPanel.CurrentTenantId == _shownHoverTenantId)
-        {
-            hoverInfoPanel.Hide();
-        }
-        _shownHoverTenantId = null;
-        _hidePendingStart = 0f;
+        HideHoverPanel();
     }
 
     private string GetTenantId()

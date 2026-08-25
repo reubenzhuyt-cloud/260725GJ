@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>末日旅社 260725GJ GameJam 绝密复盘：六大战神全景画像</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0d14;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(28, 38, 58, 0.85);
+      --border-color: rgba(64, 158, 255, 0.2);
+      --border-glow: rgba(0, 240, 255, 0.4);
+      --cyan: #00f0ff;
+      --violet: #a855f7;
+      --gold: #f59e0b;
+      --pink: #ec4899;
+      --emerald: #10b981;
+      --orange: #f97316;
+      --text-main: #f1f5f9;
+      --text-sub: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 60%);
+    }
+
+    /* Presentation Container */
+    #deck-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.98) translateY(10px);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    /* Cyber Glass Card */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 12px 40px rgba(0, 240, 255, 0.15);
+      background: var(--bg-card-hover);
+    }
+
+    .glass-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+    }
+
+    /* Common Typography */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .slide-tag {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-tag::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .slide-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-top: 4px;
+    }
+
+    .slide-subtitle {
+      font-size: 14px;
+      color: var(--text-sub);
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      min-height: 0;
+    }
+
+    /* Navigation UI */
+    .nav-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-sub);
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .quick-export-btn {
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      z-index: 100;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .quick-export-btn:hover {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+    }
+
+    /* SLIDE 1: Cover */
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      height: 100%;
+      gap: 28px;
+    }
+
+    .cover-badge {
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    }
+
+    .cover-title {
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 70%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 40px rgba(56, 189, 248, 0.3);
+    }
+
+    .cover-subtitle {
+      font-size: 20px;
+      color: var(--text-sub);
+      max-width: 800px;
+      line-height: 1.6;
+    }
+
+    .crew-capsules {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      margin-top: 10px;
+      max-width: 1000px;
+    }
+
+    .crew-capsule {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 8px 18px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+    }
+
+    .crew-capsule:hover {
+      transform: translateY(-3px);
+      border-color: var(--cyan);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.2);
+    }
+
+    .crew-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .crew-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .crew-role {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-family: var(--font-mono);
+    }
+
+    /* SLIDE 2: Big Data */
+    .stat-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+    }
+
+    .stat-num {
+      font-size: 48px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      line-height: 1;
+      margin: 12px 0 6px 0;
+    }
+
+    .stat-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    .sub-data-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sub-data-item {
+      flex: 1;
+    }
+
+    .sub-data-val {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--cyan);
+    }
+
+    .sub-data-lbl {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* SLIDE 3 & 4 & 5: Charts */
+    .chart-container-box {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-legend-custom {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      color: var(--text-sub);
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* SLIDE 6: Character Profiles */
+    .profile-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .profile-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px 20px;
+    }
+
+    .profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .p-title-group h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .p-title-group .p-role {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .p-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .p-body {
+      margin: 10px 0;
+      font-size: 12.5px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .p-body p {
+      margin-bottom: 4px;
+    }
+
+    .p-body strong {
+      color: #e2e8f0;
+    }
+
+    .p-metrics {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .p-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .p-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+    }
+
+    .p-bar-track {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .p-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    /* SLIDE 7: Drama Quotes */
+    .drama-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drama-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px;
+    }
+
+    .drama-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .drama-quote {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.45;
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-left: 3px solid var(--border-glow);
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 8px;
+    }
+
+    .drama-analysis {
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .drama-author {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    /* SLIDE 8: Awards & Epilogue */
+    .awards-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .awards-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .award-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+    }
+
+    .award-icon {
+      font-size: 28px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .award-info h4 {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .award-info p {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .award-recipient {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-top: 4px;
+    }
+
+    .epilogue-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(18, 24, 38, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+      border: 1px solid var(--border-glow);
+    }
+
+    .epilogue-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #e2e8f0;
+    }
+
+    .epilogue-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Print Styles for Perfect 16:9 PDF Export */
+    @media print {
+      body {
+        background: #0a0d14 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        overflow: visible !important;
+        width: auto !important;
+        height: auto !important;
+      }
+
+      #deck-container {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      .slide {
+        position: relative !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        display: flex !important;
+        padding: 40px 50px !important;
+      }
+
+      .nav-controls, .quick-export-btn {
+        display: none !important;
+      }
+
+      .glass-card {
+        background: rgba(18, 24, 38, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="deck-container">
+    <!-- SLIDE 1: Cover -->
+    <section class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-tag">PROJECT RETROSPECTIVE // CLASSIFIED</div>
+        <div class="slide-subtitle">2026.07.25 - 2026.08.25 // GAMEJAM 30 DAYS</div>
+      </div>
+      <div class="slide-body">
+        <div class="cover-content" style="width: 100%;">
+          <div class="cover-badge">⚡ 绝密档案 // GAMEJAM 极限复盘 ⚡</div>
+          <h1 class="cover-title">末日旅社 260725GJ<br>六大战神全景画像与决战时刻</h1>
+          <p class="cover-subtitle">
+            30个日夜的极限拉扯，从荒芜的架构萌芽到 V1.0.1 完整交付。<br>
+            记录全栈战神、救火先锋、文案狂飙大师、像素匠人、核弹画力与氛围催化剂的并肩史诗。
+          </p>
+          <div class="crew-capsules">
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></div>
+              <div>
+                <div class="crew-name">reubenzhuyt-cloud</div>
+                <div class="crew-role">全栈制作人 / 主程 / 架构中枢</div>
+              </div>
+            </div>
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--violet); box-shadow: 0 0 8px var(--violet);"></div>
+              <div>
+                <div class="crew-name">simplealice</div>
+                <div class="crew-role">核心逻辑攻坚 / 架构救火先锋</div>
+              </div>
+            </div>
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--gold); box-shadow: 0 0 8px var(--gold);"></div>
+              <div>
+                <div class="crew-name">guixiuwangxian</div>
+                <div class="crew-role">核心主策 / 引导与世界观设计师</div>
+              </div>
+            </div>
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--pink); box-shadow: 0 0 8px var(--pink);"></div>
+              <div>
+                <div class="crew-name">九温</div>
+                <div class="crew-role">UI美术 & 道具 / 极致打磨匠人</div>
+              </div>
+            </div>
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--emerald); box-shadow: 0 0 8px var(--emerald);"></div>
+              <div>
+                <div class="crew-name">shub</div>
+                <div class="crew-role">核心主美 / 场景·插画·住客视觉总监</div>
+              </div>
+            </div>
+            <div class="crew-capsule">
+              <div class="crew-dot" style="background: var(--orange); box-shadow: 0 0 8px var(--orange);"></div>
+              <div>
+                <div class="crew-name">Sungdung</div>
+                <div class="crew-role">音频总监 / 音乐设计 & 沉浸声景</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Big Data -->
+    <section class="slide" id="slide-2">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">BATTLEFIELD METRICS // 战局大数据</div>
+          <h2 class="slide-title">战场全景：高强度火力全开的大数据解剖</h2>
+        </div>
+        <div class="slide-subtitle">全周期 112 次核心 Commit / 52,000+ 行代码与资源演进</div>
+      </div>
+      <div class="slide-body">
+        <div class="stat-grid-4">
+          <div class="glass-card stat-card">
+            <div>
+              <div class="slide-tag" style="color: var(--cyan);">CODE & ENGINE</div>
+              <div class="stat-num" style="color: var(--cyan);">112</div>
+              <div class="stat-label">全工程 Commit 交付</div>
+              <div class="stat-desc">涵盖主逻辑、架构演进与全量资产装配，凌晨2~4点高频冲刺。</div>
+            </div>
+            <div class="sub-data-row">
+              <div class="sub-data-item">
+                <div class="sub-data-val">+52.4K</div>
+                <div class="sub-data-lbl">行代码/配置增加</div>
+              </div>
+              <div class="sub-data-item">
+                <div class="sub-data-val">-8.6K</div>
+                <div class="sub-data-lbl">冗余重构清理</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div>
+              <div class="slide-tag" style="color: var(--emerald);">VISUAL ASSETS</div>
+              <div class="stat-num" style="color: var(--emerald);">405+</div>
+              <div class="stat-label">美术与UI原画切图</div>
+              <div class="stat-desc">涵盖酒店全貌、5阶时序天候、37+事件原画、6链式事件与114套UI。</div>
+            </div>
+            <div class="sub-data-row">
+              <div class="sub-data-item">
+                <div class="sub-data-val">291+</div>
+                <div class="sub-data-lbl">手绘场景/插画</div>
+              </div>
+              <div class="sub-data-item">
+                <div class="sub-data-val">114+</div>
+                <div class="sub-data-lbl">精修UI与道具</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div>
+              <div class="slide-tag" style="color: var(--gold);">SYSTEM & DESIGN</div>
+              <div class="stat-num" style="color: var(--gold);">430+</div>
+              <div class="stat-label">事件配置与引导词条</div>
+              <div class="stat-desc">Guide0~8 共 9 阶段保姆级引导，真相解密树与数值模型严密闭环。</div>
+            </div>
+            <div class="sub-data-row">
+              <div class="sub-data-item">
+                <div class="sub-data-val">8 大</div>
+                <div class="sub-data-lbl">独立玩法核心系统</div>
+              </div>
+              <div class="sub-data-item">
+                <div class="sub-data-val">9 阶段</div>
+                <div class="sub-data-lbl">完整新手教程</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div>
+              <div class="slide-tag" style="color: var(--orange);">AUDIO & INTEGRATION</div>
+              <div class="stat-num" style="color: var(--orange);">21+</div>
+              <div class="stat-label">定制音轨与声效</div>
+              <div class="stat-desc">全场景侵蚀前后动态 BGM 切换、低通滤波、住客动作专属拟音。</div>
+            </div>
+            <div class="sub-data-row">
+              <div class="sub-data-item">
+                <div class="sub-data-val">21 版本</div>
+                <div class="sub-data-lbl">敏捷迭代交付</div>
+              </div>
+              <div class="sub-data-item">
+                <div class="sub-data-val">V1.0.1</div>
+                <div class="sub-data-lbl">最终决战版本</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: 24h Activity Heatmap -->
+    <section class="slide" id="slide-3">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">CHRONO-ANALYSIS // 作息解剖</div>
+          <h2 class="slide-title">24小时团队修仙作息与冲刺热力图</h2>
+        </div>
+        <div class="slide-subtitle">打破生物钟的极限攻坚：深夜20:00~凌晨04:00 绝对火力巅峰</div>
+      </div>
+      <div class="slide-body">
+        <div class="glass-card chart-container-box">
+          <div class="chart-legend-custom">
+            <div class="legend-item"><div class="legend-color" style="background: rgba(0, 240, 255, 0.8);"></div> 提交/攻坚频次 (Commits / Deliveries)</div>
+            <div class="legend-item" style="color: var(--pink);">🔥 黄金深夜修仙带 (20:00 - 04:00) 占全天 71.4% 火力输出</div>
+          </div>
+          <div style="flex: 1; position: relative; min-height: 0;">
+            <canvas id="chart24h"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: Firepower by Member -->
+    <section class="slide" id="slide-4">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">MEMBER DIVISION // 战术时段分布</div>
+          <h2 class="slide-title">6位战神时段火力交叉分布矩阵</h2>
+        </div>
+        <div class="slide-subtitle">跨昼夜全天候无缝接力：凌晨战神、下午攻坚与深夜总装</div>
+      </div>
+      <div class="slide-body">
+        <div class="glass-card chart-container-box">
+          <div class="chart-legend-custom">
+            <div class="legend-item"><div class="legend-color" style="background: #00f0ff;"></div> reubenzhuyt-cloud (全栈中枢)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #a855f7;"></div> simplealice (救火先锋)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div> guixiuwangxian (核心主策)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ec4899;"></div> 九温 (UI打磨)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> shub (视觉总监)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f97316;"></div> Sungdung (音频大师)</div>
+          </div>
+          <div style="flex: 1; position: relative; min-height: 0;">
+            <canvas id="chartMemberBars"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: 30-Day Timeline -->
+    <section class="slide" id="slide-5">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">TIMELINE ADVANCEMENT // 推进曲线</div>
+          <h2 class="slide-title">6人全周期并进推进曲线 (7/29 - 8/25)</h2>
+        </div>
+        <div class="slide-subtitle">阶梯式交付与 8/23~8/24 决战大决堤：从框架搭建到终极总装</div>
+      </div>
+      <div class="slide-body">
+        <div class="glass-card chart-container-box">
+          <div class="chart-legend-custom">
+            <div class="legend-item"><div class="legend-color" style="background: #00f0ff;"></div> reubenzhuyt (总装主程)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #a855f7;"></div> simplealice (底层逻辑)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div> guixiuwangxian (剧情配置)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ec4899;"></div> 九温 (UI迭代)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div> shub (手绘插画)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f97316;"></div> Sungdung (音乐与声效)</div>
+          </div>
+          <div style="flex: 1; position: relative; min-height: 0;">
+            <canvas id="chartTimeline"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: Character Profiles -->
+    <section class="slide" id="slide-6">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">WARRIOR PROFILES // 战神风云榜</div>
+          <h2 class="slide-title">6位团队成员性格画像与硬核战绩</h2>
+        </div>
+        <div class="slide-subtitle">致敬每一个在绝境中守住底线的末日旅社筑造者</div>
+      </div>
+      <div class="slide-body">
+        <div class="profile-grid-6">
+          <!-- 1. reubenzhuyt-cloud -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--cyan);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>reubenzhuyt-cloud</h3>
+                  <div class="p-role">全栈制作人 / 主程 / 架构中枢</div>
+                </div>
+                <div class="p-tag" style="background: rgba(0, 240, 255, 0.15); color: var(--cyan);">全栈通宵战神</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>主导系统架构、主场景集成、红点逻辑、真相系统及 V0.1~V1.0.1 全部版本总装。</p>
+                <p><strong>【战地传奇】</strong>全周期 87 次总装提交，凌晨2~4点全天候值守，团队永远在线的交付中枢。</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--cyan);">99%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 99%; background: var(--cyan);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>2%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 2%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. simplealice -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--violet);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>simplealice</h3>
+                  <div class="p-role">核心逻辑攻坚 / 架构救火先锋</div>
+                </div>
+                <div class="p-tag" style="background: rgba(168, 85, 247, 0.15); color: var(--violet);">定海神针 / 救火先生</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>攻克访客审查、存读档系统、事件筛选管线、日夜结算与卡死/金币刷新底层Bug。</p>
+                <p><strong>【战地传奇】</strong>19次极高浓度提交，多次在凌晨 03:26、04:20 极限提交关键救火代码挽救大局。</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--violet);">94%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 94%; background: var(--violet);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>8%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 8%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. guixiuwangxian -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--gold);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>guixiuwangxian</h3>
+                  <div class="p-role">核心主策 / 引导与世界观设计师</div>
+                </div>
+                <div class="p-tag" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">文案狂飙 / 引导守护者</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>构建完整事件树与真相系统，独立编写 Guide0~Guide8 共9阶段保姆级引导与430+词条配置。</p>
+                <p><strong>【战地传奇】</strong>8/24决战日以惊人手速连续推送海量配置文档，精准梳理出人员名单与设计规范。</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--gold);">90%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 90%; background: var(--gold);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>15%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 15%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 九温 -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--pink);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>九温</h3>
+                  <div class="p-role">UI美术 & 道具 / 极致打磨匠人</div>
+                </div>
+                <div class="p-tag" style="background: rgba(236, 72, 153, 0.15); color: var(--pink);">像素强迫症 / 返工匠人</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>负责全套UI界面切图与道具图标（安神茶、收音机、急救包、旧名单、绝密档案等）。</p>
+                <p><strong>【战地传奇】</strong>历经8/10初版->8/13新贴图->8/20主界面->8/23 UINew->8/24道具终极重绘！累计114+件UI返工精修。</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--pink);">92%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 92%; background: var(--pink);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>20%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 20%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. shub -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--emerald);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>shub</h3>
+                  <div class="p-role">核心主美 / 视觉总监</div>
+                </div>
+                <div class="p-tag" style="background: rgba(16, 185, 129, 0.15); color: var(--emerald);">核弹级画力 / 视觉灵魂</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>统揽酒店大地图外观、5阶视差天候背景、37+S1/S2手绘事件插画、链式图与住客头像。</p>
+                <p><strong>【战地传奇】</strong>前期厚积薄发，8/18与8/23爆发式交付37张S1插画与全套S2链式事件图，累计291+张高清原画！</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--emerald);">96%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 96%; background: var(--emerald);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>10%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 10%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Sungdung -->
+          <div class="glass-card profile-card" style="border-left: 3px solid var(--orange);">
+            <div>
+              <div class="profile-header">
+                <div class="p-title-group">
+                  <h3>Sungdung</h3>
+                  <div class="p-role">音频总监 / 音乐设计 & 声景大师</div>
+                </div>
+                <div class="p-tag" style="background: rgba(249, 115, 22, 0.15); color: var(--orange);">声临其境 / 氛围催化剂</div>
+              </div>
+              <div class="p-body">
+                <p><strong>【核心贡献】</strong>打造主题曲《旅馆·侵蚀日》、侵蚀前后动态BGM、Erosion环境音、UI交互与声学滤波。</p>
+                <p><strong>【战地传奇】</strong>8/5先行注入主题旋律，8/20注入侵蚀灵魂音效，8/23集中落地21+首沉浸式音轨与完整音效库。</p>
+              </div>
+            </div>
+            <div class="p-metrics">
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>爆种指数</span><span style="color: var(--orange);">88%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 88%; background: var(--orange);"></div></div>
+              </div>
+              <div class="p-bar-group">
+                <div class="p-bar-label"><span>摸鱼指数</span><span>25%</span></div>
+                <div class="p-bar-track"><div class="p-bar-fill" style="width: 25%; background: var(--text-dim);"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: Drama Moments -->
+    <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">MEMORABLE LOGS // 经典抓马大赏</div>
+          <h2 class="slide-title">战地实录：令人喷饭又破防的真实现场</h2>
+        </div>
+        <div class="slide-subtitle">每一个看似轻描淡写的提交与消息背后，都是一场惊心动魄的救亡图存</div>
+      </div>
+      <div class="slide-body">
+        <div class="drama-grid">
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.24 03:26:12</span><span>CRITICAL FIX</span></div>
+              <div class="drama-quote">"修复了点击住客导致游戏彻底卡死的恶性Bug，以及金币莫名清空的神秘事件。"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>距截稿不到24小时，住客系统突然频发死锁崩溃。救火先生深夜直捣核心管线，连切3个多线程隐患。</div>
+            </div>
+            <div class="drama-author" style="color: var(--violet);">—— simplealice【救火时刻】</div>
+          </div>
+
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.24 04:45:00</span><span>UI REVISION #5</span></div>
+              <div class="drama-quote">"别催了在画了！道具图标第5次全套重绘已导出，这次绝对是终版！"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>从 8/10 的初代 UI 到 8/24 凌晨的像素级绝密档案图标，九温老师在重绘的路上把完美主义拉到了极限。</div>
+            </div>
+            <div class="drama-author" style="color: var(--pink);">—— 九温【打磨之巅】</div>
+          </div>
+
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.23 23:15:30</span><span>MEGA ASSET DROP</span></div>
+              <div class="drama-quote">"压缩包发过去了，37张事件插画+全套链式背景，Unity工程请做好心理准备。"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>核弹级美术产能一次性空投进工程，Git LFS 瞬间被塞爆，整个主工程进入史诗级视觉蜕变。</div>
+            </div>
+            <div class="drama-author" style="color: var(--emerald);">—— shub【画力轰炸】</div>
+          </div>
+
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.24 02:10:18</span><span>CONFIG BURST</span></div>
+              <div class="drama-quote">"Guide0 到 Guide8 全部重写完毕，430个词条已对齐最新真相系统逻辑，请立即热更！"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>主策在决战之夜化身无情打字机，手搓 9 阶段新手引导全量 JSON，彻底消灭游玩门槛。</div>
+            </div>
+            <div class="drama-author" style="color: var(--gold);">—— guixiuwangxian【文案狂飙】</div>
+          </div>
+
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.23 21:30:00</span><span>AUDIO MASTERING</span></div>
+              <div class="drama-quote">"给侵蚀后的音轨加了低通滤波和环境心跳，戴耳机测试时别被自己吓到。"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>末日氛围的最后一块拼图注入，戴上耳机的瞬间，绝望感与压迫感直接穿透屏幕。</div>
+            </div>
+            <div class="drama-author" style="color: var(--orange);">—— Sungdung【沉浸声景】</div>
+          </div>
+
+          <div class="glass-card drama-card">
+            <div>
+              <div class="drama-time"><span>2026.08.25 04:12:44</span><span>FINAL BUILD</span></div>
+              <div class="drama-quote">"V1.0.1 最终发版打包成功。天亮了，我们赢了。"</div>
+              <div class="drama-analysis"><strong>现场直击：</strong>87 次提交的终点，红点指引、存档闭环、插画对齐、音效生效。制作人敲下发版键，为 30 天画上句号。</div>
+            </div>
+            <div class="drama-author" style="color: var(--cyan);">—— reubenzhuyt-cloud【终局发版】</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: Awards & Epilogue -->
+    <section class="slide" id="slide-8">
+      <div class="slide-header">
+        <div>
+          <div class="slide-tag">HONOR & CEREMONY // 战功授勋与结语</div>
+          <h2 class="slide-title">末日旅社荣誉殿堂 & 团队复盘寄语</h2>
+        </div>
+        <div class="slide-subtitle">致敬每一位在末日风暴中挺身而出的孤勇者</div>
+      </div>
+      <div class="slide-body">
+        <div class="awards-container">
+          <div class="awards-list">
+            <div class="glass-card award-item">
+              <div class="award-icon">👑</div>
+              <div class="award-info">
+                <h4>全栈通宵主心骨大奖</h4>
+                <p>87次提交全天候发版中枢</p>
+                <div class="award-recipient">reubenzhuyt-cloud</div>
+              </div>
+            </div>
+
+            <div class="glass-card award-item">
+              <div class="award-icon">🧯</div>
+              <div class="award-info">
+                <h4>深渊救火定海神针奖</h4>
+                <p>凌晨4点斩杀恶性卡死Bug</p>
+                <div class="award-recipient">simplealice</div>
+              </div>
+            </div>
+
+            <div class="glass-card award-item">
+              <div class="award-icon">📜</div>
+              <div class="award-info">
+                <h4>文案狂飙与引导守护者奖</h4>
+                <p>Guide0~8 矩阵与430+词条奇迹</p>
+                <div class="award-recipient">guixiuwangxian</div>
+              </div>
+            </div>
+
+            <div class="glass-card award-item">
+              <div class="award-icon">🎨</div>
+              <div class="award-info">
+                <h4>像素级强迫症与匠心奖</h4>
+                <p>5轮重绘迭代114+精修UI道具</p>
+                <div class="award-recipient">九温</div>
+              </div>
+            </div>
+
+            <div class="glass-card award-item">
+              <div class="award-icon">🌋</div>
+              <div class="award-info">
+                <h4>核弹级画力与视觉总纲奖</h4>
+                <p>291+张手绘场景与事件插画</p>
+                <div class="award-recipient">shub</div>
+              </div>
+            </div>
+
+            <div class="glass-card award-item">
+              <div class="award-icon">🎧</div>
+              <div class="award-info">
+                <h4>绝望声景与氛围催化大师奖</h4>
+                <p>21+首沉浸式音轨与全套拟音</p>
+                <div class="award-recipient">Sungdung</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card epilogue-box">
+            <div>
+              <div class="slide-tag" style="color: var(--cyan); margin-bottom: 12px;">EPILOGUE // 终章寄语</div>
+              <div class="epilogue-text">
+                “在 GameJam 的绝境之中，我们不仅构建了一个关于在末日中筛选人性与守望真相的旅社，更完成了一场属于六个人的奇迹交付。<br><br>
+                从零碎的构想、未知的 Bug、推翻重来的贴图，到最终严丝合缝、声画合一的完整作品。代码会过时，版本会更迭，但这场通宵作战的热血与并肩信任，将永远刻在我们的游戏开发历程中。”
+              </div>
+            </div>
+            <div class="epilogue-footer">
+              <span>PROJECT 260725GJ // COMPLETED</span>
+              <span style="color: var(--cyan);">★ MISSION ACCOMPLISHED ★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Navigation Controls -->
+  <div class="nav-controls">
+    <button class="nav-btn" id="prev-btn" title="Previous Slide (← / ↑ / PageUp)">❮</button>
+    <div class="slide-counter" id="slide-counter">1 / 8</div>
+    <button class="nav-btn" id="next-btn" title="Next Slide (→ / ↓ / Space / PageDown)">❯</button>
+  </div>
+
+  <button class="quick-export-btn" onclick="window.print()" title="Print to PDF / Save Slides">
+    🖨️ 导出 PDF / 打印
+  </button>
+
+  <script>
+    // Slide Navigation Logic
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counterEl = document.getElementById('slide-counter');
+
+    function updateSlides(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentSlide = index;
+
+      slides.forEach((slide, i) => {
+        if (i === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      counterEl.textContent = `${currentSlide + 1} / ${totalSlides}`;
+      
+      // Trigger chart resize if needed
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    document.getElementById('prev-btn').addEventListener('click', () => updateSlides(currentSlide - 1));
+    document.getElementById('next-btn').addEventListener('click', () => updateSlides(currentSlide + 1));
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        updateSlides(currentSlide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        updateSlides(currentSlide - 1);
+      }
+    });
+
+    // Chart.js Default Dark Configuration
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = 'ui-monospace, Consolas, sans-serif';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+
+    // 1. Slide 3: 24h Activity Chart
+    const ctx24h = document.getElementById('chart24h').getContext('2d');
+    const hours = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+    const commitData24h = [5, 6, 8, 6, 7, 1, 1, 0, 0, 0, 0, 1, 3, 1, 5, 4, 3, 6, 5, 15, 7, 12, 9, 7];
+
+    const bgColors24h = hours.map((_, i) => {
+      if (i >= 20 || i <= 4) return 'rgba(0, 240, 255, 0.85)';
+      if (i >= 14 && i <= 19) return 'rgba(168, 85, 247, 0.65)';
+      return 'rgba(255, 255, 255, 0.2)';
+    });
+
+    new Chart(ctx24h, {
+      type: 'bar',
+      data: {
+        labels: hours,
+        datasets: [{
+          label: '提交/攻坚频次',
+          data: commitData24h,
+          backgroundColor: bgColors24h,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (ctx) => `时间段: ${ctx[0].label}`,
+              label: (ctx) => ` 交付频次: ${ctx.raw} 次`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+
+    // 2. Slide 4: Member Firepower Bar Chart
+    const ctxMember = document.getElementById('chartMemberBars').getContext('2d');
+    const timeSlots = ['00:00 - 04:00 (深夜狂修)', '04:00 - 08:00 (黎明发版)', '08:00 - 12:00 (休整待命)', '12:00 - 16:00 (午后推进)', '16:00 - 20:00 (傍晚攻坚)', '20:00 - 24:00 (夜间总攻)'];
+
+    new Chart(ctxMember, {
+      type: 'bar',
+      data: {
+        labels: timeSlots,
+        datasets: [
+          { label: 'reubenzhuyt-cloud', data: [22, 14, 2, 8, 12, 29], backgroundColor: '#00f0ff', borderRadius: 4 },
+          { label: 'simplealice', data: [8, 5, 0, 1, 2, 3], backgroundColor: '#a855f7', borderRadius: 4 },
+          { label: 'guixiuwangxian', data: [4, 1, 0, 5, 6, 9], backgroundColor: '#f59e0b', borderRadius: 4 },
+          { label: '九温', data: [5, 2, 0, 6, 8, 11], backgroundColor: '#ec4899', borderRadius: 4 },
+          { label: 'shub', data: [6, 1, 0, 7, 9, 14], backgroundColor: '#10b981', borderRadius: 4 },
+          { label: 'Sungdung', data: [3, 0, 0, 4, 6, 8], backgroundColor: '#f97316', borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.06)' } }
+        }
+      }
+    });
+
+    // 3. Slide 5: Timeline Chart
+    const ctxTimeline = document.getElementById('chartTimeline').getContext('2d');
+    const timelineLabels = ['7/29 启动', '8/02 框架', '8/06 初版UI', '8/10 机制闭环', '8/14 流程攻坚', '8/18 插画爆发', '8/22 链式重构', '8/24 决战总装', '8/25 V1.0.1'];
+
+    new Chart(ctxTimeline, {
+      type: 'line',
+      data: {
+        labels: timelineLabels,
+        datasets: [
+          {
+            label: 'reubenzhuyt-cloud (主程总装)',
+            data: [5, 12, 22, 35, 48, 58, 70, 84, 87],
+            borderColor: '#00f0ff',
+            backgroundColor: 'rgba(0, 240, 255, 0.1)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 3
+          },
+          {
+            label: 'simplealice (核心救火)',
+            data: [0, 2, 4, 7, 9, 11, 14, 18, 19],
+            borderColor: '#a855f7',
+            tension: 0.35,
+            borderWidth: 2
+          },
+          {
+            label: 'guixiuwangxian (引导与配置)',
+            data: [2, 4, 6, 9, 11, 14, 17, 24, 25],
+            borderColor: '#f59e0b',
+            tension: 0.35,
+            borderWidth: 2
+          },
+          {
+            label: '九温 (UI与道具)',
+            data: [0, 5, 18, 25, 40, 55, 75, 108, 114],
+            borderColor: '#ec4899',
+            tension: 0.35,
+            borderWidth: 2
+          },
+          {
+            label: 'shub (场景与插画)',
+            data: [10, 25, 45, 70, 110, 160, 220, 285, 291],
+            borderColor: '#10b981',
+            tension: 0.35,
+            borderWidth: 2.5
+          },
+          {
+            label: 'Sungdung (音乐与声效)',
+            data: [0, 2, 5, 6, 8, 10, 14, 20, 21],
+            borderColor: '#f97316',
+            tension: 0.35,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.dataset.label}: 累计产出/交付量 ${ctx.raw}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+          },
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.04)' }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

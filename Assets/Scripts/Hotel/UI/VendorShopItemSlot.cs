@@ -18,6 +18,7 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
     private ItemDefinition _definition;
     private bool _sold;
     private bool _hovered;
+    private bool _shown;
     private Vector2 _lastMousePosition;
     private float _hoverStillTime;
     private RectTransform _rectTransform;
@@ -74,8 +75,19 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
     public void OnPointerEnter(PointerEventData eventData)
     {
         _hovered = true;
+        _shown = false;
         _lastMousePosition = Input.mousePosition;
         _hoverStillTime = 0f;
+    }
+
+    private void HidePanel()
+    {
+        _hovered = false;
+        _shown = false;
+        _hoverStillTime = 0f;
+        ItemInfoPanel panel = GetInfoPanel();
+        if (panel != null)
+            panel.Hide();
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -83,19 +95,12 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (eventData != null && eventData.pointerEnter != null && eventData.pointerEnter.transform.IsChildOf(transform))
             return;
 
-        _hovered = false;
-        _hoverStillTime = 0f;
-        ItemInfoPanel panel = GetInfoPanel();
-        if (panel != null)
-            panel.Hide();
+        HidePanel();
     }
 
     private void OnDisable()
     {
-        _hovered = false;
-        ItemInfoPanel panel = GetInfoPanel();
-        if (panel != null)
-            panel.Hide();
+        HidePanel();
     }
 
     private void Update()
@@ -103,12 +108,18 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (!_hovered || _definition == null)
             return;
 
+        if (_rectTransform != null && !RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition, null))
+        {
+            HidePanel();
+            return;
+        }
+
+        if (_shown)
+            return;
+
         Vector2 mousePosition = Input.mousePosition;
         if (Vector2.Distance(mousePosition, _lastMousePosition) > moveThreshold)
         {
-            ItemInfoPanel panel = GetInfoPanel();
-            if (panel != null)
-                panel.Hide();
             _lastMousePosition = mousePosition;
             _hoverStillTime = 0f;
             return;
@@ -118,6 +129,7 @@ public class VendorShopItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (_hoverStillTime < hoverStillDelay)
             return;
 
+        _shown = true;
         ItemInfoPanel hoverPanel = GetInfoPanel();
         if (hoverPanel != null)
             hoverPanel.Show(_definition, mousePosition);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hotel.Audio;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class GuidePanelController : MonoBehaviour
@@ -76,8 +77,10 @@ public class GuidePanelController : MonoBehaviour
     private readonly List<GuideData> _loadedGuides = new List<GuideData>();
     private readonly List<GameObject> _spawnedMenuItems = new List<GameObject>();
     private readonly List<Image> _spawnedDots = new List<Image>();
+    private readonly List<RaycastResult> _raycastResults = new List<RaycastResult>();
     private int _selectedGuideIndex = -1;
     private int _currentPageIndex = 0;
+    private int _openedFrame = -1;
 
     public int CurrentPageIndex => _currentPageIndex;
     public int SelectedGuideIndex => _selectedGuideIndex;
@@ -104,6 +107,62 @@ public class GuidePanelController : MonoBehaviour
     private void Start()
     {
         LoadAllGuides();
+    }
+
+    private void Update()
+    {
+        if (!IsOpen)
+            return;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (Time.frameCount == _openedFrame)
+                return;
+
+            if (!IsPointerInsidePanel())
+            {
+                OnCloseButtonClicked();
+            }
+        }
+    }
+
+    private bool IsPointerInsidePanel()
+    {
+        GameObject root = guidePanelRoot != null ? guidePanelRoot : gameObject;
+        if (root == null)
+            return false;
+
+        EventSystem current = EventSystem.current;
+        if (current != null)
+        {
+            var pointerData = new PointerEventData(current)
+            {
+                position = Input.mousePosition
+            };
+            _raycastResults.Clear();
+            current.RaycastAll(pointerData, _raycastResults);
+
+            for (int i = 0; i < _raycastResults.Count; i++)
+            {
+                GameObject hit = _raycastResults[i].gameObject;
+                if (hit != null && (hit == root || hit.transform.IsChildOf(root.transform)))
+                    return true;
+            }
+        }
+
+        RectTransform rootRect = root.GetComponent<RectTransform>();
+        if (rootRect != null)
+        {
+            Canvas canvas = root.GetComponentInParent<Canvas>();
+            Camera eventCamera = null;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                eventCamera = canvas.worldCamera;
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(rootRect, Input.mousePosition, eventCamera))
+                return true;
+        }
+
+        return false;
     }
 
     private void OnDestroy()
@@ -437,6 +496,8 @@ public class GuidePanelController : MonoBehaviour
     {
         if (uiManager != null && !uiManager.CanOpenButtonPanel())
             return;
+
+        _openedFrame = Time.frameCount;
 
         if (guidePanelRoot != null)
             guidePanelRoot.SetActive(true);

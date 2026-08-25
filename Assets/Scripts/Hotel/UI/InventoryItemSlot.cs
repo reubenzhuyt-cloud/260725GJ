@@ -18,11 +18,18 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
     private int _count;
     private float _lastClickTime;
     private bool _hovered;
+    private bool _shown;
     private Vector2 _lastMousePosition;
     private float _hoverStillTime;
+    private RectTransform _rectTransform;
 
     public ItemDefinition Item => _item;
     public int Count => _count;
+
+    private void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+    }
 
     public void Bind(ItemDefinition item, int count)
     {
@@ -70,8 +77,19 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public void OnPointerEnter(PointerEventData eventData)
     {
         _hovered = true;
+        _shown = false;
         _lastMousePosition = Input.mousePosition;
         _hoverStillTime = 0f;
+    }
+
+    private void HidePanel()
+    {
+        _hovered = false;
+        _shown = false;
+        _hoverStillTime = 0f;
+        ItemInfoPanel panel = GetInfoPanel();
+        if (panel != null)
+            panel.Hide();
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -79,19 +97,12 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (eventData != null && eventData.pointerEnter != null && eventData.pointerEnter.transform.IsChildOf(transform))
             return;
 
-        _hovered = false;
-        _hoverStillTime = 0f;
-        ItemInfoPanel panel = GetInfoPanel();
-        if (panel != null)
-            panel.Hide();
+        HidePanel();
     }
 
     private void OnDisable()
     {
-        _hovered = false;
-        ItemInfoPanel panel = GetInfoPanel();
-        if (panel != null)
-            panel.Hide();
+        HidePanel();
     }
 
     private void Update()
@@ -99,12 +110,18 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (!_hovered || _item == null)
             return;
 
+        if (_rectTransform != null && !RectTransformUtility.RectangleContainsScreenPoint(_rectTransform, Input.mousePosition, null))
+        {
+            HidePanel();
+            return;
+        }
+
+        if (_shown)
+            return;
+
         Vector2 mousePosition = Input.mousePosition;
         if (Vector2.Distance(mousePosition, _lastMousePosition) > moveThreshold)
         {
-            ItemInfoPanel panel = GetInfoPanel();
-            if (panel != null)
-                panel.Hide();
             _lastMousePosition = mousePosition;
             _hoverStillTime = 0f;
             return;
@@ -114,6 +131,7 @@ public class InventoryItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerEx
         if (_hoverStillTime < hoverStillDelay)
             return;
 
+        _shown = true;
         ItemInfoPanel hoverPanel = GetInfoPanel();
         if (hoverPanel != null)
             hoverPanel.Show(_item, mousePosition);

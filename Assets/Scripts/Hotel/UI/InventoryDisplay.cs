@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hotel.Authoring.Items;
 using Hotel.Runtime;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InventoryDisplay : MonoBehaviour
 {
@@ -15,16 +16,19 @@ public class InventoryDisplay : MonoBehaviour
     public PhaseEnteredEvent onPhaseEntered;
 
     private readonly List<InventoryItemSlot> _slotPool = new List<InventoryItemSlot>();
+    private readonly List<RaycastResult> _raycastResults = new List<RaycastResult>();
     private bool _runStateRestoredSubscribed;
     private bool _inventoryChangedSubscribed;
     private bool _warnedMissingPrefab;
     private bool _hasStarted;
+    private int _openedFrame = -1;
 
     private static readonly Dictionary<string, ItemDefinition> ResItemCache = new Dictionary<string, ItemDefinition>();
     private static bool _resItemsLoaded;
 
     private void OnEnable()
     {
+        _openedFrame = Time.frameCount;
         SubscribeRunStateRestored();
         SubscribeInventoryChanged();
         if (onPhaseEntered != null)
@@ -45,6 +49,92 @@ public class InventoryDisplay : MonoBehaviour
     {
         _hasStarted = true;
         RefreshDisplay();
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (Time.frameCount == _openedFrame)
+                return;
+
+            if (ItemUseManager.Instance != null && ItemUseManager.Instance.IsAwaitingTarget)
+                return;
+
+            if (!IsPointerInsideInventoryOrPopups())
+            {
+                CloseInventory();
+            }
+        }
+    }
+
+    private void CloseInventory()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetInventoryPanelVisible(false);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+    private bool IsPointerInsideInventoryOrPopups()
+    {
+        EventSystem current = EventSystem.current;
+        if (current != null)
+        {
+            var pointerData = new PointerEventData(current)
+            {
+                position = Input.mousePosition
+            };
+            _raycastResults.Clear();
+            current.RaycastAll(pointerData, _raycastResults);
+
+            for (int i = 0; i < _raycastResults.Count; i++)
+            {
+                GameObject hit = _raycastResults[i].gameObject;
+                if (hit == null)
+                    continue;
+
+                if (hit == gameObject || hit.transform.IsChildOf(transform))
+                    return true;
+
+                if (ItemUseManager.Instance != null)
+                {
+                    if (ItemUseManager.Instance.confirmPanel != null && ItemUseManager.Instance.confirmPanel.IsShowing)
+                    {
+                        if (hit.transform.IsChildOf(ItemUseManager.Instance.confirmPanel.transform))
+                            return true;
+                    }
+                    if (ItemUseManager.Instance.truthInfoPanel != null && ItemUseManager.Instance.truthInfoPanel.gameObject.activeSelf)
+                    {
+                        if (hit.transform.IsChildOf(ItemUseManager.Instance.truthInfoPanel.transform))
+                            return true;
+                    }
+                    if (ItemUseManager.Instance.infoPanel != null && ItemUseManager.Instance.infoPanel.gameObject.activeSelf)
+                    {
+                        if (hit.transform.IsChildOf(ItemUseManager.Instance.infoPanel.transform))
+                            return true;
+                    }
+                }
+            }
+        }
+
+        RectTransform selfRect = GetComponent<RectTransform>();
+        if (selfRect != null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Camera eventCamera = null;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                eventCamera = canvas.worldCamera;
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(selfRect, Input.mousePosition, eventCamera))
+                return true;
+        }
+
+        return false;
     }
 
     public void RefreshDisplay()

@@ -15,7 +15,13 @@ public class ItemInfoPanel : MonoBehaviour
 
     private Canvas _canvas;
     private RectTransform _selfRect;
+    private CanvasGroup _canvasGroup;
     private ItemDefinition _currentItem;
+
+    private void Awake()
+    {
+        EnsureInitialized();
+    }
 
     public void Show(ItemDefinition item, Vector2 screenPoint)
     {
@@ -70,6 +76,25 @@ public class ItemInfoPanel : MonoBehaviour
             _selfRect = GetComponent<RectTransform>();
         if (_canvas == null)
             _canvas = GetComponentInParent<Canvas>();
+        if (_canvasGroup == null)
+        {
+            _canvasGroup = GetComponent<CanvasGroup>();
+            if (_canvasGroup == null)
+                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.blocksRaycasts = false;
+            _canvasGroup.interactable = false;
+        }
+
+        Graphic[] graphics = GetComponentsInChildren<Graphic>(true);
+        for (int i = 0; i < graphics.Length; i++)
+        {
+            if (graphics[i] != null)
+                graphics[i].raycastTarget = false;
+        }
     }
 
     private void PositionAt(Vector2 screenPoint)
