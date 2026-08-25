@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 public class GuidePanelController : MonoBehaviour
 {
+    public static event Action GuideClosed;
     [System.Serializable]
     public class GuidePageData
     {
@@ -529,6 +530,8 @@ public class GuidePanelController : MonoBehaviour
 
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayUISound(UISoundType.PanelClose);
+
+        GuideClosed?.Invoke();
     }
 
     public void Toggle()

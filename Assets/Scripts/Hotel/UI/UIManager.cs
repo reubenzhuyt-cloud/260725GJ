@@ -51,6 +51,11 @@ public class UIManager : MonoBehaviour
                 panel.enabled = true;
             }
         }
+
+        if (SettlementBridge.Instance != null && SettlementBridge.Instance.IsFreshStart && SettlementBridge.Instance.RunState != null && SettlementBridge.Instance.RunState.Day == 1)
+        {
+            OpenGuidePanel();
+        }
     }
 
     private void AutoBindGuideUI()

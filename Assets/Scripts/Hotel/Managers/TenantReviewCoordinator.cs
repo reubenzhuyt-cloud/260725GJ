@@ -35,6 +35,7 @@ public class TenantReviewCoordinator : MonoBehaviour
     private int _activeDay;
     private HotelPhase _activePhase;
     private bool _panelActive;
+    private bool _waitingForGuide;
 
     private void Awake()
     {
@@ -44,6 +45,11 @@ public class TenantReviewCoordinator : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_waitingForGuide)
+        {
+            GuidePanelController.GuideClosed -= OnGuideClosedAfterDelay;
+            _waitingForGuide = false;
+        }
         if (Instance == this) Instance = null;
     }
 
@@ -157,6 +163,11 @@ public class TenantReviewCoordinator : MonoBehaviour
     {
         if (onPhaseEntered != null)
             onPhaseEntered.Unregister(OnPhaseEntered);
+        if (_waitingForGuide)
+        {
+            GuidePanelController.GuideClosed -= OnGuideClosedAfterDelay;
+            _waitingForGuide = false;
+        }
     }
 
     private void OnPhaseEntered(PhaseEnterData data)
@@ -167,7 +178,34 @@ public class TenantReviewCoordinator : MonoBehaviour
         _activeDay = data.day;
         _activePhase = ToHotelPhase(data.phase);
         _activeBatchIndex = 0;
+
+        bool isFreshDay1 = data.day == 1 && SettlementBridge.Instance != null && SettlementBridge.Instance.IsFreshStart;
+        GuidePanelController guide = FindObjectOfType<GuidePanelController>(true);
+        bool guideIsActive = guide != null && guide.IsOpen;
+
+        if (isFreshDay1 && (guideIsActive || UIManager.Instance != null))
+        {
+            if (!_waitingForGuide)
+            {
+                _waitingForGuide = true;
+                GuidePanelController.GuideClosed += OnGuideClosedAfterDelay;
+            }
+            return;
+        }
+
         ShowCurrentReview();
+    }
+
+    private void OnGuideClosedAfterDelay()
+    {
+        if (!_waitingForGuide) return;
+        GuidePanelController.GuideClosed -= OnGuideClosedAfterDelay;
+        _waitingForGuide = false;
+
+        if (_activeBatch.Count > 0 && !_panelActive)
+        {
+            ShowCurrentReview();
+        }
     }
 
     public bool HasPendingReview()

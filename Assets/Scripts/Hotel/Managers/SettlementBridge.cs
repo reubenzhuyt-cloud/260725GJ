@@ -29,6 +29,7 @@ public class SettlementBridge : MonoBehaviour
 
     public GameRunState RunState => _runState;
     public StateReducer Reducer => _reducer;
+    public bool IsFreshStart { get; private set; }
 
     private GameRunState _runState;
     private StateReducer _reducer;
@@ -43,8 +44,9 @@ public class SettlementBridge : MonoBehaviour
         Instance = this;
 
         _reducer = new StateReducer();
-        GameLaunchContext.TryConsume(out var loadedState, out _);
+        GameLaunchContext.TryConsume(out var loadedState, out var startFresh);
         _runState = loadedState ?? GameRunState.New(new RunId(Guid.NewGuid().ToString("N")), Environment.TickCount);
+        IsFreshStart = startFresh || (loadedState == null && _runState.Day == 1);
 
         if (loadedState == null && debugStartDay > 0)
         {
